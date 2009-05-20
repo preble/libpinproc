@@ -1,7 +1,7 @@
-/* 
+/*
  * The MIT License
  * Copyright (c) 2009 Gerry Stellenberg, Adam Preble
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -9,11 +9,11 @@
  * copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following
- * conditions: 
- * 
+ * conditions:
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -37,20 +37,20 @@ PRLogCallback logCallback = NULL;
 
 void PRLog(const char *format, ...)
 {
-	const int maxLogLineLength = 1024;
-	char line[maxLogLineLength];
-	va_list ap;
-	va_start(ap, format);
-	vsnprintf(line, maxLogLineLength, format, ap);
-	if (logCallback)
-		logCallback(line);
-	else
-		fprintf(stderr, line);
+    const int maxLogLineLength = 1024;
+    char line[maxLogLineLength];
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(line, maxLogLineLength, format, ap);
+    if (logCallback)
+        logCallback(line);
+    else
+        fprintf(stderr, line);
 }
 
 void PRLogSetCallback(PRLogCallback callback)
 {
-	logCallback = callback;
+    logCallback = callback;
 }
 
 
@@ -59,17 +59,17 @@ void PRLogSetCallback(PRLogCallback callback)
 /** Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed. */
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType)
 {
-	PRDevice *device = PRDevice::Create(machineType);
-	if (device == NULL)
-		return kPRHandleInvalid;
-	else
-		return device;
+    PRDevice *device = PRDevice::Create(machineType);
+    if (device == NULL)
+        return kPRHandleInvalid;
+    else
+        return device;
 }
 /** Destroys an existing P-ROC device handle. */
 PR_EXPORT void PRDelete(PRHandle handle)
 {
-	if (handle != kPRHandleInvalid)
-		delete (PRDevice*)handle;
+    if (handle != kPRHandleInvalid)
+        delete (PRDevice*)handle;
 }
 
 
@@ -78,48 +78,48 @@ PR_EXPORT void PRDelete(PRHandle handle)
 /** Get all of the available events that have been received. */
 PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
 {
-	return handleAsDevice->GetEvents(eventsOut, maxEvents);
+    return handleAsDevice->GetEvents(eventsOut, maxEvents);
 }
 
 
 // Drivers
 PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
 {
-	return handleAsDevice->DriverUpdateGlobalConfig(driverGlobalConfig);
+    return handleAsDevice->DriverUpdateGlobalConfig(driverGlobalConfig);
 }
 PR_EXPORT PRResult PRDriverGetGroupConfig(PRHandle handle, uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig)
 {
-	return handleAsDevice->DriverGetGroupConfig(groupNum, driverGroupConfig);
+    return handleAsDevice->DriverGetGroupConfig(groupNum, driverGroupConfig);
 }
 PR_EXPORT PRResult PRDriverUpdateGroupConfig(PRHandle handle, PRDriverGroupConfig *driverGroupConfig)
 {
-	return handleAsDevice->DriverUpdateGroupConfig(driverGroupConfig);
+    return handleAsDevice->DriverUpdateGroupConfig(driverGroupConfig);
 }
 PR_EXPORT PRResult PRDriverGetState(PRHandle handle, uint8_t driverNum, PRDriverState *driverState)
 {
-	return handleAsDevice->DriverGetState(driverNum, driverState);
+    return handleAsDevice->DriverGetState(driverNum, driverState);
 }
 PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverState)
 {
-	return handleAsDevice->DriverUpdateState(driverState);
+    return handleAsDevice->DriverUpdateState(driverState);
 }
 
 // Driver Helper functions:
 PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
 {
-	return handleAsDevice->DriverDisable(driverNum);
+    return handleAsDevice->DriverDisable(driverNum);
 }
 PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds)
 {
-	return handleAsDevice->DriverPulse(driverNum, milliseconds);
+    return handleAsDevice->DriverPulse(driverNum, milliseconds);
 }
 PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
-	return handleAsDevice->DriverSchedule(driverNum, schedule, cycleSeconds, now);
+    return handleAsDevice->DriverSchedule(driverNum, schedule, cycleSeconds, now);
 }
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
 {
-	return handleAsDevice->DriverPatter(driverNum, millisecondsOn, millisecondsOff, originalOnTime);
+    return handleAsDevice->DriverPatter(driverNum, millisecondsOn, millisecondsOff, originalOnTime);
 }
 
 
@@ -128,15 +128,15 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
 
 PR_EXPORT PRResult PRSwitchesUpdateRules(PRHandle handle, PRSwitchRule *rules, int numRules)
 {
-	return handleAsDevice->SwitchesUpdateRules(rules, numRules);
+    return handleAsDevice->SwitchesUpdateRules(rules, numRules);
 }
 
 PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dmdGlobalConfig)
 {
-	return handleAsDevice->DMDUpdateGlobalConfig(dmdGlobalConfig);
+    return handleAsDevice->DMDUpdateGlobalConfig(dmdGlobalConfig);
 }
 PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames)
 {
-	return handleAsDevice->DMDDraw(dots, columns, rows, numSubFrames);
+    return handleAsDevice->DMDDraw(dots, columns, rows, numSubFrames);
 }
 
