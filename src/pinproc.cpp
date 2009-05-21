@@ -133,7 +133,10 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
     PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-
+PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)
+{
+    return handleAsDevice->DriverWatchdogTickle();
+}
 
 PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
 {

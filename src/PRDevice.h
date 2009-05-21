@@ -66,6 +66,8 @@ public:
 
     PRResult SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
+    PRResult DriverWatchdogTickle();
+
     PRResult DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig);
     PRResult DMDDraw(uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);
 

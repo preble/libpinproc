@@ -123,10 +123,9 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
     return i;
 }
 
-
 PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig)
 {
-    const int burstWords = 2;
+    const int burstWords = 4;
     uint32_t burst[burstWords];
     int32_t rc;
 
@@ -134,8 +133,12 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
 
     this->driverGlobalConfig = *driverGlobalConfig;
     rc = CreateDriverUpdateGlobalConfigBurst(burst, driverGlobalConfig);
+    rc = CreateWatchdogConfigBurst(burst+2, driverGlobalConfig->watchdogExpired,
+                                            driverGlobalConfig->watchdogEnable,
+                                            driverGlobalConfig->watchdogResetTime);
 
-    DEBUG(PRLog("Words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog("Driver Global words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog("Watchdog words: %x %x\n", burst[2], burst[3]));
     return WriteData(burst, burstWords);
 }
 
@@ -187,6 +190,19 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     return WriteData(burst, burstWords);
 }
 
+
+PRResult PRDevice::DriverWatchdogTickle()
+{
+    const int burstWords = 2;
+    uint32_t burst[burstWords];
+    int32_t rc;
+    
+    rc = CreateWatchdogConfigBurst(burst, driverGlobalConfig.watchdogExpired,
+                                   driverGlobalConfig.watchdogEnable,
+                                   driverGlobalConfig.watchdogResetTime);
+    
+    return WriteData(burst, burstWords);
+}
 
 
 

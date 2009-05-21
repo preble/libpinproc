@@ -69,6 +69,10 @@ const uint32_t P_ROC_REG_VERSION_ADDR             = 1;
 const uint32_t P_ROC_REG_WATCHDOG_ADDR            = 2;
 const uint32_t P_ROC_REG_DIPSWITCH_ADDR           = 3;
 
+const uint32_t P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT        = 30;
+const uint32_t P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT         = 14;
+const uint32_t P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT     = 0;
+
 const uint32_t P_ROC_EVENT_SWITCH_NUM_MASK                 = 0xFF;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_MASK               = 0x100;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_SHIFT              = 8;
@@ -157,6 +161,8 @@ int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalCo
 int32_t CreateDriverUpdateGroupConfigBurst ( uint32_t * burst, PRDriverGroupConfig *driver_group);
 int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);
 int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
+int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
+                                   bool_t watchdogEnable, uint16_t watchdogResetTime);
 int32_t CreateDMDUpdateGlobalConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
 
 void ParseSwitchAddress(uint32_t addr, uint8_t *switchNum, PREventType *eventType);
