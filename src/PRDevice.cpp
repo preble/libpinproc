@@ -83,10 +83,13 @@ void PRDevice::Reset()
     }
     for (i = 0; i < maxSwitchRules; i++)
     {
-        PRSwitchRule *switchRule = &switchRules[i];
+        PRSwitchRuleInternal *switchRule = &switchRules[i];
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
-        switchRule->switchNum = i;
+        uint32_t addr = (i << P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT);
+        ParseSwitchAddress(addr, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
+        if (switchRule->switchNum >= kPRSwitchVirtualFirst && switchRule->switchNum <= kPRSwitchVirtualLast)
+            freeSwitchRules.push(addr);
     }
 
     unrequestedDataQueue.empty();
@@ -245,45 +248,91 @@ PRResult PRDevice::DriverPatter(uint16_t driverNum, uint16_t millisecondsOn, uin
 }
 
 
-PRResult PRDevice::SwitchesUpdateRules(PRSwitchRule *rules, int numRules)
+PRSwitchRuleInternal *PRDevice::GetSwitchRuleByAddress(uint32_t addr)
 {
-    int32_t i,rc;
-    DEBUG(PRLog("SwitchesUpdateRules: numRules: %d\n", numRules));
-
-    // Iterate through the array of rules, install each in the P-ROC
-    for (i=0; i < numRules; i++) {
-        uint16_t switchNum = rules[i].switchNum;
-        switchRules[switchNum] = rules[i];
-        PRSwitchRule *rule = &switchRules[switchNum];
-        PRSwitchRule *nextRule = NULL;
-
-        // See if this is the last item.  If not, need to add a link to the current item
-        if (i != numRules - 1) {
-            nextRule = &rules[i+1];
-
-            // Link address is the switch number assigned to the next rule as that's where
-            // the next rule will be installed
-            rule->linkAddress = nextRule->switchNum;
-            rule->linkActive = true;
-        }
-        else {
-            rule->linkActive = false;
-            rule->linkAddress = 0;
-        }
-
-        DEBUG(PRLog("Installing switch rule: switchNum: %d, eventType: %d\n  link: %d, link address: %d\n",
-                    rule->switchNum, rule->eventType, rule->linkActive, rule->linkAddress));
-
-        uint32_t rule_burst[4];
-        rc = CreateSwitchesUpdateRulesBurst (rule_burst, rule);
-
-        DEBUG(PRLog("words: %d:%d:%d:%d\n", rule_burst[0], rule_burst[1], rule_burst[2], rule_burst[3]));
-
-        rc = WriteData(rule_burst, 4);
-    }
-    return rc;
+    return &switchRules[addr>>P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT];
 }
 
+PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+{
+    // Updates a single rule with the associated linked driver state changes.
+    const int burstSize = 4;
+    uint32_t burst[burstSize];
+    
+    if (switchNum > kPRSwitchPhysicalLast) // Always true due to data type.
+    {
+        DEBUG(PRLog("Switch rule out of range 0-%d\n", kPRSwitchPhysicalLast));
+        return kPRFailure;
+    }
+    if (freeSwitchRules.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
+    {
+        DEBUG(PRLog("Not enough free switch rules: %d available, need %d\n", freeSwitchRules.size(), numDrivers));
+        return kPRFailure;
+    }
+    
+    PRResult res = kPRSuccess;
+    uint32_t newRuleAddr = CreateSwitchRuleAddr(switchNum, rule->eventType);
+    
+    // First we need to check the linked rule to see if the indicated switchNum has any rules that need to be freed:
+    PRSwitchRuleInternal *oldRule = GetSwitchRuleByAddress(newRuleAddr);
+    while (oldRule->linkActive)
+    {
+        oldRule = GetSwitchRuleByAddress(oldRule->linkAddress);
+        freeSwitchRules.push(oldRule->linkAddress);
+    }
+    
+    // Now let's setup the first actual rule:
+    uint32_t firstRuleAddr = newRuleAddr;
+    PRSwitchRuleInternal *newRule = GetSwitchRuleByAddress(newRuleAddr);
+    newRule->eventType = rule->eventType; // This shouldn't be necessary.
+    newRule->notifyHost = rule->notifyHost;
+    newRule->changeOutput = false;
+    newRule->linkActive = false;
+    
+    while (numDrivers > 0)
+    {
+        newRule->changeOutput = true;
+        newRule->driver = linkedDrivers[0];
+        
+        if (numDrivers > 1)
+        {
+            newRule->linkActive = true;
+            newRule->linkAddress = freeSwitchRules.front();
+            freeSwitchRules.pop();
+            
+            CreateSwitchesUpdateRulesBurst(burst, newRule);
+            
+            // Prepare for the next rule:
+            newRule = GetSwitchRuleByAddress(newRule->linkAddress);
+        }
+        else
+        {
+            newRule->linkActive = false;
+            CreateSwitchesUpdateRulesBurst(burst, newRule);
+        }
+        
+        // Write the actual rule:
+        res = WriteData(burst, burstSize);
+        if (res != kPRSuccess)
+        {
+            DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
+            newRule = GetSwitchRuleByAddress(firstRuleAddr);
+            newRule->changeOutput = false;
+            newRule->linkActive = false;
+            CreateSwitchesUpdateRulesBurst(burst, newRule);
+            if (WriteData(burst, burstSize) == kPRSuccess)
+                DEBUG(PRLog("Disabled successfully.\n"));
+            else
+                DEBUG(PRLog("Failed to disable.\n"));
+            return res;
+        }
+        
+        linkedDrivers++;
+        numDrivers--;
+    }
+    
+    return res;
+}
 
 int32_t PRDevice::DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig)
 {

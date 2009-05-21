@@ -140,6 +140,15 @@ const uint32_t P_ROC_DMD_RCLK_LOW_CYCLES_SHIFT       = 24;
 
 const uint32_t P_ROC_DMD_DOT_TABLE_BASE_ADDR         = 0x1000;
 
+typedef struct PRSwitchRuleInternal {
+    uint8_t switchNum;    /**< Number of the physical switch, or for linked driver changes the virtual switch number (224 and up). */
+  	PREventType eventType; /**< The event type that this rule generates.  Determines closed/open, debounced/non-debounced. */
+    bool_t notifyHost;
+    bool_t changeOutput;   /**< True if this switch rule should affect a driver output change. */
+    bool_t linkActive;     /**< True if this switch rule has additional linked driver updates. */
+    uint32_t linkAddress;  /**< Switch number of the linked driver update. */
+    PRDriverState driver;  /**< Driver state change to affect once this rule is triggered. */
+} PRSwitchRuleInternal;
 
 
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words);
@@ -147,7 +156,10 @@ uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals);
 int32_t CreateDriverUpdateGroupConfigBurst ( uint32_t * burst, PRDriverGroupConfig *driver_group);
 int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);
-int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRule *rule_record);
+int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
 int32_t CreateDMDUpdateGlobalConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
+
+void ParseSwitchAddress(uint32_t addr, uint8_t *switchNum, PREventType *eventType);
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
 
 #endif // _PROC_HARDWARE_H_

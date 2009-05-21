@@ -101,23 +101,14 @@ void ConfigureSwitches(PRHandle proc)
 {
     int i;
 
-    // Create a basic driver for all of the switches to default to:
-    PRDriverState defaultDriver;
-    memset(&defaultDriver, 0x0, sizeof(defaultDriver)); // Set all fields to 0.
-
     for (i = 0; i <= kPRSwitchPhysicalLast; i++)
     {
         PRSwitchRule sw;
-        sw.switchNum = i;
         sw.notifyHost = true;
-        sw.changeOutput = false;
-        sw.linkActive = false;
-        sw.linkAddress = 0;
         sw.eventType = kPREventTypeSwitchClosedDebounced;
-        sw.driver = defaultDriver;
-        PRSwitchesUpdateRules(proc, &sw, 1);
+        PRSwitchesUpdateRule(proc, i, &sw, NULL, 0);
         sw.eventType = kPREventTypeSwitchOpenDebounced;
-        PRSwitchesUpdateRules(proc, &sw, 1);
+        PRSwitchesUpdateRule(proc, i, &sw, NULL, 0);
     }
 }
 

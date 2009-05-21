@@ -126,9 +126,9 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
 
 // Switches
 
-PR_EXPORT PRResult PRSwitchesUpdateRules(PRHandle handle, PRSwitchRule *rules, int numRules)
+PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
-    return handleAsDevice->SwitchesUpdateRules(rules, numRules);
+    return handleAsDevice->SwitchesUpdateRule(switchNum, rule, linkedDrivers, numDrivers);
 }
 
 PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dmdGlobalConfig)

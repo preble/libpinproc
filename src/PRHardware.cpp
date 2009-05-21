@@ -125,18 +125,34 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver) {
     return kPRSuccess;
 }
 
-int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRule *rule_record) {
-    uint32_t addr;
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType) 
+{
+    uint32_t debounce = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchClosedDebounced) ? 1 : 0;
+    uint32_t state    = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchOpenNondebounced) ? 1 : 0;
+	
+    uint32_t addr = ((debounce << P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT) |
+                     (state << P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT) |
+                     (switchNum << P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT) );
+	return addr;
+}
+
+void ParseSwitchAddress(uint32_t addr, uint8_t *switchNum, PREventType *eventType)
+{
+    *switchNum = (addr >> P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT) & 0xff;
+
+    bool open = ((addr >> P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT) & 0x1) == 0x1;
+    bool debounce = ((addr >> P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT) & 0x1) == 0x1;
+    if (open)
+        *eventType = debounce ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
+    else
+        *eventType = debounce ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchClosedNondebounced;
+}
+
+int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record) {
+    uint32_t addr = CreateSwitchRuleAddr(rule_record->switchNum, rule_record->eventType);
     uint32_t driver_command[3];
 
     CreateDriverUpdateBurst ( driver_command, &(rule_record->driver));
-
-    uint32_t debounce = (rule_record->eventType == kPREventTypeSwitchOpenDebounced) || (rule_record->eventType == kPREventTypeSwitchClosedDebounced) ? 1 : 0;
-    uint32_t state    = (rule_record->eventType == kPREventTypeSwitchOpenDebounced) || (rule_record->eventType == kPREventTypeSwitchOpenNondebounced) ? 1 : 0;
-
-    addr = ( (debounce << P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT) |
-            (state << P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT) |
-            (rule_record->switchNum << P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT) );
 
     burst[0] = CreateBurstCommand (P_ROC_BUS_STATE_CHANGE_PROC_SELECT, addr, 3 );
     burst[1] = driver_command[1];

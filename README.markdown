@@ -4,7 +4,8 @@ Library for Gerry Stellenberg's [P-ROC](http://pinballcontrollers.com/) (Pinball
 
 ### License
 
-The MIT License
+#### The MIT License
+
 Copyright (c) 2009 Gerry Stellenberg, Adam Preble
 
 Permission is hereby granted, free of charge, to any person

@@ -185,17 +185,12 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
 /** @} */
 
 typedef struct PRSwitchRule {
-    uint16_t switchNum;    /**< Number of the physical switch, or for linked driver changes the virtual switch number (224 and up). */
   	PREventType eventType; /**< The event type that this rule generates.  Determines closed/open, debounced/non-debounced. */
     bool_t notifyHost;
-    bool_t changeOutput;   /**< True if this switch rule should affect a driver output change. */
-    bool_t linkActive;     /**< True if this switch rule has additional linked driver updates. */
-    uint32_t linkAddress;  /**< Switch number of the linked driver update. */
-    PRDriverState driver;  /**< Driver state change to affect once this rule is triggered. */
 } PRSwitchRule;
 
-/** Updates the rules for the given switch and PREventType combinations. */
-PR_EXPORT PRResult PRSwitchesUpdateRules(PRHandle handle, PRSwitchRule *rules, int numRules);
+/** Updates the rules for the given switch. */
+PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
 
 

@@ -37,7 +37,7 @@ using namespace std;
 
 #define maxDriverGroups (26)
 #define maxDrivers (256)
-#define maxSwitchRules (256)
+#define maxSwitchRules (256<<2) // 8 bits of switchNum indicies plus bits for debounced and state.
 
 #ifdef NDEBUG
 #  define DEBUG(block)
@@ -69,7 +69,7 @@ public:
     PRResult DriverSchedule(uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool now);
     PRResult DriverPatter(uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 
-    PRResult SwitchesUpdateRules(PRSwitchRule *rules, int numRules);
+    PRResult SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
     PRResult DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig);
     PRResult DMDDraw(uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);
@@ -138,6 +138,8 @@ protected:
     PRDriverGlobalConfig driverGlobalConfig;
     PRDriverGroupConfig driverGroups[maxDriverGroups];
     PRDriverState drivers[maxDrivers];
-    PRSwitchRule switchRules[maxSwitchRules];
-
+	
+    PRSwitchRuleInternal switchRules[maxSwitchRules];
+	queue<uint32_t> freeSwitchRules; /**< Addresses of available switch rules. */
+    PRSwitchRuleInternal *GetSwitchRuleByAddress(uint32_t addr);
 };
