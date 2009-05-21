@@ -105,10 +105,8 @@ void ConfigureSwitches(PRHandle proc)
     {
         PRSwitchRule sw;
         sw.notifyHost = true;
-        sw.eventType = kPREventTypeSwitchClosedDebounced;
-        PRSwitchesUpdateRule(proc, i, &sw, NULL, 0);
-        sw.eventType = kPREventTypeSwitchOpenDebounced;
-        PRSwitchesUpdateRule(proc, i, &sw, NULL, 0);
+        PRSwitchesUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+        PRSwitchesUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
     }
 }
 

@@ -188,64 +188,6 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
 }
 
 
-PRResult PRDevice::DriverDisable(uint16_t driverNum)
-{
-    PRDriverState driver;
-    DriverGetState(driverNum, &driver);
-    driver.state = 0;
-    driver.timeslots = 0;
-    driver.waitForFirstTimeSlot = false;
-    driver.outputDriveTime = 0;
-    driver.patterOnTime = 0;
-    driver.patterOffTime = 0;
-    driver.patterEnable = false;
-    return DriverUpdateState(&driver);
-}
-
-
-PRResult PRDevice::DriverPulse(uint16_t driverNum, int milliseconds)
-{
-    PRDriverState driver;
-    DriverGetState(driverNum, &driver);
-    driver.state = 1;
-    driver.timeslots = 0;
-    driver.waitForFirstTimeSlot = false;
-    driver.outputDriveTime = milliseconds;
-    driver.patterOnTime = 0;
-    driver.patterOffTime = 0;
-    driver.patterEnable = false;
-    return DriverUpdateState(&driver);
-}
-
-
-PRResult PRDevice::DriverSchedule(uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool now)
-{
-    PRDriverState driver;
-    DriverGetState(driverNum, &driver);
-    driver.state = 1;
-    driver.timeslots = schedule;
-    driver.waitForFirstTimeSlot = !now;
-    driver.outputDriveTime = cycleSeconds;
-    driver.patterOnTime = 0;
-    driver.patterOffTime = 0;
-    driver.patterEnable = false;
-    return DriverUpdateState(&driver);
-}
-
-
-PRResult PRDevice::DriverPatter(uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
-{
-    PRDriverState driver;
-    DriverGetState(driverNum, &driver);
-    driver.state = originalOnTime != 0;
-    driver.timeslots = 0;
-    driver.waitForFirstTimeSlot = false;
-    driver.outputDriveTime = originalOnTime;
-    driver.patterOnTime = millisecondsOn;
-    driver.patterOffTime = millisecondsOff;
-    driver.patterEnable = true;
-    return DriverUpdateState(&driver);
-}
 
 
 PRSwitchRuleInternal *PRDevice::GetSwitchRuleByAddress(uint32_t addr)
@@ -253,7 +195,7 @@ PRSwitchRuleInternal *PRDevice::GetSwitchRuleByAddress(uint32_t addr)
     return &switchRules[addr>>P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT];
 }
 
-PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
     // Updates a single rule with the associated linked driver state changes.
     const int burstSize = 4;
@@ -271,7 +213,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRD
     }
     
     PRResult res = kPRSuccess;
-    uint32_t newRuleAddr = CreateSwitchRuleAddr(switchNum, rule->eventType);
+    uint32_t newRuleAddr = CreateSwitchRuleAddr(switchNum, eventType);
     
     // First we need to check the linked rule to see if the indicated switchNum has any rules that need to be freed:
     PRSwitchRuleInternal *oldRule = GetSwitchRuleByAddress(newRuleAddr);
@@ -284,7 +226,8 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRD
     // Now let's setup the first actual rule:
     uint32_t firstRuleAddr = newRuleAddr;
     PRSwitchRuleInternal *newRule = GetSwitchRuleByAddress(newRuleAddr);
-    newRule->eventType = rule->eventType; // This shouldn't be necessary.
+    if (newRule->eventType != eventType)
+        DEBUG(PRLog("Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleAddr, newRule->eventType, eventType));
     newRule->notifyHost = rule->notifyHost;
     newRule->changeOutput = false;
     newRule->linkActive = false;

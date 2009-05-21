@@ -107,28 +107,81 @@ PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverSta
 // Driver Helper functions:
 PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
 {
-    return handleAsDevice->DriverDisable(driverNum);
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStateDisable(&driver);
+    return handleAsDevice->DriverUpdateState(&driver);
 }
 PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds)
 {
-    return handleAsDevice->DriverPulse(driverNum, milliseconds);
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStatePulse(&driver, milliseconds);
+    return handleAsDevice->DriverUpdateState(&driver);
 }
 PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
-    return handleAsDevice->DriverSchedule(driverNum, schedule, cycleSeconds, now);
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStateSchedule(&driver, schedule, cycleSeconds, now);
+    return handleAsDevice->DriverUpdateState(&driver);
 }
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
 {
-    return handleAsDevice->DriverPatter(driverNum, millisecondsOn, millisecondsOff, originalOnTime);
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
+    return handleAsDevice->DriverUpdateState(&driver);
 }
 
+
+PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
+{
+    driver->state = 0;
+    driver->timeslots = 0;
+    driver->waitForFirstTimeSlot = false;
+    driver->outputDriveTime = 0;
+    driver->patterOnTime = 0;
+    driver->patterOffTime = 0;
+    driver->patterEnable = false;
+}
+PR_EXPORT void PRDriverStatePulse(PRDriverState *driver, int milliseconds)
+{
+    driver->state = 1;
+    driver->timeslots = 0;
+    driver->waitForFirstTimeSlot = false;
+    driver->outputDriveTime = milliseconds;
+    driver->patterOnTime = 0;
+    driver->patterOffTime = 0;
+    driver->patterEnable = false;
+}
+PR_EXPORT void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
+{
+    driver->state = 1;
+    driver->timeslots = schedule;
+    driver->waitForFirstTimeSlot = !now;
+    driver->outputDriveTime = cycleSeconds;
+    driver->patterOnTime = 0;
+    driver->patterOffTime = 0;
+    driver->patterEnable = false;
+}
+PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
+{
+    driver->state = originalOnTime != 0;
+    driver->timeslots = 0;
+    driver->waitForFirstTimeSlot = false;
+    driver->outputDriveTime = originalOnTime;
+    driver->patterOnTime = millisecondsOn;
+    driver->patterOffTime = millisecondsOff;
+    driver->patterEnable = true;
+}
 
 
 // Switches
 
-PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
-    return handleAsDevice->SwitchesUpdateRule(switchNum, rule, linkedDrivers, numDrivers);
+    return handleAsDevice->SwitchesUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
 PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dmdGlobalConfig)

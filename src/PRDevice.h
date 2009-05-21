@@ -64,12 +64,7 @@ public:
     PRResult DriverGetState(uint8_t driverNum, PRDriverState *driverState);
     PRResult DriverUpdateState(PRDriverState *driverState);
 
-    PRResult DriverDisable(uint16_t driverNum);
-    PRResult DriverPulse(uint16_t driverNum, int milliseconds);
-    PRResult DriverSchedule(uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool now);
-    PRResult DriverPatter(uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
-
-    PRResult SwitchesUpdateRule(uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+    PRResult SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
     PRResult DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig);
     PRResult DMDDraw(uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);

@@ -172,6 +172,16 @@ PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 
 
+/** Disables (turns off) the given driver. */
+PR_EXPORT void PRDriverStateDisable(PRDriverState *driverState);
+/** Pulses the given driver for a number of milliseconds. */
+PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, int milliseconds);
+/** Assigns a repeating schedule to the given driver. */
+PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
+/** Assigns a pitter-patter schedule (repeating on/off) to the given driver. */
+PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+
+
 
 // Switches
 
@@ -185,12 +195,59 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
 /** @} */
 
 typedef struct PRSwitchRule {
-  	PREventType eventType; /**< The event type that this rule generates.  Determines closed/open, debounced/non-debounced. */
-    bool_t notifyHost;
+    bool_t notifyHost; /**< If true this switch change event will provided to the user via PRGetEvents(). */
 } PRSwitchRule;
 
-/** Updates the rules for the given switch. */
-PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+/**
+ * @brief Configures the handling of switch rules within P-ROC.
+ * 
+ * P-ROC's switch event system allows the user to receive and act upon events specific to the individual switch's application.
+ * For example, P-ROC can provide debounced switch events to software by means of the PRGetEvents() call (to create 
+ * a lane change behavior).   The same switch can also be configured with a non-debounced rule to fire a flipper coil.
+ * Multiple driver changes can be tied to a single switch state transition to create more complicated effects: a slingshot
+ * switch that fires the slingshot coil, a flash lamp, and a score event.
+ * 
+ * P-ROC holds four different switch rules for each switch: closed to open and open to closed, each with a debounced and non-debounced versions:
+ *  - #kPREventTypeSwitchOpenDebounced
+ *  - #kPREventTypeSwitchClosedDebounced 
+ *  - #kPREventTypeSwitchOpenNondebounced
+ *  - #kPREventTypeSwitchClosedNondebounced
+ * 
+ * @section Examples
+ * 
+ * Configuring a basic switch rule with no driver state changes that will appear in PRGetEvents():
+ * @code
+ * PRSwitchRule rule;
+ * rule.notifyHost = true;
+ * PRSwitchesUpdateRule(handle, switchNum, kPREventTypeSwitchOpenDebounced, &rule, NULL, 0);
+ * @endcode
+ * 
+ * Configuring a pop bumper switch to pulse the coil and a flash lamp:
+ * @code
+ * // Configure a switch rule to fire the coil and flash lamp:
+ * PRSwitchRule rule;
+ * rule.notifyHost = false;
+ * PRDriverState drivers[2];
+ * PRDriverGetState(handle, drvCoilPopBumper1, &drivers[0]);
+ * PRDriverGetState(handle, drvFlashLamp1, &drivers[1]);
+ * PRDriverStatePulse(&drivers[0], 50);
+ * PRDriverStatePulse(&drivers[1], 50);
+ * PRSwitchesUpdateRule(handle, drvSwPopBumper1, kPREventTypeSwitchClosedNondebounced, 
+ *                      &rule, drivers, 2);
+ * // Now configure a switch rule to process scoring in software:
+ * rule.notifyHost = false;
+ * PRSwitchesUpdateRule(handle, drvSwPopBumper1, kPREventTypeSwitchClosedDebounced, 
+ *                      &rule, NULL, 0);
+ * @endcode
+ * 
+ * @param handle The P-ROC device handle.
+ * @param switchNum The index of the switch this configuration affects.
+ * @param eventType The switch rule for the specified switchNum to be configured.
+ * @param rule A pointer to the #PRSwitchRule structure describing how this state change should be handled.  May not be NULL.
+ * @param linkedDrivers An array of #PRDriverState structures describing the driver state changes to be made when this switch rule is triggered.  May be NULL if numDrivers is 0.
+ * @param numDrivers Number of elements in the linkedDrivers array.  May be zero or more.
+ */
+PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
 
 
