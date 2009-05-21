@@ -56,9 +56,7 @@
         #define PR_EXTERN_C_END
     #endif
 #endif
-/** @endcond */
 
-/** @cond */
 PR_EXTERN_C_BEGIN
 /** @endcond */
 
@@ -76,6 +74,11 @@ typedef void * PRHandle;     /**< Opaque type used to reference an individual P-
 typedef void (*PRLogCallback)(const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
 PR_EXPORT void PRLogSetCallback(PRLogCallback callback); /**< Replaces the default logging handler with the given callback function. */
 
+/** 
+ * @defgroup device Device Creation & Deletion
+ * @{
+ */
+
 typedef enum PRMachineType {
     kPRMachineInvalid = 0,
     kPRMachineCustom = 1,
@@ -88,29 +91,12 @@ typedef enum PRMachineType {
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType); /**< Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed.  Returns #kPRHandleInvalid if an error occurred. */
 PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existing P-ROC device handle. */
 
-
-// Events
-// Closed == 0, Open == 1
-typedef enum PREventType {
-    kPREventTypeInvalid = 0,
-    kPREventTypeSwitchClosedDebounced    = 1, /**< The switch has gone from open to closed and the signal has been debounced. */
-    kPREventTypeSwitchOpenDebounced      = 2, /**< The switch has gone from closed to open and the signal has been debounced. */
-    kPREventTypeSwitchClosedNondebounced = 3, /**< The switch has gone from open to closed and the signal has not been debounced. */
-    kPREventTypeSwitchOpenNondebounced   = 4, /**< The switch has gone from closed to open and the signal has not been debounced. */
-    kPREventTypetLast = kPREventTypeSwitchOpenNondebounced
-} PREventType;
-
-typedef struct PREvent {
-    PREventType type;  /**< The type of event that has occurred.  Usually a switch event at this point. */
-    uint32_t value;    /**< For switch events, the switch number that has changed. */
-    uint32_t time;     /**< Time (in milliseconds) that this event occurred. */
-} PREvent;
-
-/** Get all of the available events that have been received. */
-PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
-
+/** @} */ // End of Device Creation & Deletion
 
 // Drivers
+/** @defgroup drivers Driver Manipulation
+ * @{
+ */
 
 typedef struct PRDriverGlobalConfig {
     bool_t enableOutputs; // Formerly enable_direct_outputs
@@ -160,43 +146,95 @@ PR_EXPORT PRResult PRDriverGetGroupConfig(PRHandle handle, uint8_t groupNum, PRD
 PR_EXPORT PRResult PRDriverUpdateGroupConfig(PRHandle handle, PRDriverGroupConfig *driverGroupConfig);
 
 PR_EXPORT PRResult PRDriverGetState(PRHandle handle, uint8_t driverNum, PRDriverState *driverState);
-/** Sets the state of the given driver (lamp, coil, etc.). */
+/**
+ * @brief Sets the state of the given driver (lamp or coil).
+ */
 PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverState);
 
 // Driver Helper functions:
 
-/** Disables (turns off) the given driver. */
+/** 
+ * Disables (turns off) the given driver. 
+ * This function is provided for convenience.  See PRDriverStateDisable() for a full description.
+ */
 PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum);
-/** Pulses the given driver for a number of milliseconds. */
+/** 
+ * Pulses the given driver for a number of milliseconds. 
+ * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
+ */
 PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds);
-/** Assigns a repeating schedule to the given driver. */
+/** 
+ * Assigns a repeating schedule to the given driver. 
+ * This function is provided for convenience.  See PRDriverStateSchedule() for a full description.
+ */
 PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
-/** Assigns a pitter-patter schedule (repeating on/off) to the given driver. */
+/** 
+ * Assigns a pitter-patter schedule (repeating on/off) to the given driver. 
+ * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
+ */
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 /** Tickle the watchdog timer. */
 PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle);
 
-/** Disables (turns off) the given driver. */
+/** 
+ * Changes the given #PRDriverState to reflect a disabled state.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ */
 PR_EXPORT void PRDriverStateDisable(PRDriverState *driverState);
-/** Pulses the given driver for a number of milliseconds. */
+/** 
+ * Changes the given #PRDriverState to reflect a pulse state.
+ * @param milliseconds Number of milliseconds to pulse the driver for.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ */
 PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, int milliseconds);
-/** Assigns a repeating schedule to the given driver. */
+/** 
+ * Changes the given #PRDriverState to reflect a scheduled state.
+ * Assigns a repeating schedule to the given driver. 
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ */
 PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
-/** Assigns a pitter-patter schedule (repeating on/off) to the given driver. */
+/** 
+ * @brief Changes the given #PRDriverState to reflect a pitter-patter schedule state.
+ * Assigns a pitter-patter schedule (repeating on/off) to the given driver.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ * 
+ * Use originalOnTime to pulse the driver for a number of milliseconds before the pitter-patter schedule begins.
+ */
 PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 
-
+/** @} */ // End of Drivers
 
 // Switches
 
-/** @defgroup switchconsts Switch Constants
+/** @defgroup switches Switches and Events
  * @{
  */
+
+// Events
+// Closed == 0, Open == 1
+typedef enum PREventType {
+    kPREventTypeInvalid = 0,
+    kPREventTypeSwitchClosedDebounced    = 1, /**< The switch has gone from open to closed and the signal has been debounced. */
+    kPREventTypeSwitchOpenDebounced      = 2, /**< The switch has gone from closed to open and the signal has been debounced. */
+    kPREventTypeSwitchClosedNondebounced = 3, /**< The switch has gone from open to closed and the signal has not been debounced. */
+    kPREventTypeSwitchOpenNondebounced   = 4, /**< The switch has gone from closed to open and the signal has not been debounced. */
+    kPREventTypetLast = kPREventTypeSwitchOpenNondebounced
+} PREventType;
+
+typedef struct PREvent {
+    PREventType type;  /**< The type of event that has occurred.  Usually a switch event at this point. */
+    uint32_t value;    /**< For switch events, the switch number that has changed. */
+    uint32_t time;     /**< Time (in milliseconds) that this event occurred. */
+} PREvent;
+
+/** Get all of the available events that have been received. */
+PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
+
+
 #define kPRSwitchPhysicalFirst (0)   /**< Switch number of the first physical switch. */
 #define kPRSwitchPhysicalLast (223)  /**< Switch number of the last physical switch.  */
 #define kPRSwitchVirtualFirst (224)  /**< Switch number of the first virtual switch.  */
 #define kPRSwitchVirtualLast (255)   /**< Switch number of the last virtual switch.   */
-/** @} */
 
 typedef struct PRSwitchRule {
     bool_t notifyHost; /**< If true this switch change event will provided to the user via PRGetEvents(). */
@@ -205,13 +243,16 @@ typedef struct PRSwitchRule {
 /**
  * @brief Configures the handling of switch rules within P-ROC.
  * 
- * P-ROC's switch event system allows the user to receive and act upon events specific to the individual switch's application.
- * For example, P-ROC can provide debounced switch events to software by means of the PRGetEvents() call (to create 
- * a lane change behavior).   The same switch can also be configured with a non-debounced rule to fire a flipper coil.
+ * P-ROC's switch rule system allows the user to decide which switch events are returned to software,
+ * as well as optionally linking one or more driver state changes to rules to create immediate feedback (such as in pop bumpers).
+ * 
+ * For instance, P-ROC can provide debounced switch events for a flipper button so software can apply lange change behavior.  
+ * This is accomplished by configuring the P-ROC with a switch rule for the flipper button and then receiving the events via the PRGetEvents() call.
+ * The same switch can also be configured with a non-debounced rule to fire a flipper coil.
  * Multiple driver changes can be tied to a single switch state transition to create more complicated effects: a slingshot
  * switch that fires the slingshot coil, a flash lamp, and a score event.
  * 
- * P-ROC holds four different switch rules for each switch: closed to open and open to closed, each with a debounced and non-debounced versions:
+ * P-ROC holds four different switch rules for each switch: closed to open, open to closed, and each with a debounced and non-debounced versions:
  *  - #kPREventTypeSwitchOpenDebounced
  *  - #kPREventTypeSwitchClosedDebounced 
  *  - #kPREventTypeSwitchOpenNondebounced
@@ -219,14 +260,14 @@ typedef struct PRSwitchRule {
  * 
  * @section Examples
  * 
- * Configuring a basic switch rule with no driver state changes that will appear in PRGetEvents():
+ * Configuring a basic switch rule to simply notify software via PRGetEvents() without affecting any coil/lamp drivers:
  * @code
  * PRSwitchRule rule;
  * rule.notifyHost = true;
  * PRSwitchesUpdateRule(handle, switchNum, kPREventTypeSwitchOpenDebounced, &rule, NULL, 0);
  * @endcode
  * 
- * Configuring a pop bumper switch to pulse the coil and a flash lamp:
+ * Configuring a pop bumper switch to pulse the coil and a flash lamp for 50ms each:
  * @code
  * // Configure a switch rule to fire the coil and flash lamp:
  * PRSwitchRule rule;
@@ -236,11 +277,11 @@ typedef struct PRSwitchRule {
  * PRDriverGetState(handle, drvFlashLamp1, &drivers[1]);
  * PRDriverStatePulse(&drivers[0], 50);
  * PRDriverStatePulse(&drivers[1], 50);
- * PRSwitchesUpdateRule(handle, drvSwPopBumper1, kPREventTypeSwitchClosedNondebounced, 
+ * PRSwitchesUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedNondebounced, 
  *                      &rule, drivers, 2);
  * // Now configure a switch rule to process scoring in software:
- * rule.notifyHost = false;
- * PRSwitchesUpdateRule(handle, drvSwPopBumper1, kPREventTypeSwitchClosedDebounced, 
+ * rule.notifyHost = true;
+ * PRSwitchesUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedDebounced, 
  *                      &rule, NULL, 0);
  * @endcode
  * 
@@ -253,10 +294,13 @@ typedef struct PRSwitchRule {
  */
 PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
-
+/** @} */ // End of Switches & Events
 
 // DMD
-
+/**
+ * @defgroup dmd DMD Control
+ * @{
+ */
 typedef struct PRDMDGlobalConfig {
     uint8_t numRows;
     uint16_t numColumns;
@@ -274,8 +318,16 @@ PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dm
 /** Updates the DMD frame buffer with the given data. */
 PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);
 
+/** @} */ // End of DMD
+
 /** @cond */
 PR_EXTERN_C_END
 /** @endcond */
+
+/**
+ * @mainpage libpinproc API Documentation
+ * 
+ * This is the documentation for libpinproc, the P-ROC Layer 1 API.
+ */
 
 #endif // _PINPROC_H_
