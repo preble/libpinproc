@@ -121,7 +121,10 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
 {
     return handleAsDevice->DriverPatter(driverNum, millisecondsOn, millisecondsOff, originalOnTime);
 }
-
+PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)
+{
+    return handleAsDevice->DriverWatchdogTickle();
+}
 
 
 // Switches

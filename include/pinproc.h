@@ -122,7 +122,10 @@ typedef struct PRDriverGlobalConfig {
     uint8_t matrixRowEnableIndex0;
     bool_t activeLowMatrixRows;
     bool_t encodeEnables;
-    bool_t tickleWatchdog;
+    bool_t tickleSternWatchdog;
+    bool_t watchdogExpired;
+    bool_t watchdogEnable;
+    uint16_t watchdogResetTime;
 } PRDriverGlobalConfig;
 
 typedef struct PRDriverGroupConfig {
@@ -168,9 +171,10 @@ PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum);
 PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds);
 /** Assigns a repeating schedule to the given driver. */
 PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
-
+/** Assigns a pitter-patter schedule (repeating on/off) to the given driver. */
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
-
+/** Tickle the watchdog timer. */
+PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle);
 
 
 // Switches

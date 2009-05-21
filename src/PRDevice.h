@@ -68,6 +68,7 @@ public:
     PRResult DriverPulse(uint16_t driverNum, int milliseconds);
     PRResult DriverSchedule(uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool now);
     PRResult DriverPatter(uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+    PRResult DriverWatchdogTickle();
 
     PRResult SwitchesUpdateRules(PRSwitchRule *rules, int numRules);
 

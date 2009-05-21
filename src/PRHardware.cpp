@@ -72,8 +72,9 @@ int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalCo
                  P_ROC_DRIVER_GLOBAL_ACTIVE_LOW_MATRIX_ROWS_SHIFT) |
                 (driver_globals->encodeEnables <<
                  P_ROC_DRIVER_GLOBAL_ENCODE_ENABLES_SHIFT) |
-                (driver_globals->tickleWatchdog <<
+                (driver_globals->tickleSternWatchdog <<
                  P_ROC_DRIVER_GLOBAL_TICKLE_WATCHDOG_SHIFT) );
+
     return kPRSuccess;
 }
 
@@ -122,6 +123,19 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver) {
     (driver->patterOnTime << P_ROC_DRIVER_CONFIG_PATTER_ON_TIME_SHIFT) |
     (driver->patterOffTime << P_ROC_DRIVER_CONFIG_PATTER_OFF_TIME_SHIFT) |
     (driver->patterEnable << P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT);
+    return kPRSuccess;
+}
+
+int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
+                                    bool_t watchdogEnable, uint16_t watchdogResetTime) {
+    uint32_t addr;
+
+    addr = P_ROC_REG_WATCHDOG_ADDR;
+    burst[0] = CreateBurstCommand (P_ROC_MANAGER_SELECT, addr, 1 );
+    burst[1] = ( (watchdogExpired << P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT) |
+                 (watchdogEnable << P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT) |
+                 (watchdogResetTime << P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT) );
+
     return kPRSuccess;
 }
 

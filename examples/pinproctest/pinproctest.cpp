@@ -52,8 +52,11 @@ void ConfigureDrivers(PRHandle proc)
     globals.matrixRowEnableIndex1 = 12;
     globals.matrixRowEnableIndex0 = 6;
     globals.activeLowMatrixRows = true;
-    globals.tickleWatchdog = false;
+    globals.tickleSternWatchdog = false;
     globals.encodeEnables = false;
+    globals.watchdogExpired = false;
+    globals.watchdogEnable = true;
+    globals.watchdogResetTime = 1000; // milliseconds
 
     // We want to start up safely, so we'll update the global driver config twice.
     // When we toggle enableOutputs like this P-ROC will reset the polarity:
@@ -125,10 +128,15 @@ bool runLoopRun = true;
 
 void RunLoop(PRHandle proc)
 {
+    PRDriverGlobalConfig driverGlobals;
+
     const int maxEvents = 16;
     PREvent events[maxEvents];
     while (runLoopRun)
     {
+        // Tickle Watchdog by updating DriverGlobalConfig.
+        PRDriverWatchdogTickle(proc);
+         
         int numEvents = PRGetEvents(proc, events, maxEvents);
         for (int i = 0; i < numEvents; i++)
         {
@@ -169,14 +177,18 @@ int main(const char **argv, int argc)
 
     printf("Configuring P-ROC...\n");
 
-    ConfigureDrivers(proc);
     ConfigureSwitches(proc);
+    // Make Drivers the last thing to configure so watchdog doesn't expire
+    // before the RunLoop begins
+    ConfigureDrivers(proc);
 
     printf("Running.  Hit Ctrl-C to exit.\n");
 
     // Pulse a coil to test:
 //	PRDriverDisable(proc, 80);
-//	PRDriverPulse(proc, 53, 100);
+    PRDriverPulse(proc, 53, 100);
+    PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    PRDriverPatter(proc, 84, 127, 127, 0);
 
     RunLoop(proc);
 
