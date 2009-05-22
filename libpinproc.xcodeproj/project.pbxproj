@@ -15,6 +15,7 @@
 		668249E30FC0A3960051560E /* pinproctest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 668249E20FC0A3960051560E /* pinproctest.cpp */; };
 		668249EA0FC0A4280051560E /* libpinproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2AAC046055464E500DB518D /* libpinproc.a */; };
 		668249ED0FC0A4CD0051560E /* PRHardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 668249EC0FC0A4CD0051560E /* PRHardware.cpp */; };
+		66824DAE0FC6FC690051560E /* PRConfig.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66824DAD0FC6FC690051560E /* PRConfig.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +37,7 @@
 		668249D90FC0A30A0051560E /* pinproctest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pinproctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		668249E20FC0A3960051560E /* pinproctest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pinproctest.cpp; path = examples/pinproctest/pinproctest.cpp; sourceTree = "<group>"; };
 		668249EC0FC0A4CD0051560E /* PRHardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PRHardware.cpp; path = src/PRHardware.cpp; sourceTree = "<group>"; };
+		66824DAD0FC6FC690051560E /* PRConfig.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PRConfig.cpp; path = src/PRConfig.cpp; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libpinproc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpinproc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -93,6 +95,7 @@
 				668249390FC07B2A0051560E /* pinproc.cpp */,
 				668249400FC07D900051560E /* PRDevice.h */,
 				668249410FC07D900051560E /* PRDevice.cpp */,
+				66824DAD0FC6FC690051560E /* PRConfig.cpp */,
 				6682494A0FC0870B0051560E /* PRHardware.h */,
 				668249EC0FC0A4CD0051560E /* PRHardware.cpp */,
 			);
@@ -198,6 +201,7 @@
 				6682493A0FC07B2A0051560E /* pinproc.cpp in Sources */,
 				668249430FC07D900051560E /* PRDevice.cpp in Sources */,
 				668249ED0FC0A4CD0051560E /* PRHardware.cpp in Sources */,
+				66824DAE0FC6FC690051560E /* PRConfig.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
