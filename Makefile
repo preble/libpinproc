@@ -9,7 +9,8 @@ LIBSRC=src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp
 
 LIBOBJ=$(LIBSRC:.cpp=.o)
 
-#CXXFLAGS=-I/usr/local/lib -lusb -lftdi
+#CXXFLAGS=-I/usr/local/lib -lusb -lftdi 
+CXXFLAGS=-I../../yaml-cpp/include
 
 $(LIB): $(LIBOBJ)
 	@echo lib Makefile - archiving $(LIB)

@@ -2,6 +2,14 @@
 
 Library for Gerry Stellenberg's [P-ROC](http://pinballcontrollers.com/) (Pinball Remote Operations Controller).
 
+### Compiling
+
+libpinproc requires:
+
+- [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.
+- [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
+- [yaml-cpp](http://code.google.com/p/yaml-cpp/): Should be checked out in the directory two levels below libpinproc in the full source tree (at the same level as ./P-ROC) in a directory named yaml-cpp.  Follow the build instructions, creating the build subdirectory.  The Makefiles and other project files expect to find libyaml-cpp.a in the yaml-cpp/build/bin directory.
+
 ### License
 
 #### The MIT License

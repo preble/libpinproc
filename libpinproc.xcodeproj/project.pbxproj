@@ -221,7 +221,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"../../yaml-cpp/include",
+				);
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = pinproc;
 			};
@@ -233,7 +236,10 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
-				HEADER_SEARCH_PATHS = /usr/local/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"../../yaml-cpp/include",
+				);
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = pinproc;
 			};
@@ -275,7 +281,11 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
-				OTHER_LDFLAGS = "-lftdi";
+				OTHER_LDFLAGS = (
+					"-L../../yaml-cpp/build/bin",
+					"-lyaml-cpp",
+					"-lftdi",
+				);
 				PREBINDING = NO;
 				PRODUCT_NAME = pinproctest;
 			};
@@ -290,7 +300,11 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
-				OTHER_LDFLAGS = "-lftdi";
+				OTHER_LDFLAGS = (
+					"-L../../yaml-cpp/build/bin",
+					"-lyaml-cpp",
+					"-lftdi",
+				);
 				PREBINDING = NO;
 				PRODUCT_NAME = pinproctest;
 				ZERO_LINK = NO;

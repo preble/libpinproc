@@ -99,6 +99,93 @@ void PRDevice::Reset()
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
 }
 
+#include <fstream>
+#include "yaml.h"
+
+PRResult PRDevice::LoadDefaultsFromYAML(const char *yamlFilePath)
+{
+    try
+    {
+        std::ifstream fin(yamlFilePath);
+        if (fin.is_open() == false)
+        {
+            DEBUG(PRLog("YAML file not found: %s\n", yamlFilePath));
+            return kPRFailure;
+        }
+        YAML::Parser parser(fin);
+        
+        while(parser) {
+            YAML::Node doc;
+            parser.GetNextDocument(doc);
+            
+            for(YAML::Iterator it=doc.begin();it!=doc.end();++it) {
+                std::string key;
+                it.first() >> key;
+                DEBUG(PRLog("Parsing key %s...\n", key.c_str()));
+                if (key.compare("PRGameName") == 0)
+                {
+                    std::string name;
+                    it.second() >> name;
+                    DEBUG(PRLog("  Machine name: %s\n", name.c_str()));
+                }
+                else if (key.compare("PRDriverGlobalConfig") == 0)
+                {
+                    //const YAML::Node& dict = it.second();
+                }
+                else if (key.compare("PRDriverGroupConfigs") == 0)
+                {
+                    const YAML::Node& groups = it.second();
+                    for(YAML::Iterator it=groups.begin();it!=groups.end();++it) 
+                    {
+                        std::string key;
+                        it.first() >> key;
+                    }
+                }
+                else if (key.compare("PRDrivers") == 0)
+                {
+                    const YAML::Node& dict = it.second();
+                    for(YAML::Iterator dictIt=dict.begin(); dictIt != dict.end(); ++dictIt) 
+                    {
+                        std::string driverKey;
+                        std::string driverName;
+                        dictIt.first() >> driverKey;
+                        dictIt.second() >> driverName;
+                        DEBUG(PRLog("  Driver: %s -> %s\n", driverKey.c_str(), driverName.c_str()));
+                    }
+                }
+                else if (key.compare("PRSwitches") == 0)
+                {
+                    const YAML::Node& dict = it.second();
+                    for(YAML::Iterator dictIt=dict.begin(); dictIt != dict.end(); ++dictIt) 
+                    {
+                        std::string driverKey;
+                        std::string driverName;
+                        dictIt.first() >> driverKey;
+                        dictIt.second() >> driverName;
+                        DEBUG(PRLog("  Switch: %s -> %s\n", driverKey.c_str(), driverName.c_str()));
+                    }
+                }
+            }
+        }
+    }
+    catch (YAML::ParserException& ex)
+    {
+        DEBUG(PRLog("YAML parse error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str()));
+        return kPRFailure;
+    }
+    catch (YAML::RepresentationException& ex)
+    {
+        DEBUG(PRLog("YAML representation error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str()));
+        return kPRFailure;
+    }
+    catch (...)
+    {
+        DEBUG(PRLog("Unexpected exception while parsing YAML config.\n"));
+        return kPRFailure;
+    }
+    return kPRSuccess;
+}
+
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)
 {

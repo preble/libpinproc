@@ -162,6 +162,7 @@ int main(const char **argv, int argc)
         return 1;
 
     printf("Configuring P-ROC...\n");
+    PRLoadDefaultsFromYAML(proc, "../../examples/pinproctest/Example.yaml");
 
     ConfigureSwitches(proc);
     // Make Drivers the last thing to configure so watchdog doesn't expire
