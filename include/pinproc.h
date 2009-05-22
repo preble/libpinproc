@@ -252,7 +252,7 @@ typedef struct PRSwitchRule {
  * Multiple driver changes can be tied to a single switch state transition to create more complicated effects: a slingshot
  * switch that fires the slingshot coil, a flash lamp, and a score event.
  * 
- * P-ROC holds four different switch rules for each switch: closed to open, open to closed, and each with a debounced and non-debounced versions:
+ * P-ROC holds four different switch rules for each switch: closed to open and open to closed, each with a debounced and non-debounced versions:
  *  - #kPREventTypeSwitchOpenDebounced
  *  - #kPREventTypeSwitchClosedDebounced 
  *  - #kPREventTypeSwitchOpenNondebounced
