@@ -51,54 +51,42 @@ PRResult PRDevice::LoadDefaultsFromYAML(const char *yamlFilePath)
             YAML::Node doc;
             parser.GetNextDocument(doc);
             
-            for(YAML::Iterator it=doc.begin();it!=doc.end();++it) {
-                std::string key;
-                it.first() >> key;
-                DEBUG(PRLog("Parsing key %s...\n", key.c_str()));
-                if (key.compare("PRGameName") == 0)
+            try
+            {
+                const YAML::Node& node = doc["PRGameName"];
+                std::string name;  node >> name;
+                DEBUG(PRLog("  Game Name: %s\n", name.c_str()));
+            } 
+            catch (YAML::KeyNotFound& ex) {}
+            
+            try
+            {
+                const YAML::Node& dict = doc["PRSwitches"];
+                for(YAML::Iterator dictIt = dict.begin(); dictIt != dict.end(); ++dictIt) 
                 {
+                    std::string key;
                     std::string name;
-                    it.second() >> name;
-                    DEBUG(PRLog("  Machine name: %s\n", name.c_str()));
+                    dictIt.first() >> key;
+                    dictIt.second() >> name;
+                    DEBUG(PRLog("  Switch: %s -> %s\n", key.c_str(), name.c_str()));
                 }
-                else if (key.compare("PRDriverGlobalConfig") == 0)
+            } 
+            catch (YAML::KeyNotFound& ex) {}
+            
+            try
+            {
+                const YAML::Node& dict = doc["PRDrivers"];
+                for(YAML::Iterator dictIt = dict.begin(); dictIt != dict.end(); ++dictIt) 
                 {
-                    //const YAML::Node& dict = it.second();
+                    std::string key;
+                    std::string name;
+                    dictIt.first() >> key;
+                    dictIt.second() >> name;
+                    DEBUG(PRLog("  Driver: %s -> %s\n", key.c_str(), name.c_str()));
                 }
-                else if (key.compare("PRDriverGroupConfigs") == 0)
-                {
-                    const YAML::Node& groups = it.second();
-                    for(YAML::Iterator it=groups.begin();it!=groups.end();++it) 
-                    {
-                        std::string key;
-                        it.first() >> key;
-                    }
-                }
-                else if (key.compare("PRDrivers") == 0)
-                {
-                    const YAML::Node& dict = it.second();
-                    for(YAML::Iterator dictIt=dict.begin(); dictIt != dict.end(); ++dictIt) 
-                    {
-                        std::string driverKey;
-                        std::string driverName;
-                        dictIt.first() >> driverKey;
-                        dictIt.second() >> driverName;
-                        DEBUG(PRLog("  Driver: %s -> %s\n", driverKey.c_str(), driverName.c_str()));
-                    }
-                }
-                else if (key.compare("PRSwitches") == 0)
-                {
-                    const YAML::Node& dict = it.second();
-                    for(YAML::Iterator dictIt=dict.begin(); dictIt != dict.end(); ++dictIt) 
-                    {
-                        std::string driverKey;
-                        std::string driverName;
-                        dictIt.first() >> driverKey;
-                        dictIt.second() >> driverName;
-                        DEBUG(PRLog("  Switch: %s -> %s\n", driverKey.c_str(), driverName.c_str()));
-                    }
-                }
-            }
+            } 
+            catch (YAML::KeyNotFound& ex) {}
+            
         }
     }
     catch (YAML::ParserException& ex)
