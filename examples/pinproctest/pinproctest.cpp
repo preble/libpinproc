@@ -68,8 +68,8 @@ void ConfigureDrivers(PRHandle proc)
     globals.enableOutputs = true;
     PRDriverUpdateGlobalConfig(proc, &globals);
 
-    // Configure the groups:
-
+    // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
+    // with driver #32.  The following 6 groups are configured for coils/flashlamps.
     PRDriverGroupConfig group;
     for (i = 0; i < 6; i++)
     {
@@ -86,6 +86,7 @@ void ConfigureDrivers(PRHandle proc)
         PRDriverUpdateGroupConfig(proc, &group);
     }
 
+    // The following 8 groups are configured for the feature lamp matrix.
     for (i = 6; i < 14; i++) {
         PRDriverGetGroupConfig(proc, i + 4, &group);
         group.slowTime = 400;
@@ -104,6 +105,7 @@ void ConfigureSwitches(PRHandle proc)
 {
     int i;
 
+    // Configures rules to notify the host for every debounced switch event.
     for (i = 0; i <= kPRSwitchPhysicalLast; i++)
     {
         PRSwitchRule sw;
@@ -113,16 +115,158 @@ void ConfigureSwitches(PRHandle proc)
     }
 }
 
+void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, int holdCoilNum, int pulseTime)
+{
+    const int numDriverRules = 2;
+    PRDriverState drivers[numDriverRules];
+    PRSwitchRule sw;
+
+    // Flipper on rules
+    PRDriverGetState(proc, mainCoilNum, &drivers[0]);
+    PRDriverStatePulse(&drivers[0],pulseTime); // Pulse coil for 34ms.
+    PRDriverGetState(proc, holdCoilNum, &drivers[1]);
+    PRDriverStatePulse(&drivers[1],0);  // Turn on indefintely (set pulse for 0ms)
+    sw.notifyHost = false;
+    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+
+    // Flipper off rules
+    PRDriverGetState(proc, mainCoilNum, &drivers[0]);
+    PRDriverStateDisable(&drivers[0]); // Disable main coil
+    PRDriverGetState(proc, holdCoilNum, &drivers[1]);
+    PRDriverStateDisable(&drivers[1]); // Disable hold coil
+    sw.notifyHost = false;
+    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+}
+
+void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
+{
+    const int numDriverRules = 1;
+    PRDriverState drivers[numDriverRules];
+    PRSwitchRule sw;
+
+    // Lower Right Flipper On
+    PRDriverGetState(proc, coilNum, &drivers[0]);
+    PRDriverStatePulse(&drivers[0],pulseTime); // Pulse coil for 34ms.
+    sw.notifyHost = false;
+    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+}
+
+void ConfigureSwitchRules(PRHandle proc)
+{
+    // WPC  Flippers
+    ConfigureWPCFlipperSwitchRule (proc, 1, 32, 33, 34); // Lower Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, 3, 34, 35, 34); // Lower Left WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, 5, 36, 37, 34); // Upper Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, 7, 38, 39, 34); // Upper Left WPC Flipper
+
+    // WPC  Slingshots
+    ConfigureBumperRule (proc, 97, 71, 25); // WPC Right Slingshot
+    ConfigureBumperRule (proc, 96, 70, 25); // WPC Left Slingshot
+}
+
+void ConfigureDMD (PRHandle proc)
+{
+    int i;
+
+    // Create the structure that holds the DMD settings
+    PRDMDConfig dmdConfig;
+    memset(&dmdConfig, 0x0, sizeof(dmdConfig));
+   
+    dmdConfig.numRows = 32;
+    dmdConfig.numColumns = 128;
+    dmdConfig.numSubFrames = 4;
+   
+    for (i = 0; i < 4; i++)
+    {
+        dmdConfig.rclkLowCycles[i] = 15;
+        dmdConfig.latchHighCycles[i] = 15;
+        dmdConfig.dotclkHalfPeriod[i] = 1;
+    }
+        
+    dmdConfig.deHighCycles[0] = 200;
+    dmdConfig.deHighCycles[1] = 400;
+    dmdConfig.deHighCycles[2] = 100;
+    dmdConfig.deHighCycles[3] = 800;
+
+    PRDMDUpdateConfig(proc, &dmdConfig);
+}
+
+// Display a simple pattern to verify DMD functionality.
+// 16 consecutive rows will turn on with incrementing brightness and rotate vertically
+void UpdateDots( unsigned char * dots, unsigned int dotPointer )
+{
+    int i,j,k,dot_byte,color,mappedColor,loopCtr;
+
+    loopCtr = dotPointer/2;
+    color = 0xf;
+
+    // Slow it down just a tad
+    if (dotPointer%2 == 0)
+    {
+        // Clear the DMD dots every time the rotation occurs
+        memset(dots,0,((128*32)/8)*4);
+    
+        // Loop through all of the rows
+        for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
+        {
+            // Map the color index to the DMD's physical color map
+            switch (color) 
+            {
+                case 0: mappedColor = 0; break;
+                case 1: mappedColor = 2; break;
+                case 2: mappedColor = 8; break;
+                case 3: mappedColor = 10; break;
+                case 4: mappedColor = 1; break;
+                case 5: mappedColor = 3; break;
+                case 6: mappedColor = 9; break;
+                case 7: mappedColor = 11; break;
+                case 8: mappedColor = 4; break;
+                case 9: mappedColor = 6; break;
+                case 10: mappedColor = 12; break;
+                case 11: mappedColor = 14; break;
+                case 12: mappedColor = 5; break;
+                case 13: mappedColor = 7; break;
+                case 14: mappedColor = 13; break;
+                case 15: mappedColor = 15; break;
+            }
+
+            // Loop through each of 16 bytes in a row
+            for (j = 0; j < 16; j++)
+            {
+                // Loop through each subframe
+                for (k = 0; k < 4; k++)
+                {
+                    // Turn on the byte in each sub-frame that's enabled 
+                    // active for the color code.
+                    if ((mappedColor >> k) & 1 == 1) dots[k*(128*32/8)+((i%32)*16)+j] = 0xff;
+                }
+            }
+            if (color > 0) color--;
+        }
+    }
+
+}
+
 bool runLoopRun = true;
 
 void RunLoop(PRHandle proc)
 {
     const int maxEvents = 16;
     PREvent events[maxEvents];
+
+    // Create dot array using an array of bytes.  Each byte holds 8 dots.  Need
+    // space for 4 sub-frames of 128/32 dots.
+    unsigned char dots[4*((128*32)/8)]; 
+    unsigned int dotPointer = 0;
+
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
          
+        // Create a dot pattern to test the DMD
+        UpdateDots(dots,dotPointer++);
+        PRDMDDraw(proc,dots);
+
         int numEvents = PRGetEvents(proc, events, maxEvents);
         for (int i = 0; i < numEvents; i++)
         {
@@ -163,18 +307,22 @@ int main(const char **argv, int argc)
 
     printf("Configuring P-ROC...\n");
 
-    ConfigureSwitches(proc);
+    ConfigureDMD(proc); 
+    ConfigureSwitches(proc); // Notify host for all debounced switch events.
+    ConfigureSwitchRules(proc); // Flippers, slingshots
+
     // Make Drivers the last thing to configure so watchdog doesn't expire
-    // before the RunLoop begins
+    // before the RunLoop begins.
     ConfigureDrivers(proc);
 
     printf("Running.  Hit Ctrl-C to exit.\n");
 
-    // Pulse a coil to test:
-//	PRDriverDisable(proc, 80);
-    PRDriverPulse(proc, 53, 100);
-    PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
-    PRDriverPatter(proc, 84, 127, 127, 0);
+    // Pulse a coil for testing purposes.
+    //PRDriverPulse(proc, 53, 100);
+    // Schedule a feature lamp for testing purposes.
+    //PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    // Pitter-patter a feature lamp for testing purposes.
+    //PRDriverPatter(proc, 84, 127, 127, 0);
 
     RunLoop(proc);
 
