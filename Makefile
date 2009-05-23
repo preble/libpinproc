@@ -5,7 +5,7 @@ CC=g++
 LIB=libpinproc.a
 LIBDEST=./
 
-LIBSRC=src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp
+LIBSRC=src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp src/PRConfig.cpp
 
 LIBOBJ=$(LIBSRC:.cpp=.o)
 
