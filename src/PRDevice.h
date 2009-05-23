@@ -56,6 +56,7 @@ protected:
 
 public:
     // public libpinproc API:
+    PRResult LoadDefaultsFromYAML(const char *yamlFilePath);
     int GetEvents(PREvent *events, int maxEvents);
 
     PRResult DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig);

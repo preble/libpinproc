@@ -306,6 +306,7 @@ int main(const char **argv, int argc)
         return 1;
 
     printf("Configuring P-ROC...\n");
+    PRLoadDefaultsFromYAML(proc, "../../examples/pinproctest/Example.yaml");
 
     ConfigureDMD(proc); 
     ConfigureSwitches(proc); // Notify host for all debounced switch events.

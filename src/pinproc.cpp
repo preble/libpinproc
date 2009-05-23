@@ -72,6 +72,10 @@ PR_EXPORT void PRDelete(PRHandle handle)
         delete (PRDevice*)handle;
 }
 
+PR_EXPORT PRResult PRLoadDefaultsFromYAML(PRHandle handle, const char *yamlFilePath)
+{
+    return handleAsDevice->LoadDefaultsFromYAML(yamlFilePath);
+}
 
 // Events
 

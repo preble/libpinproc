@@ -2,8 +2,8 @@
 # File:  Makefile for application
 #
 CC=g++
-LDFLAGS=-L../.. -L/usr/local/lib
-LIBS=-lpinproc -lusb -lftdi
+LDFLAGS=-L../.. -L/usr/local/lib -L../../../../yaml-cpp/build/bin
+LIBS=-lpinproc -lusb -lftdi -lyaml-cpp
 
 SRC=pinproctest.cpp
 
