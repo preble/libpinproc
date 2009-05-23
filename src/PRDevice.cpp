@@ -85,11 +85,11 @@ void PRDevice::Reset()
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
-        uint32_t addr = (i << P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT);
-        ParseSwitchAddress(addr, &switchRule->switchNum, &switchRule->eventType);
+        uint16_t ruleIndex = i;
+        ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
         if (switchRule->switchNum >= kPRSwitchVirtualFirst && switchRule->switchNum <= kPRSwitchVirtualLast)
-            freeSwitchRules.push(addr);
+            freeSwitchRuleIndexes.push(ruleIndex);
     }
 
     unrequestedDataQueue.empty();
@@ -206,9 +206,9 @@ PRResult PRDevice::DriverWatchdogTickle()
 
 
 
-PRSwitchRuleInternal *PRDevice::GetSwitchRuleByAddress(uint32_t addr)
+PRSwitchRuleInternal *PRDevice::GetSwitchRuleByIndex(uint16_t index)
 {
-    return &switchRules[addr>>P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT];
+    return &switchRules[index];
 }
 
 PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
@@ -222,101 +222,117 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
         DEBUG(PRLog("Switch rule out of range 0-%d\n", kPRSwitchPhysicalLast));
         return kPRFailure;
     }
-    if (freeSwitchRules.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
+
+    // If more the base rule will link to others, ensure free indexes exists for 
+    // the links.
+    if (numDrivers > 0 && freeSwitchRuleIndexes.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
     {
-        DEBUG(PRLog("Not enough free switch rules: %d available, need %d\n", freeSwitchRules.size(), numDrivers));
+        DEBUG(PRLog("Not enough free switch rule indexes: %d available, need %d\n", freeSwitchRuleIndexes.size(), numDrivers));
         return kPRFailure;
     }
-    
+
     PRResult res = kPRSuccess;
-    uint32_t newRuleAddr = CreateSwitchRuleAddr(switchNum, eventType);
+    uint32_t newRuleIndex = CreateSwitchRuleIndex(switchNum, eventType);
     
-    // First we need to check the linked rule to see if the indicated switchNum has any rules that need to be freed:
-    PRSwitchRuleInternal *oldRule = GetSwitchRuleByAddress(newRuleAddr);
+    // Because we're redefining the rule chain, we need to remove all previously existing links and return the indexes to the free list.
+    PRSwitchRuleInternal *oldRule = GetSwitchRuleByIndex(newRuleIndex);
     while (oldRule->linkActive)
     {
-        oldRule = GetSwitchRuleByAddress(oldRule->linkAddress);
-        freeSwitchRules.push(oldRule->linkAddress);
+        oldRule = GetSwitchRuleByIndex(oldRule->linkIndex);
+        freeSwitchRuleIndexes.push(oldRule->linkIndex);
     }
     
     // Now let's setup the first actual rule:
-    uint32_t firstRuleAddr = newRuleAddr;
-    PRSwitchRuleInternal *newRule = GetSwitchRuleByAddress(newRuleAddr);
+    uint16_t firstRuleIndex = newRuleIndex;
+    PRSwitchRuleInternal *newRule = GetSwitchRuleByIndex(newRuleIndex);
     if (newRule->eventType != eventType)
-        DEBUG(PRLog("Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleAddr, newRule->eventType, eventType));
+        DEBUG(PRLog("Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
     newRule->notifyHost = rule->notifyHost;
     newRule->changeOutput = false;
     newRule->linkActive = false;
     
-    while (numDrivers > 0)
+    // Process each driver who's state should change in response to the switch event.
+    if (numDrivers > 0) 
     {
-        newRule->changeOutput = true;
-        newRule->driver = linkedDrivers[0];
-        
-        if (numDrivers > 1)
+        while (numDrivers > 0)
         {
-            newRule->linkActive = true;
-            newRule->linkAddress = freeSwitchRules.front();
-            freeSwitchRules.pop();
+            newRule->changeOutput = true;
+            newRule->driver = linkedDrivers[0];
             
-            CreateSwitchesUpdateRulesBurst(burst, newRule);
-            
-            // Prepare for the next rule:
-            newRule = GetSwitchRuleByAddress(newRule->linkAddress);
-        }
-        else
-        {
-            newRule->linkActive = false;
-            CreateSwitchesUpdateRulesBurst(burst, newRule);
-        }
-        
-        // Write the actual rule:
-        res = WriteData(burst, burstSize);
-        if (res != kPRSuccess)
-        {
-            DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
-            newRule = GetSwitchRuleByAddress(firstRuleAddr);
-            newRule->changeOutput = false;
-            newRule->linkActive = false;
-            CreateSwitchesUpdateRulesBurst(burst, newRule);
-            if (WriteData(burst, burstSize) == kPRSuccess)
-                DEBUG(PRLog("Disabled successfully.\n"));
+            if (numDrivers > 1)
+            {
+                newRule->linkActive = true;
+                newRule->linkIndex = freeSwitchRuleIndexes.front(); 
+                freeSwitchRuleIndexes.pop();
+                
+                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                
+                // Prepare for the next rule:
+                newRule = GetSwitchRuleByIndex(newRule->linkIndex);
+            }
             else
-                DEBUG(PRLog("Failed to disable.\n"));
-            return res;
+            {
+                newRule->linkActive = false;
+                CreateSwitchesUpdateRulesBurst(burst, newRule);
+            }
+            
+            DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+            // Write the rule:
+            res = WriteData(burst, burstSize);
+            if (res != kPRSuccess)
+            {
+                DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
+                newRule = GetSwitchRuleByIndex(firstRuleIndex);
+                newRule->changeOutput = false;
+                newRule->linkActive = false;
+                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                if (WriteData(burst, burstSize) == kPRSuccess)
+                    DEBUG(PRLog("Disabled successfully.\n"));
+                else
+                    DEBUG(PRLog("Failed to disable.\n"));
+                return res;
+            }
+            
+            linkedDrivers++;
+            numDrivers--;
         }
-        
-        linkedDrivers++;
-        numDrivers--;
+    }
+    else 
+    {
+        CreateSwitchesUpdateRulesBurst(burst, newRule);
+        DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+
+        // Write the rule:
+        res = WriteData(burst, burstSize);
     }
     
     return res;
 }
 
-int32_t PRDevice::DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig)
+int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
 {
     uint32_t rc;
-    uint32_t burst[10];
+    const int burstWords = 7;
+    uint32_t burst[burstWords];
 
-    CreateDMDUpdateGlobalConfigBurst(burst, dmdGlobalConfig);
+    this->dmdConfig = *dmdConfig;
+    CreateDMDUpdateConfigBurst(burst, dmdConfig);
 
-    DEBUG(PRLog("DMD config packet: "));
-    for (int i=0; i<10; i++) {
-        DEBUG(PRLog("%d ", burst[i]));
-    }
-    DEBUG(PRLog("\n"));
+    DEBUG(PRLog("Configuring DMD"));
+    DEBUG(PRLog("Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
+                burst[4],burst[5],burst[6]));
 
-    rc = WriteData(burst, 9);
+    rc = WriteData(burst, burstWords);
     return rc;
 }
 
 
-PRResult PRDevice::DMDDraw(uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames)
+PRResult PRDevice::DMDDraw(uint8_t * dots)
 {
     int32_t k; //i,x,y,j,k,m;
     //uint8_t color;
-    uint16_t words_per_sub_frame = (columns*rows) / 32;
-    uint16_t words_per_frame = words_per_sub_frame * numSubFrames;
+    uint16_t words_per_sub_frame = (dmdConfig.numColumns*dmdConfig.numRows) / 32;
+    uint16_t words_per_frame = words_per_sub_frame * dmdConfig.numSubFrames;
     uint32_t dmd_command_buffer[1024];
     uint32_t * p_dmd_frame_buffer_words;
 

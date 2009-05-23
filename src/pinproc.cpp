@@ -187,12 +187,12 @@ PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREv
     return handleAsDevice->SwitchesUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
-PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dmdGlobalConfig)
+PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)
 {
-    return handleAsDevice->DMDUpdateGlobalConfig(dmdGlobalConfig);
+    return handleAsDevice->DMDUpdateConfig(dmdConfig);
 }
-PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames)
+PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots)
 {
-    return handleAsDevice->DMDDraw(dots, columns, rows, numSubFrames);
+    return handleAsDevice->DMDDraw(dots);
 }
 

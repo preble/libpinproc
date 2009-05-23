@@ -139,23 +139,30 @@ int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
     return kPRSuccess;
 }
 
-int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType) 
+int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType) 
 {
     uint32_t debounce = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchClosedDebounced) ? 1 : 0;
     uint32_t state    = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchOpenNondebounced) ? 1 : 0;
 	
-    uint32_t addr = ((debounce << P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT) |
-                     (state << P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT) |
-                     (switchNum << P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT) );
-	return addr;
+    uint32_t index = ((debounce << P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT) |
+                      (state << P_ROC_SWITCH_RULE_NUM_STATE_SHIFT) |
+                      (switchNum << P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT) );
+    return index;
 }
 
-void ParseSwitchAddress(uint32_t addr, uint8_t *switchNum, PREventType *eventType)
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType) 
 {
-    *switchNum = (addr >> P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT) & 0xff;
+    uint16_t number = CreateSwitchRuleIndex( switchNum, eventType );
+    uint32_t addr = number << P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT;
+    return addr;
+}
 
-    bool open = ((addr >> P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT) & 0x1) == 0x1;
-    bool debounce = ((addr >> P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT) & 0x1) == 0x1;
+void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *eventType)
+{
+    *switchNum = (index >> P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT) & 0xff;
+
+    bool open = ((index >> P_ROC_SWITCH_RULE_NUM_STATE_SHIFT) & 0x1) == 0x1;
+    bool debounce = ((index >> P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT) & 0x1) == 0x1;
     if (open)
         *eventType = debounce ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
     else
@@ -175,23 +182,29 @@ int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal 
     burst[3] = (rule_record->changeOutput << P_ROC_SWITCH_RULE_CHANGE_OUTPUT_SHIFT) |
     (rule_record->driver.driverNum << P_ROC_SWITCH_RULE_DRIVER_NUM_SHIFT) |
     (rule_record->linkActive << P_ROC_SWITCH_RULE_LINK_ACTIVE_SHIFT) |
-    (rule_record->linkAddress << P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT) |
+    (rule_record->linkIndex << P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT) |
     (rule_record->notifyHost << P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT);
     return kPRSuccess;
 
 }
 
-int32_t CreateDMDUpdateGlobalConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
+int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
 {
     uint32_t addr;
     uint32_t i;
 
-    addr = 8;
-    burst[0] = CreateBurstCommand (P_ROC_BUS_DMD_SELECT, addr, 8 );
+    addr = 0;
+    burst[0] = CreateBurstCommand (P_ROC_BUS_DMD_SELECT, addr, 1 );
+    burst[1] = (1 << P_ROC_DMD_ENABLE_SHIFT) |
+               (dmd_config->numSubFrames << P_ROC_DMD_NUM_SUB_FRAMES_SHIFT) |
+               (dmd_config->numRows << P_ROC_DMD_NUM_ROWS_SHIFT) |
+               (dmd_config->numColumns << P_ROC_DMD_NUM_COLUMNS_SHIFT); 
 
-    for (i=0; i<8; i++) {
-        burst[i+1] = 0;
-        burst[i+1] = (dmd_config->rclkLowCycles[i] << P_ROC_DMD_RCLK_LOW_CYCLES_SHIFT) |
+    addr = 8;
+    burst[2] = CreateBurstCommand (P_ROC_BUS_DMD_SELECT, addr, 4 );
+
+    for (i=0; i<4; i++) {
+        burst[i+3] = (dmd_config->rclkLowCycles[i] << P_ROC_DMD_RCLK_LOW_CYCLES_SHIFT) |
         (dmd_config->latchHighCycles[i] << P_ROC_DMD_LATCH_HIGH_CYCLES_SHIFT) |
         (dmd_config->deHighCycles[i] << P_ROC_DMD_DE_HIGH_CYCLES_SHIFT) |
         (dmd_config->dotclkHalfPeriod[i] << P_ROC_DMD_DOTCLK_HALF_PERIOD_SHIFT);
