@@ -257,11 +257,10 @@ PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREv
 
 // DMD
 
-typedef struct PRDMDGlobalConfig {
+typedef struct PRDMDConfig {
     uint8_t numRows;
     uint16_t numColumns;
     uint8_t numSubFrames;
-    uint16_t cyclesPerRow;
     bool_t enable;
     uint8_t rclkLowCycles[8];
     uint8_t latchHighCycles[8];
@@ -270,9 +269,9 @@ typedef struct PRDMDGlobalConfig {
 } PRDMDConfig;
 
 /** Sets the configuration registers for the DMD driver. */
-PR_EXPORT int32_t PRDMDUpdateGlobalConfig(PRHandle handle, PRDMDGlobalConfig *dmdGlobalConfig);
+PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig);
 /** Updates the DMD frame buffer with the given data. */
-PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);
+PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots);
 
 /** @cond */
 PR_EXTERN_C_END
