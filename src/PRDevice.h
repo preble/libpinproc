@@ -68,8 +68,8 @@ public:
 
     PRResult DriverWatchdogTickle();
 
-    PRResult DMDUpdateGlobalConfig(PRDMDGlobalConfig *dmdGlobalConfig);
-    PRResult DMDDraw(uint8_t * dots, uint16_t columns, uint8_t rows, uint8_t numSubFrames);
+    PRResult DMDUpdateConfig(PRDMDConfig *dmdConfig);
+    PRResult DMDDraw(uint8_t * dots);
 
 protected:
 
@@ -135,8 +135,9 @@ protected:
     PRDriverGlobalConfig driverGlobalConfig;
     PRDriverGroupConfig driverGroups[maxDriverGroups];
     PRDriverState drivers[maxDrivers];
+    PRDMDConfig dmdConfig;
 	
     PRSwitchRuleInternal switchRules[maxSwitchRules];
-	queue<uint32_t> freeSwitchRules; /**< Addresses of available switch rules. */
-    PRSwitchRuleInternal *GetSwitchRuleByAddress(uint32_t addr);
+	queue<uint32_t> freeSwitchRuleIndexes; /**< Indexes of available switch rules. */
+    PRSwitchRuleInternal *GetSwitchRuleByIndex(uint16_t index);
 };

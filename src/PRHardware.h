@@ -121,9 +121,10 @@ const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT     = 30;
 
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DRIVER_NUM_SHIFT = 1;
 
-const uint32_t P_ROC_SWITCH_RULE_ADDR_DEBOUNCE_SHIFT = 11;
-const uint32_t P_ROC_SWITCH_RULE_ADDR_STATE_SHIFT = 10;
-const uint32_t P_ROC_SWITCH_RULE_ADDR_SWITCH_NUM_SHIFT = 2;
+const uint32_t P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT = 9;
+const uint32_t P_ROC_SWITCH_RULE_NUM_STATE_SHIFT = 8;
+const uint32_t P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT = 0;
+const uint32_t P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT = 2;
 
 const uint32_t P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT = 23;
 const uint32_t P_ROC_SWITCH_RULE_LINK_ACTIVE_SHIFT = 10;
@@ -133,12 +134,11 @@ const uint32_t P_ROC_SWITCH_RULE_DRIVER_NUM_SHIFT    = 0;
 
 const uint32_t P_ROC_DMD_NUM_COLUMNS_SHIFT           = 0;
 const uint32_t P_ROC_DMD_NUM_ROWS_SHIFT              = 8;
-const uint32_t P_ROC_DMD_NUM_SHADES_SHIFT            = 16;
-const uint32_t P_ROC_DMD_CYCLES_PER_ROW_SHIFT        = 21;
+const uint32_t P_ROC_DMD_NUM_SUB_FRAMES_SHIFT        = 16;
 const uint32_t P_ROC_DMD_ENABLE_SHIFT                = 31;
 
 const uint32_t P_ROC_DMD_DOTCLK_HALF_PERIOD_SHIFT    = 0;
-const uint32_t P_ROC_DMD_DE_HIGH_CYCLES_SHIFT        = 8;
+const uint32_t P_ROC_DMD_DE_HIGH_CYCLES_SHIFT        = 6;
 const uint32_t P_ROC_DMD_LATCH_HIGH_CYCLES_SHIFT     = 16;
 const uint32_t P_ROC_DMD_RCLK_LOW_CYCLES_SHIFT       = 24;
 
@@ -150,7 +150,7 @@ typedef struct PRSwitchRuleInternal {
     bool_t notifyHost;
     bool_t changeOutput;   /**< True if this switch rule should affect a driver output change. */
     bool_t linkActive;     /**< True if this switch rule has additional linked driver updates. */
-    uint32_t linkAddress;  /**< Switch number of the linked driver update. */
+    uint16_t linkIndex;  /**< Switch rule index ({debounce,state,switchNum}) of the linked driver update rule. */
     PRDriverState driver;  /**< Driver state change to affect once this rule is triggered. */
 } PRSwitchRuleInternal;
 
@@ -163,9 +163,10 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);
 int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
 int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
                                    bool_t watchdogEnable, uint16_t watchdogResetTime);
-int32_t CreateDMDUpdateGlobalConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
+int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
 
-void ParseSwitchAddress(uint32_t addr, uint8_t *switchNum, PREventType *eventType);
+void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *eventType);
+int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType);
 int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
 
 #endif // _PROC_HARDWARE_H_
