@@ -3,7 +3,7 @@
 #
 CC=g++
 LIB=libpinproc.a
-LIBDEST=./
+LIBDEST=./bin/
 
 LIBSRC=src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp src/PRConfig.cpp
 
@@ -14,11 +14,11 @@ CXXFLAGS=-I../../yaml-cpp/include
 
 $(LIB): $(LIBOBJ)
 	@echo lib Makefile - archiving $(LIB)
-	$(AR) r $(LIB) $(LIBOBJ)
+	$(AR) r $(LIBDEST)$(LIB) $(LIBOBJ)
 
 .cpp.o:
 	@echo lib Makefile - compiling $<
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(LIBOBJ) $(LIB)
+	rm -f $(LIBOBJ) $(LIBDEST)$(LIB)

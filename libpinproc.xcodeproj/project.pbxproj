@@ -220,6 +220,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -230,7 +231,10 @@
 					"../../yaml-cpp/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
+				OBJROOT = build;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = pinproc;
+				SYMROOT = bin;
 			};
 			name = Debug;
 		};
@@ -238,6 +242,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				HEADER_SEARCH_PATHS = (
@@ -245,7 +250,9 @@
 					"../../yaml-cpp/include",
 				);
 				INSTALL_PATH = /usr/local/lib;
+				OBJROOT = build;
 				PRODUCT_NAME = pinproc;
+				SYMROOT = bin;
 			};
 			name = Release;
 		};
