@@ -34,6 +34,35 @@
 #include <cmath>
 #include "pinproc.h" // Include libpinproc's header.
 
+
+#define kFlipperLwRightSw (1)
+#define kFlipperLwLeftSw (3)
+#define kFlipperUpRightSw (5)
+#define kFlipperUpLeftSw (7)
+
+#define kFlipperLwRightMain (32)
+#define kFlipperLwLeftMain (34)
+#define kFlipperUpRightMain (36)
+#define kFlipperUpLeftMain (38)
+
+#define kFlipperLwRightHold (33)
+#define kFlipperLwLeftHold (35)
+#define kFlipperUpRightHold (37)
+#define kFlipperUpLeftHold (39)
+
+#define kSlingLeftSw (96)
+#define kSlingRightSw (97)
+
+#define kSlingLeftCoil (70)
+#define kSlingRightCoil (71)
+
+#define kFlipperPulseTime (34) // 34 ms
+#define kBumperPulseTime (25) // 25 ms
+
+#define kDMDColumns (128)
+#define kDMDRows (32)
+#define kDMDSubFrames (4) // For color depth of 16
+
 /** Demonstration of the custom logging callback. */
 void TestLogger(const char *text)
 {
@@ -155,17 +184,17 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
 void ConfigureSwitchRules(PRHandle proc)
 {
     // WPC  Flippers
-    ConfigureWPCFlipperSwitchRule (proc, 1, 32, 33, 34); // Lower Right WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 3, 34, 35, 34); // Lower Left WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 5, 36, 37, 34); // Upper Right WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 7, 38, 39, 34); // Upper Left WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperLwRightSw, kFlipperLwRightMain, kFlipperLwRightHold, kFlipperPulseTime); // Lower Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperLwLeftSw, kFlipperLwLeftMain, kFlipperLwLeftHold, kFlipperPulseTime); // Lower Left WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperUpRightSw, kFlipperUpRightMain, kFlipperUpRightHold, kFlipperPulseTime); // Upper Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperUpLeftSw, kFlipperUpLeftMain, kFlipperUpLeftHold, kFlipperPulseTime); // Upper Left WPC Flipper
 
     // WPC  Slingshots
-    ConfigureBumperRule (proc, 97, 71, 25); // WPC Right Slingshot
-    ConfigureBumperRule (proc, 96, 70, 25); // WPC Left Slingshot
+    ConfigureBumperRule (proc, kSlingRightSw, kSlingRightCoil, kBumperPulseTime); // WPC Right Slingshot
+    ConfigureBumperRule (proc, kSlingLeftSw, kSlingLeftCoil, kBumperPulseTime); // WPC Left Slingshot
 }
 
-void ConfigureDMD (PRHandle proc)
+void ConfigureDMD(PRHandle proc)
 {
     int i;
 
@@ -173,11 +202,11 @@ void ConfigureDMD (PRHandle proc)
     PRDMDConfig dmdConfig;
     memset(&dmdConfig, 0x0, sizeof(dmdConfig));
    
-    dmdConfig.numRows = 32;
-    dmdConfig.numColumns = 128;
-    dmdConfig.numSubFrames = 4;
+    dmdConfig.numRows = kDMDRows;
+    dmdConfig.numColumns = kDMDColumns;
+    dmdConfig.numSubFrames = kDMDSubFrames;
    
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < kDMDSubFrames; i++)
     {
         dmdConfig.rclkLowCycles[i] = 15;
         dmdConfig.latchHighCycles[i] = 15;
@@ -197,63 +226,48 @@ void ConfigureDMD (PRHandle proc)
 // starting with dim dots at the top.
 void UpdateDots( unsigned char * dots, unsigned int dotPointer )
 {
-    int i,j,k,dot_byte,color,mappedColor,loopCtr,shifter;
+    int i,j,k,color,mappedColor,loopCtr,byte_shifter;
+    const int rate_reduction_divisor = 1;
 
-    loopCtr = dotPointer/1;
-    color = 0xf;
-    shifter = 0x80;
+    loopCtr = dotPointer/rate_reduction_divisor;
+    color = pow(2,kDMDSubFrames) - 1;
+    byte_shifter = 0x80;
 
     // Slow it down just a tad
-    if (dotPointer%1 == 0)
+    if (dotPointer%rate_reduction_divisor == 0)
     {
-        // Set up shifter to rotate pattern to the right.
-        shifter = pow(2,(loopCtr%8));
+        // Set up byte_shifter to rotate pattern to the right.
+        byte_shifter = pow(2,(loopCtr%8));
 
         // Clear the DMD dots every time the rotation occurs
-        memset(dots,0,((128*32)/8)*4);
+        memset(dots,0,((kDMDColumns*kDMDRows)/8)*kDMDSubFrames);
     
         // Loop through all of the rows
-        //for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
-        for (i = 31; i >= 0; i--)
+        for (i = kDMDRows - 1; i >= 0; i--)
         {
             // Map the color index to the DMD's physical color map
-            switch (color) 
-            {
-                case 0: mappedColor = 0; break;
-                case 1: mappedColor = 2; break;
-                case 2: mappedColor = 8; break;
-                case 3: mappedColor = 1; break;
-                case 4: mappedColor = 10; break;
-                case 5: mappedColor = 3; break;
-                case 6: mappedColor = 9; break;
-                case 7: mappedColor = 4; break;
-                case 8: mappedColor = 11; break;
-                case 9: mappedColor = 6; break;
-                case 10: mappedColor = 12; break;
-                case 11: mappedColor = 5; break;
-                case 12: mappedColor = 14; break;
-                case 13: mappedColor = 7; break;
-                case 14: mappedColor = 13; break;
-                case 15: mappedColor = 15; break;
-            }
+            int mappedColors[] = {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15};
+            mappedColor = mappedColors[color];
 
             // Loop through each of 16 bytes in a row
-            for (j = 0; j < 16; j++)
+            for (j = 0; j < kDMDColumns / 8; j++)
             {
                 // Loop through each subframe
-                for (k = 0; k < 4; k++)
+                for (k = 0; k < kDMDSubFrames; k++)
                 {
                     // Turn on the byte in each sub-frame that's enabled 
                     // active for the color code.
-                    if ((mappedColor >> k) & 1 == 1) dots[k*(128*32/8)+((i%32)*16)+j] = shifter;
+                    if ((mappedColor >> k) & 1 == 1) 
+                        dots[k*(kDMDColumns*kDMDRows/8)+((i%kDMDRows)*(kDMDColumns / 8))+j] = byte_shifter;
                 }
             }
-            if (i%2 == 0) color--;
-            if (shifter == 1) shifter = 0x80;
-            else shifter = shifter >> 1;
+            // Determine where to change the color in order to progress from row 0 = color 0
+            // to the last row being the last color.
+            if (i % (int)((kDMDRows/pow(2,kDMDSubFrames))) == 0) color--;
+            if (byte_shifter == 1) byte_shifter = 0x80;
+            else byte_shifter = byte_shifter >> 1;
         }
     }
-
 }
 
 bool runLoopRun = true;
@@ -313,9 +327,6 @@ int main(const char **argv, int argc)
     PRHandle proc = PRCreate(kPRMachineWPC);
     if (proc == kPRHandleInvalid)
         return 1;
-
-    printf("Configuring P-ROC...\n");
-    PRLoadDefaultsFromYAML(proc, "../../examples/pinproctest/Example.yaml");
 
     ConfigureDMD(proc); 
     ConfigureSwitches(proc); // Notify host for all debounced switch events.
