@@ -33,6 +33,32 @@
 #include <unistd.h>
 #include "pinproc.h" // Include libpinproc's header.
 
+
+#define kFlipperLwRightSw (1)
+#define kFlipperLwLeftSw (3)
+#define kFlipperUpRightSw (5)
+#define kFlipperUpLeftSw (7)
+
+#define kFlipperLwRightMain (32)
+#define kFlipperLwLeftMain (34)
+#define kFlipperUpRightMain (36)
+#define kFlipperUpLeftMain (38)
+
+#define kFlipperLwRightHold (33)
+#define kFlipperLwLeftHold (35)
+#define kFlipperUpRightHold (37)
+#define kFlipperUpLeftHold (39)
+
+#define kSlingLeftSw (96)
+#define kSlingRightSw (97)
+
+#define kSlingLeftCoil (70)
+#define kSlingRightCoil (71)
+
+#define kFlipperPulseTime (34) // 34 ms
+#define kBumperPulseTime (25) // 25 ms
+
+
 /** Demonstration of the custom logging callback. */
 void TestLogger(const char *text)
 {
@@ -154,17 +180,17 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
 void ConfigureSwitchRules(PRHandle proc)
 {
     // WPC  Flippers
-    ConfigureWPCFlipperSwitchRule (proc, 1, 32, 33, 34); // Lower Right WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 3, 34, 35, 34); // Lower Left WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 5, 36, 37, 34); // Upper Right WPC Flipper
-    ConfigureWPCFlipperSwitchRule (proc, 7, 38, 39, 34); // Upper Left WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperLwRightSw, kFlipperLwRightMain, kFlipperLwRightHold, kFlipperPulseTime); // Lower Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperLwLeftSw, kFlipperLwLeftMain, kFlipperLwLeftHold, kFlipperPulseTime); // Lower Left WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperUpRightSw, kFlipperUpRightMain, kFlipperUpRightHold, kFlipperPulseTime); // Upper Right WPC Flipper
+    ConfigureWPCFlipperSwitchRule (proc, kFlipperUpLeftSw, kFlipperUpLeftMain, kFlipperUpLeftHold, kFlipperPulseTime); // Upper Left WPC Flipper
 
     // WPC  Slingshots
-    ConfigureBumperRule (proc, 97, 71, 25); // WPC Right Slingshot
-    ConfigureBumperRule (proc, 96, 70, 25); // WPC Left Slingshot
+    ConfigureBumperRule (proc, kSlingRightSw, kSlingRightCoil, kBumperPulseTime); // WPC Right Slingshot
+    ConfigureBumperRule (proc, kSlingLeftSw, kSlingLeftCoil, kBumperPulseTime); // WPC Left Slingshot
 }
 
-void ConfigureDMD (PRHandle proc)
+void ConfigureDMD(PRHandle proc)
 {
     int i;
 
@@ -195,7 +221,7 @@ void ConfigureDMD (PRHandle proc)
 // 16 consecutive rows will turn on with incrementing brightness and rotate vertically
 void UpdateDots( unsigned char * dots, unsigned int dotPointer )
 {
-    int i,j,k,dot_byte,color,mappedColor,loopCtr;
+    int i,j,k,color,mappedColor,loopCtr;
 
     loopCtr = dotPointer/2;
     color = 0xf;
@@ -210,25 +236,8 @@ void UpdateDots( unsigned char * dots, unsigned int dotPointer )
         for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
         {
             // Map the color index to the DMD's physical color map
-            switch (color) 
-            {
-                case 0: mappedColor = 0; break;
-                case 1: mappedColor = 2; break;
-                case 2: mappedColor = 8; break;
-                case 3: mappedColor = 10; break;
-                case 4: mappedColor = 1; break;
-                case 5: mappedColor = 3; break;
-                case 6: mappedColor = 9; break;
-                case 7: mappedColor = 11; break;
-                case 8: mappedColor = 4; break;
-                case 9: mappedColor = 6; break;
-                case 10: mappedColor = 12; break;
-                case 11: mappedColor = 14; break;
-                case 12: mappedColor = 5; break;
-                case 13: mappedColor = 7; break;
-                case 14: mappedColor = 13; break;
-                case 15: mappedColor = 15; break;
-            }
+            int mappedColors[] = {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15};
+            mappedColor = mappedColors[color];
 
             // Loop through each of 16 bytes in a row
             for (j = 0; j < 16; j++)
@@ -304,9 +313,6 @@ int main(const char **argv, int argc)
     PRHandle proc = PRCreate(kPRMachineWPC);
     if (proc == kPRHandleInvalid)
         return 1;
-
-    printf("Configuring P-ROC...\n");
-    PRLoadDefaultsFromYAML(proc, "../../examples/pinproctest/Example.yaml");
 
     ConfigureDMD(proc); 
     ConfigureSwitches(proc); // Notify host for all debounced switch events.
