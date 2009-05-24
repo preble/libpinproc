@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <cmath>
 #include "pinproc.h" // Include libpinproc's header.
 
 /** Demonstration of the custom logging callback. */
@@ -183,31 +184,37 @@ void ConfigureDMD (PRHandle proc)
         dmdConfig.dotclkHalfPeriod[i] = 1;
     }
         
-    dmdConfig.deHighCycles[0] = 200;
+    dmdConfig.deHighCycles[0] = 250;
     dmdConfig.deHighCycles[1] = 400;
-    dmdConfig.deHighCycles[2] = 100;
+    dmdConfig.deHighCycles[2] = 180;
     dmdConfig.deHighCycles[3] = 800;
 
     PRDMDUpdateConfig(proc, &dmdConfig);
 }
 
 // Display a simple pattern to verify DMD functionality.
-// 16 consecutive rows will turn on with incrementing brightness and rotate vertically
+// 16 diagonal lines will rotate to the right.  Every two rows will get brighter, 
+// starting with dim dots at the top.
 void UpdateDots( unsigned char * dots, unsigned int dotPointer )
 {
-    int i,j,k,dot_byte,color,mappedColor,loopCtr;
+    int i,j,k,dot_byte,color,mappedColor,loopCtr,shifter;
 
-    loopCtr = dotPointer/2;
+    loopCtr = dotPointer/1;
     color = 0xf;
+    shifter = 0x80;
 
     // Slow it down just a tad
-    if (dotPointer%2 == 0)
+    if (dotPointer%1 == 0)
     {
+        // Set up shifter to rotate pattern to the right.
+        shifter = pow(2,(loopCtr%8));
+
         // Clear the DMD dots every time the rotation occurs
         memset(dots,0,((128*32)/8)*4);
     
         // Loop through all of the rows
-        for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
+        //for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
+        for (i = 31; i >= 0; i--)
         {
             // Map the color index to the DMD's physical color map
             switch (color) 
@@ -215,16 +222,16 @@ void UpdateDots( unsigned char * dots, unsigned int dotPointer )
                 case 0: mappedColor = 0; break;
                 case 1: mappedColor = 2; break;
                 case 2: mappedColor = 8; break;
-                case 3: mappedColor = 10; break;
-                case 4: mappedColor = 1; break;
+                case 3: mappedColor = 1; break;
+                case 4: mappedColor = 10; break;
                 case 5: mappedColor = 3; break;
                 case 6: mappedColor = 9; break;
-                case 7: mappedColor = 11; break;
-                case 8: mappedColor = 4; break;
+                case 7: mappedColor = 4; break;
+                case 8: mappedColor = 11; break;
                 case 9: mappedColor = 6; break;
                 case 10: mappedColor = 12; break;
-                case 11: mappedColor = 14; break;
-                case 12: mappedColor = 5; break;
+                case 11: mappedColor = 5; break;
+                case 12: mappedColor = 14; break;
                 case 13: mappedColor = 7; break;
                 case 14: mappedColor = 13; break;
                 case 15: mappedColor = 15; break;
@@ -238,10 +245,12 @@ void UpdateDots( unsigned char * dots, unsigned int dotPointer )
                 {
                     // Turn on the byte in each sub-frame that's enabled 
                     // active for the color code.
-                    if ((mappedColor >> k) & 1 == 1) dots[k*(128*32/8)+((i%32)*16)+j] = 0xff;
+                    if ((mappedColor >> k) & 1 == 1) dots[k*(128*32/8)+((i%32)*16)+j] = shifter;
                 }
             }
-            if (color > 0) color--;
+            if (i%2 == 0) color--;
+            if (shifter == 1) shifter = 0x80;
+            else shifter = shifter >> 1;
         }
     }
 
