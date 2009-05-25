@@ -91,8 +91,6 @@ typedef enum PRMachineType {
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType); /**< Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed.  Returns #kPRHandleInvalid if an error occurred. */
 PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existing P-ROC device handle. */
 
-PR_EXPORT PRResult PRLoadDefaultsFromYAML(PRHandle handle, const char *yamlFilePath);
-
 /** @} */ // End of Device Creation & Deletion
 
 // Drivers

@@ -224,12 +224,12 @@ void ConfigureDMD(PRHandle proc)
 // Display a simple pattern to verify DMD functionality.
 // 16 diagonal lines will rotate to the right.  Every two rows will get brighter, 
 // starting with dim dots at the top.
-void UpdateDots( unsigned char * dots, unsigned int dotPointer )
+void UpdateDots( unsigned char * dots, unsigned int dotOffset )
 {
     int i,j,k,color,mappedColor,loopCtr,byte_shifter;
     const int rate_reduction_divisor = 1;
 
-    loopCtr = dotPointer/rate_reduction_divisor;
+    loopCtr = dotOffset/rate_reduction_divisor;
     color = pow(2,kDMDSubFrames) - 1;
     byte_shifter = 0x80;
 
@@ -280,14 +280,14 @@ void RunLoop(PRHandle proc)
     // Create dot array using an array of bytes.  Each byte holds 8 dots.  Need
     // space for 4 sub-frames of 128/32 dots.
     unsigned char dots[4*((128*32)/8)]; 
-    unsigned int dotPointer = 0;
+    unsigned int dotOffset = 0;
 
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
          
         // Create a dot pattern to test the DMD
-        UpdateDots(dots,dotPointer++);
+        UpdateDots(dots,dotOffset++);
         PRDMDDraw(proc,dots);
 
         int numEvents = PRGetEvents(proc, events, maxEvents);

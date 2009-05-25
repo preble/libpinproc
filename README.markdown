@@ -4,15 +4,29 @@ Library for Gerry Stellenberg's [P-ROC](http://pinballcontrollers.com/) (Pinball
 
 ### Compiling
 
+#### Prerequisites
+
 libpinproc requires:
 
 - [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
+
+Once required but not right now:
+
 - [yaml-cpp](http://code.google.com/p/yaml-cpp/): Should be checked out in the directory two levels below libpinproc in the full source tree (at the same level as ./P-ROC) in a directory named yaml-cpp.  Follow the build instructions, creating the build subdirectory.  The Makefiles and other project files expect to find libyaml-cpp.a in the yaml-cpp/build/bin directory.
 
-### License
+We are presently experimenting with different build mechanisms.  As such there are three ways to build libpinproc at this time: CMake, GNU Make, and the Xcode project (for Mac).  As the preferred method is presently CMake, here's how.  Before you get started, you will need CMake if you don't already have it.
 
-#### The MIT License
+#### Building with CMake
+
+    cd libpinproc
+    mkdir build; cd build
+    cmake ..
+    make
+
+The CMakeLists.txt file is presently designed to be run from a directory inside the libpinproc directory.  This will build both libpinproc and pinproctest.  Binaries will be placed in the directory that make was run from.
+
+### License
 
 Copyright (c) 2009 Gerry Stellenberg, Adam Preble
 
