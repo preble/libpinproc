@@ -234,7 +234,7 @@ void UpdateDots( unsigned char * dots, unsigned int dotOffset )
     byte_shifter = 0x80;
 
     // Slow it down just a tad
-    if (dotPointer%rate_reduction_divisor == 0)
+    if (dotOffset%rate_reduction_divisor == 0)
     {
         // Set up byte_shifter to rotate pattern to the right.
         byte_shifter = pow(2,(loopCtr%8));
