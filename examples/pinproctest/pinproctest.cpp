@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
+#include <cmath>
 #include "pinproc.h" // Include libpinproc's header.
 
 
@@ -58,6 +59,9 @@
 #define kFlipperPulseTime (34) // 34 ms
 #define kBumperPulseTime (25) // 25 ms
 
+#define kDMDColumns (128)
+#define kDMDRows (32)
+#define kDMDSubFrames (4) // For color depth of 16
 
 /** Demonstration of the custom logging callback. */
 void TestLogger(const char *text)
@@ -198,62 +202,72 @@ void ConfigureDMD(PRHandle proc)
     PRDMDConfig dmdConfig;
     memset(&dmdConfig, 0x0, sizeof(dmdConfig));
    
-    dmdConfig.numRows = 32;
-    dmdConfig.numColumns = 128;
-    dmdConfig.numSubFrames = 4;
+    dmdConfig.numRows = kDMDRows;
+    dmdConfig.numColumns = kDMDColumns;
+    dmdConfig.numSubFrames = kDMDSubFrames;
    
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < kDMDSubFrames; i++)
     {
         dmdConfig.rclkLowCycles[i] = 15;
         dmdConfig.latchHighCycles[i] = 15;
         dmdConfig.dotclkHalfPeriod[i] = 1;
     }
         
-    dmdConfig.deHighCycles[0] = 200;
+    dmdConfig.deHighCycles[0] = 250;
     dmdConfig.deHighCycles[1] = 400;
-    dmdConfig.deHighCycles[2] = 100;
+    dmdConfig.deHighCycles[2] = 180;
     dmdConfig.deHighCycles[3] = 800;
 
     PRDMDUpdateConfig(proc, &dmdConfig);
 }
 
 // Display a simple pattern to verify DMD functionality.
-// 16 consecutive rows will turn on with incrementing brightness and rotate vertically
-void UpdateDots( unsigned char * dots, unsigned int dotPointer )
+// 16 diagonal lines will rotate to the right.  Every two rows will get brighter, 
+// starting with dim dots at the top.
+void UpdateDots( unsigned char * dots, unsigned int dotOffset )
 {
-    int i,j,k,color,mappedColor,loopCtr;
+    int i,j,k,color,mappedColor,loopCtr,byte_shifter;
+    const int rate_reduction_divisor = 1;
 
-    loopCtr = dotPointer/2;
-    color = 0xf;
+    loopCtr = dotOffset/rate_reduction_divisor;
+    color = pow(2,kDMDSubFrames) - 1;
+    byte_shifter = 0x80;
 
     // Slow it down just a tad
-    if (dotPointer%2 == 0)
+    if (dotOffset%rate_reduction_divisor == 0)
     {
+        // Set up byte_shifter to rotate pattern to the right.
+        byte_shifter = pow(2,(loopCtr%8));
+
         // Clear the DMD dots every time the rotation occurs
-        memset(dots,0,((128*32)/8)*4);
+        memset(dots,0,((kDMDColumns*kDMDRows)/8)*kDMDSubFrames);
     
         // Loop through all of the rows
-        for (i = (loopCtr%32)+32; i >= loopCtr%32; i--)
+        for (i = kDMDRows - 1; i >= 0; i--)
         {
             // Map the color index to the DMD's physical color map
             int mappedColors[] = {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15};
             mappedColor = mappedColors[color];
 
             // Loop through each of 16 bytes in a row
-            for (j = 0; j < 16; j++)
+            for (j = 0; j < kDMDColumns / 8; j++)
             {
                 // Loop through each subframe
-                for (k = 0; k < 4; k++)
+                for (k = 0; k < kDMDSubFrames; k++)
                 {
                     // Turn on the byte in each sub-frame that's enabled 
                     // active for the color code.
-                    if ((mappedColor >> k) & 1 == 1) dots[k*(128*32/8)+((i%32)*16)+j] = 0xff;
+                    if ((mappedColor >> k) & 1 == 1) 
+                        dots[k*(kDMDColumns*kDMDRows/8)+((i%kDMDRows)*(kDMDColumns / 8))+j] = byte_shifter;
                 }
             }
-            if (color > 0) color--;
+            // Determine where to change the color in order to progress from row 0 = color 0
+            // to the last row being the last color.
+            if (i % (int)((kDMDRows/pow(2,kDMDSubFrames))) == 0) color--;
+            if (byte_shifter == 1) byte_shifter = 0x80;
+            else byte_shifter = byte_shifter >> 1;
         }
     }
-
 }
 
 bool runLoopRun = true;
@@ -266,14 +280,14 @@ void RunLoop(PRHandle proc)
     // Create dot array using an array of bytes.  Each byte holds 8 dots.  Need
     // space for 4 sub-frames of 128/32 dots.
     unsigned char dots[4*((128*32)/8)]; 
-    unsigned int dotPointer = 0;
+    unsigned int dotOffset = 0;
 
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
          
         // Create a dot pattern to test the DMD
-        UpdateDots(dots,dotPointer++);
+        UpdateDots(dots,dotOffset++);
         PRDMDDraw(proc,dots);
 
         int numEvents = PRGetEvents(proc, events, maxEvents);
