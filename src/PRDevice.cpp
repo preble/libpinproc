@@ -211,7 +211,23 @@ PRSwitchRuleInternal *PRDevice::GetSwitchRuleByIndex(uint16_t index)
     return &switchRules[index];
 }
 
-PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
+{
+    uint32_t rc;
+    const int burstWords = 2;
+    uint32_t burst[burstWords];
+
+    this->switchConfig = *switchConfig;
+    CreateSwitchUpdateConfigBurst(burst, switchConfig);
+
+    DEBUG(PRLog("Configuring Switch Logic"));
+    DEBUG(PRLog("Words: %x %x\n",burst[0],burst[1]));
+
+    rc = WriteData(burst, burstWords);
+    return rc;
+}
+
+PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
     // Updates a single rule with the associated linked driver state changes.
     const int burstSize = 4;
@@ -265,7 +281,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
                 newRule->linkIndex = freeSwitchRuleIndexes.front(); 
                 freeSwitchRuleIndexes.pop();
                 
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule);
                 
                 // Prepare for the next rule:
                 newRule = GetSwitchRuleByIndex(newRule->linkIndex);
@@ -273,7 +289,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
             else
             {
                 newRule->linkActive = false;
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule);
             }
             
             DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
@@ -285,7 +301,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
                 newRule = GetSwitchRuleByIndex(firstRuleIndex);
                 newRule->changeOutput = false;
                 newRule->linkActive = false;
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule);
                 if (WriteData(burst, burstSize) == kPRSuccess)
                     DEBUG(PRLog("Disabled successfully.\n"));
                 else
@@ -299,7 +315,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
     }
     else 
     {
-        CreateSwitchesUpdateRulesBurst(burst, newRule);
+        CreateSwitchUpdateRulesBurst(burst, newRule);
         DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:

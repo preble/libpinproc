@@ -181,9 +181,14 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsO
 
 // Switches
 
-PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig)
 {
-    return handleAsDevice->SwitchesUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
+    return handleAsDevice->SwitchUpdateConfig(switchConfig);
+}
+
+PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+{
+    return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
 PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)

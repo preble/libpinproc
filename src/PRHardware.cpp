@@ -139,6 +139,28 @@ int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
     return kPRSuccess;
 }
 
+int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig)
+{
+    uint32_t addr;
+    uint32_t i;
+
+    addr = 0;
+    burst[0] = CreateBurstCommand (P_ROC_BUS_SWITCH_CTRL_SELECT, addr, 1 );
+    burst[1] = (switchConfig->clear << P_ROC_SWITCH_CONFIG_CLEAR_SHIFT) |
+               (switchConfig->directMatrixScanLoopTime << 
+                   P_ROC_SWITCH_CONFIG_MS_PER_DM_SCAN_LOOP_SHIFT) |
+               (switchConfig->pulsesBeforeCheckingRX << 
+                   P_ROC_SWITCH_CONFIG_PULSES_BEFORE_CHECKING_RX_SHIFT) |
+               (switchConfig->inactivePulsesAfterBurst << 
+                   P_ROC_SWITCH_CONFIG_INACTIVE_PULSES_AFTER_BURST_SHIFT) |
+               (switchConfig->pulsesPerBurst << 
+                   P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT) |
+               (switchConfig->pulseHalfPeriodTime << 
+                   P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT);
+
+    return kPRSuccess;
+}
+
 int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType) 
 {
     uint32_t debounce = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchClosedDebounced) ? 1 : 0;
@@ -169,7 +191,7 @@ void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *event
         *eventType = debounce ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchClosedNondebounced;
 }
 
-int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record) {
+int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record) {
     uint32_t addr = CreateSwitchRuleAddr(rule_record->switchNum, rule_record->eventType);
     uint32_t driver_command[3];
 

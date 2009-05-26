@@ -135,13 +135,23 @@ void ConfigureSwitches(PRHandle proc)
 {
     int i;
 
+    // Configure switch controller registers (if the defaults aren't acceptable)
+    PRSwitchConfig switchConfig;
+    switchConfig.clear = false;
+    switchConfig.directMatrixScanLoopTime = 2; // milliseconds
+    switchConfig.pulsesBeforeCheckingRX = 10;
+    switchConfig.inactivePulsesAfterBurst = 12;
+    switchConfig.pulsesPerBurst = 6;
+    switchConfig.pulseHalfPeriodTime = 13; // milliseconds
+    PRSwitchUpdateConfig(proc, &switchConfig);
+
     // Configures rules to notify the host for every debounced switch event.
     for (i = 0; i <= kPRSwitchPhysicalLast; i++)
     {
         PRSwitchRule sw;
         sw.notifyHost = true;
-        PRSwitchesUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
-        PRSwitchesUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
     }
 }
 
@@ -157,7 +167,7 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverGetState(proc, holdCoilNum, &drivers[1]);
     PRDriverStatePulse(&drivers[1],0);  // Turn on indefintely (set pulse for 0ms)
     sw.notifyHost = false;
-    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
 
     // Flipper off rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
@@ -165,7 +175,7 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverGetState(proc, holdCoilNum, &drivers[1]);
     PRDriverStateDisable(&drivers[1]); // Disable hold coil
     sw.notifyHost = false;
-    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
 }
 
 void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
@@ -178,7 +188,7 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     PRDriverGetState(proc, coilNum, &drivers[0]);
     PRDriverStatePulse(&drivers[0],pulseTime); // Pulse coil for 34ms.
     sw.notifyHost = false;
-    PRSwitchesUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
 }
 
 void ConfigureSwitchRules(PRHandle proc)

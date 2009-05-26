@@ -64,7 +64,8 @@ public:
     PRResult DriverGetState(uint8_t driverNum, PRDriverState *driverState);
     PRResult DriverUpdateState(PRDriverState *driverState);
 
-    PRResult SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+    PRResult SwitchUpdateConfig(PRSwitchConfig *switchConfig);
+    PRResult SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
     PRResult DriverWatchdogTickle();
 
@@ -137,6 +138,7 @@ protected:
     PRDriverState drivers[maxDrivers];
     PRDMDConfig dmdConfig;
 	
+    PRSwitchConfig switchConfig;
     PRSwitchRuleInternal switchRules[maxSwitchRules];
 	queue<uint32_t> freeSwitchRuleIndexes; /**< Indexes of available switch rules. */
     PRSwitchRuleInternal *GetSwitchRuleByIndex(uint16_t index);

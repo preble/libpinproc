@@ -121,14 +121,21 @@ const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT     = 30;
 
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DRIVER_NUM_SHIFT = 1;
 
-const uint32_t P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT = 9;
-const uint32_t P_ROC_SWITCH_RULE_NUM_STATE_SHIFT = 8;
-const uint32_t P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT = 0;
-const uint32_t P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT = 2;
+const uint32_t P_ROC_SWITCH_CONFIG_CLEAR_SHIFT                       = 31;
+const uint32_t P_ROC_SWITCH_CONFIG_MS_PER_DM_SCAN_LOOP_SHIFT         = 24;
+const uint32_t P_ROC_SWITCH_CONFIG_PULSES_BEFORE_CHECKING_RX_SHIFT   = 18;
+const uint32_t P_ROC_SWITCH_CONFIG_INACTIVE_PULSES_AFTER_BURST_SHIFT = 12;
+const uint32_t P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT            = 6;
+const uint32_t P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT    = 0;
 
-const uint32_t P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT = 23;
-const uint32_t P_ROC_SWITCH_RULE_LINK_ACTIVE_SHIFT = 10;
-const uint32_t P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT = 11;
+const uint32_t P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT   = 9;
+const uint32_t P_ROC_SWITCH_RULE_NUM_STATE_SHIFT      = 8;
+const uint32_t P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT = 0;
+const uint32_t P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT    = 2;
+
+const uint32_t P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT   = 23;
+const uint32_t P_ROC_SWITCH_RULE_LINK_ACTIVE_SHIFT   = 10;
+const uint32_t P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT  = 11;
 const uint32_t P_ROC_SWITCH_RULE_CHANGE_OUTPUT_SHIFT = 9;
 const uint32_t P_ROC_SWITCH_RULE_DRIVER_NUM_SHIFT    = 0;
 
@@ -160,7 +167,8 @@ uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals);
 int32_t CreateDriverUpdateGroupConfigBurst ( uint32_t * burst, PRDriverGroupConfig *driver_group);
 int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);
-int32_t CreateSwitchesUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
+int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig);
+int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
 int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
                                    bool_t watchdogEnable, uint16_t watchdogResetTime);
 int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
