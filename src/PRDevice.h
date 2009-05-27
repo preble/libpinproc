@@ -121,6 +121,7 @@ protected:
 
 
     // Local Device State
+    void Shutdown();
     void Reset();
     PRMachineType machineType;
     PRDriverGlobalConfig driverGlobalConfig;

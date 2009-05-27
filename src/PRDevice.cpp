@@ -37,6 +37,7 @@ PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 
 PRDevice::~PRDevice()
 {
+    Shutdown();
     Close();
 }
 
@@ -99,6 +100,31 @@ void PRDevice::Reset()
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
 }
 
+void PRDevice::Shutdown()
+{
+    int i;
+    PRDriverState driverState;
+    PRSwitchRule switchRule;
+
+    // Deactivate all drivers
+    for (i = 0; i < maxDrivers; i++)
+    {
+        // Get each driver's current state just in case polarity was changed from the default.
+        DriverGetState(i, &driverState);
+        driverState.state = false;
+        DriverUpdateState(&driverState);
+    }
+
+    // Deactivate all switch rules
+    switchRule.notifyHost = false;
+    for (i = kPRSwitchPhysicalFirst; i < kPRSwitchPhysicalLast; i++)
+    {
+        SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &switchRule, NULL, 0);
+        SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &switchRule, NULL, 0);
+        SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &switchRule, NULL, 0);
+        SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &switchRule, NULL, 0);
+    }
+}
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)
 {
