@@ -30,6 +30,8 @@
 
 
 #include "PRHardware.h"
+#include "PRCommon.h"
+#include "pinproc.h"
 
 
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words ) {
@@ -234,3 +236,112 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
     return kPRSuccess;
 }
 
+
+/**
+ * This is where all FTDI driver-specific code should go.
+ * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.
+ */
+
+#if !defined(USE_LIBFTDI)
+#define USE_LIBFTDI 1
+#endif
+
+#if USE_LIBFTDI
+
+#include <ftdi.h>
+
+static bool ftdiInitialized;
+static ftdi_context ftdic;
+
+
+PRResult PRHardwareOpen()
+{
+    int32_t i=0;
+    PRResult rc;
+    struct ftdi_device_list *devlist, *curdev;
+    char manufacturer[128], description[128];
+    
+    ftdiInitialized = false;
+    
+    // Open the FTDI device
+    if (ftdi_init(&ftdic) != 0)
+    {
+        DEBUG(PRLog("Failed to initialize FTDI.\n"));
+        return kPRFailure;
+    }
+    
+    // Find all FTDI devices
+    // This is very basic and really only expects to see 1 device.  It needs to be
+    // smarter.  At the very least, it should check some register on the P-ROC versus
+    // an input parameter to ensure the software is set up for the same architecture as
+    // the P-ROC (Stern vs WPC).  Otherwise, it's possible to drive the coils the wrong
+    // polarity and blow fuses or fry transistors and all other sorts of badness.
+    
+    // We first enumerate all of the devices:
+    int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
+    if (numDevices < 0) {
+        DEBUG(PRLog("ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
+        ftdi_deinit(&ftdic);
+        return kPRFailure;
+    }
+    else {
+        DEBUG(PRLog("Number of FTDI devices found: %d\n", numDevices));
+        
+        for (curdev = devlist; curdev != NULL; i++) {
+            DEBUG(PRLog("Checking device %d\n", i));
+            if ((rc = (int32_t)ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0) {
+                DEBUG(PRLog("  ftdi_usb_get_strings failed: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
+            }
+            else {
+                DEBUG(PRLog("  Device #%d:\n", i));
+                DEBUG(PRLog("  Manufacturer: %s\n", manufacturer));
+                DEBUG(PRLog("  Description: %s\n", description));
+            }
+            curdev = curdev->next;
+        }
+        
+    }
+    
+    // Don't need the device list anymore
+    ftdi_list_free (&devlist);
+    
+    if ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0)
+    {
+        DEBUG(PRLog("ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
+        return kPRFailure;
+    }
+    else
+    {
+        rc = kPRSuccess;
+        if (ftdic.type == TYPE_R) {
+            uint32_t chipid;
+            ftdi_read_chipid(&ftdic,&chipid);
+            DEBUG(PRLog("FTDI chip_id = 0x%x\n", chipid));
+            ftdiInitialized = true;
+            return kPRSuccess;
+        }
+        else
+        {
+            DEBUG(PRLog("FTDI type != TYPE_R: 0x%x\n", ftdic.type));
+            return kPRFailure;
+        }
+    }
+}
+void PRHardwareClose()
+{
+    if (ftdiInitialized)
+    {
+        ftdi_usb_close(&ftdic);
+        ftdi_deinit(&ftdic);
+    }
+}
+int PRHardwareRead(uint8_t *buffer, int maxBytes)
+{
+    return ftdi_read_data(&ftdic, buffer, maxBytes);
+}
+int PRHardwareWrite(uint8_t *buffer, int bytes)
+{
+    return ftdi_write_data(&ftdic, buffer, bytes);
+}
+
+#endif // USE_LIBFTDI

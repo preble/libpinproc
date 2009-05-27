@@ -30,7 +30,7 @@
 
 #include "PRDevice.h"
 
-PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType), ftdiInitialized(false)
+PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
     Reset();
 }
@@ -391,112 +391,39 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
 
 PRResult PRDevice::Open()
 {
-    int32_t i=0;
-    PRResult rc;
-    struct ftdi_device_list *devlist, *curdev;
-    char manufacturer[128], description[128];
-    uint32_t temp_word;
-
-    ftdiInitialized = false;
-
-    // Open the FTDI device
-    if (ftdi_init(&ftdic) != 0)
+    PRResult res = PRHardwareOpen();
+    if (res == kPRSuccess)
     {
-        DEBUG(PRLog("Failed to initialize FTDI.\n"));
-        return kPRFailure;
-    }
-
-    // Find all FTDI devices
-    // This is very basic and really only expects to see 1 device.  It needs to be
-    // smarter.  At the very least, it should check some register on the P-ROC versus
-    // an input parameter to ensure the software is set up for the same architecture as
-    // the P-ROC (Stern vs WPC).  Otherwise, it's possible to drive the coils the wrong
-    // polarity and blow fuses or fry transistors and all other sorts of badness.
-
-    // We first enumerate all of the devices:
-    int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
-    if (numDevices < 0) {
-        DEBUG(PRLog("ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
-        ftdi_deinit(&ftdic);
-        return kPRFailure;
-    }
-    else {
-        DEBUG(PRLog("Number of FTDI devices found: %d\n", numDevices));
-
-        for (curdev = devlist; curdev != NULL; i++) {
-            DEBUG(PRLog("Checking device %d\n", i));
-            if ((rc = (int32_t)ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0) {
-                DEBUG(PRLog("  ftdi_usb_get_strings failed: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
-            }
-            else {
-                DEBUG(PRLog("  Device #%d:\n", i));
-                DEBUG(PRLog("  Manufacturer: %s\n", manufacturer));
-                DEBUG(PRLog("  Description: %s\n", description));
-            }
-            curdev = curdev->next;
+        // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
+        // just in case it was already initialized from a previous application execution.
+        DEBUG(PRLog("Verifying P-ROC ID: \n"));
+        if (VerifyChipID() == kPRFailure) {
+            // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
+            // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
+            // before it allows access deeper into the chip.  This keeps garbage from getting
+            // in and wreaking havoc before software is up and running.
+            DEBUG(PRLog("Initializing P-ROC...\n"));
+            res = FlushReadBuffer();
+            uint32_t temp_word = P_ROC_INIT_PATTERN_A;
+            res = WriteData(&temp_word, 1);
+            temp_word = P_ROC_INIT_PATTERN_B;
+            res = WriteData(&temp_word, 1);
+            res = VerifyChipID();
         }
-
-    }
-
-    // Don't need the device list anymore
-    ftdi_list_free (&devlist);
-    // Did previous logic leave ftdic clean? Probably
-    // Need to de-init and re-init before opening usb?  Doubtful.
-    //ftdi_deinit(&ftdic);
-    //ftdi_init(&ftdic);
-
-
-    if ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0)
-    {
-        DEBUG(PRLog("ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
-        return kPRFailure;
-    }
-    else
-    {
-        rc = kPRSuccess;
-        if (ftdic.type == TYPE_R) {
-            uint32_t chipid;
-            ftdi_read_chipid(&ftdic,&chipid);
-            DEBUG(PRLog("FTDI chip_id = 0x%x\n", chipid));
-
-            // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
-            // just in case it was already initialized from a previous application execution.
-            DEBUG(PRLog("Verifying P-ROC ID: \n"));
-            if (VerifyChipID() == kPRFailure) {
-                // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
-                // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
-                // before it allows access deeper into the chip.  This keeps garbage from getting
-                // in and wreaking havoc before software is up and running.
-                DEBUG(PRLog("Initializing P-ROC...\n"));
-                rc = FlushReadBuffer();
-                temp_word = P_ROC_INIT_PATTERN_A;
-                rc = WriteData(&temp_word, 1);
-                temp_word = P_ROC_INIT_PATTERN_B;
-                rc = WriteData(&temp_word, 1);
-                rc = VerifyChipID();
-            }
-            else
-            {
-                DEBUG(PRLog("Failed to verify chip ID."));
-                rc = kPRFailure;
-            }
+        else
+        {
+            DEBUG(PRLog("Failed to verify chip ID."));
+            res = kPRFailure;
         }
     }
 
-    if (rc == kPRSuccess)
-        ftdiInitialized = true;
-
-    return rc;
+    return res;
 }
 
 PRResult PRDevice::Close()
 {
     // TODO: Add protection against closing a not-open ftdic.
-    if (ftdiInitialized)
-    {
-        ftdi_usb_close(&ftdic);
-        ftdi_deinit(&ftdic);
-    }
+    PRHardwareClose();
     return kPRSuccess;
 }
 
@@ -577,7 +504,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
     }
 
     int bytesToWrite = numWords * 4;
-    int bytesWritten = (int32_t)ftdi_write_data(&ftdic, wr_buffer, bytesToWrite);
+    int bytesWritten = PRHardwareWrite(wr_buffer, bytesToWrite);
 
     if (bytesWritten != bytesToWrite)
     {
@@ -639,7 +566,7 @@ PRResult PRDevice::FlushReadBuffer()
 int32_t PRDevice::CollectReadData()
 {
     int32_t rc,i;
-    rc = ftdi_read_data(&ftdic, collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
+    rc = PRHardwareRead(collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
     for (i=0; i<rc; i=i++) {
         collected_bytes_fifo[collected_bytes_wr_addr] = collect_buffer[i];
         if (collected_bytes_wr_addr == (FTDI_BUFFER_SIZE-1))

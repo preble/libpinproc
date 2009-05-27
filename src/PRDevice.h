@@ -29,22 +29,15 @@
  */
 
 #include "../include/pinproc.h"
+#include "PRCommon.h"
 #include "PRHardware.h"
 #include <queue>
-#include <ftdi.h>
 
 using namespace std;
 
 #define maxDriverGroups (26)
 #define maxDrivers (256)
 #define maxSwitchRules (256<<2) // 8 bits of switchNum indicies plus bits for debounced and state.
-
-#ifdef NDEBUG
-#  define DEBUG(block)
-#else
-#  define DEBUG(block) block
-#endif
-extern void PRLog(const char *format, ...);
 
 class PRDevice
 {
@@ -117,9 +110,6 @@ protected:
 
     queue<uint32_t> unrequestedDataQueue; /**< Queue of words received from the device that were not requested via RequestData().  Usually switch events. */
     queue<uint32_t> requestedDataQueue; /**< Queue of words received from the device as the result of a call to RequestData(). */
-
-    bool ftdiInitialized;
-    ftdi_context ftdic;
 
     uint8_t collected_bytes_fifo[FTDI_BUFFER_SIZE];
     int32_t collected_bytes_rd_addr;
