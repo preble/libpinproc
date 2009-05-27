@@ -1,0 +1,29 @@
+# P-ROC Game Description file for Judge Dredd
+PRGame:
+    machineType: wpc
+PRFlippers:
+    - flipperLwR
+    - flipperLwL
+    - flipperUpR
+    - flipperUpL
+PRBumpers:
+    - slingL
+    - slingR
+PRSwitches:
+    flipperLwR: 1
+    flipperLwL: 3
+    flipperUpR: 5
+    flipperUpL: 7
+    slingL: 96
+    slingR: 97
+PRCoils:
+    flipperLwRMain: 32
+    flipperLwRHold: 33
+    flipperLwLMain: 34
+    flipperLwLHold: 35
+    flipperUpRMain: 36
+    flipperUpRHold: 37
+    flipperUpLMain: 38
+    flipperUpLHold: 39
+    slingL: 70
+    slingR: 71
