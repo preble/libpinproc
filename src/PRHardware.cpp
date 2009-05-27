@@ -31,7 +31,6 @@
 
 #include "PRHardware.h"
 #include "PRCommon.h"
-#include "pinproc.h"
 
 
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words ) {
