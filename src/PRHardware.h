@@ -169,4 +169,10 @@ void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *event
 int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType);
 int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
 
+
+PRResult PRHardwareOpen();
+void PRHardwareClose();
+int PRHardwareRead(uint8_t *buffer, int maxBytes);
+int PRHardwareWrite(uint8_t *buffer, int bytes);
+
 #endif // _PROC_HARDWARE_H_
