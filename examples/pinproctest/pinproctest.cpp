@@ -89,24 +89,50 @@ PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
     return kPRSuccess;
 }
 
-void ConfigureDrivers(PRHandle proc, YAML::Node& yamlDoc)
+void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yamlDoc)
 {
     int i;
+    int mappedDriverGroupEnableIndex[kPRDriverGroupsMax];
+    int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 4, 3, 2, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0};
+    int rowEnableIndex1;
+    int rowEnableIndex0;
+    bool tickleSternWatchdog;
+    bool globalPolarity;
+    bool activeLowMatrixRows;
+    int driverLoopTime;
+    int watchdogResetTime;
+    int slowGroupTime;
+
+    switch (machineType) 
+    {
+        case kPRMachineWPC: {
+            memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, sizeof(mappedDriverGroupEnableIndex)); 
+            rowEnableIndex1 = 6; // Unused in WPC
+            rowEnableIndex0 = 6;
+            tickleSternWatchdog = false;
+            globalPolarity = false;
+            activeLowMatrixRows = true;
+            driverLoopTime = 4; // milliseconds
+            watchdogResetTime = 1000; // milliseconds
+            slowGroupTime = driverLoopTime * 100; // microseconds
+            break;
+        }
+    }
 
     PRDriverGlobalConfig globals;
     globals.enableOutputs = false;
-    globals.globalPolarity = false;
+    globals.globalPolarity = globalPolarity;
     globals.useClear = false;
     globals.strobeStartSelect = false;
-    globals.startStrobeTime = 4; // milliseconds per output loop
-    globals.matrixRowEnableIndex1 = 12;
-    globals.matrixRowEnableIndex0 = 6;
-    globals.activeLowMatrixRows = true;
-    globals.tickleSternWatchdog = false;
+    globals.startStrobeTime = driverLoopTime; // milliseconds per output loop
+    globals.matrixRowEnableIndex1 = rowEnableIndex1;
+    globals.matrixRowEnableIndex0 = rowEnableIndex0;
+    globals.activeLowMatrixRows = activeLowMatrixRows;
+    globals.tickleSternWatchdog = tickleSternWatchdog;
     globals.encodeEnables = false;
     globals.watchdogExpired = false;
     globals.watchdogEnable = true;
-    globals.watchdogResetTime = 1000; // milliseconds
+    globals.watchdogResetTime = watchdogResetTime;
 
     // We want to start up safely, so we'll update the global driver config twice.
     // When we toggle enableOutputs like this P-ROC will reset the polarity:
@@ -120,13 +146,14 @@ void ConfigureDrivers(PRHandle proc, YAML::Node& yamlDoc)
 
     // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
     // with driver #32.  The following 6 groups are configured for coils/flashlamps.
+
     PRDriverGroupConfig group;
-    for (i = 0; i < 6; i++)
+    for (i = 4; i < 10; i++)
     {
-        PRDriverGetGroupConfig(proc, i + 4, &group);
+        PRDriverGetGroupConfig(proc, i, &group);
         group.slowTime = 0;
-        group.enableIndex = i;
-        group.rowActivateIndex = i;
+        group.enableIndex = mappedDriverGroupEnableIndex[i];
+        group.rowActivateIndex = 0;
         group.rowEnableSelect = 0;
         group.matrixed = false;
         group.polarity = false;
@@ -137,11 +164,11 @@ void ConfigureDrivers(PRHandle proc, YAML::Node& yamlDoc)
     }
 
     // The following 8 groups are configured for the feature lamp matrix.
-    for (i = 6; i < 14; i++) {
-        PRDriverGetGroupConfig(proc, i + 4, &group);
-        group.slowTime = 400;
-        group.enableIndex = 7;
-        group.rowActivateIndex = i - 6;
+    for (i = 10; i < 18; i++) {
+        PRDriverGetGroupConfig(proc, i, &group);
+        group.slowTime = slowGroupTime;
+        group.enableIndex = mappedDriverGroupEnableIndex[i];
+        group.rowActivateIndex = i - 10;
         group.rowEnableSelect = 0;
         group.matrixed = 1;
         group.polarity = 0;
@@ -402,7 +429,7 @@ int main(int argc, const char **argv)
 
     // Make Drivers the last thing to configure so watchdog doesn't expire
     // before the RunLoop begins.
-    ConfigureDrivers(proc, yamlDoc);
+    ConfigureDrivers(proc, machineType, yamlDoc);
 
     printf("Running.  Hit Ctrl-C to exit.\n");
 
