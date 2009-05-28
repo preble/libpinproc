@@ -11,11 +11,11 @@ libpinproc requires:
 - [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
 
-The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/). Follow the build instructions, creating the build subdirectory.  After building, from the build directory, run the following commands to manually install it:
+The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
 
-    sudo cp bin/libyaml-cpp.a /usr/local/lib/
+    sudo cp lib/libyaml-cpp.a /usr/local/lib/
     sudo mkdir /usr/local/include/yaml-cpp
-    sudo cp ../include/*.h /usr/local/include/yaml-cpp/
+    sudo cp include/*.h /usr/local/include/yaml-cpp/
 
 #### Building with CMake
 
