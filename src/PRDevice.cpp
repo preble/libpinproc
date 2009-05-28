@@ -32,12 +32,12 @@
 
 PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
-    Reset();
+    // Reset internally maintainted driver and switch structures, but do not update the device.
+    Reset(false);
 }
 
 PRDevice::~PRDevice()
 {
-    Shutdown();
     Close();
 }
 
@@ -58,34 +58,50 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
-    dev->Reset();
+    // Reset internally maintainted driver and switch structures, but do not update the device.
+    dev->Reset(false);
 
     return dev;
 }
 
-void PRDevice::Reset()
+void PRDevice::Reset(bool updateDevice)
 {
     bool defaultPolarity = machineType != kPRMachineWPC;
     int i;
     memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
-    for (i = 0; i < maxDrivers; i++)
+    for (i = 0; i < kPRDriverCount; i++)
     {
         PRDriverState *driver = &drivers[i];
         memset(driver, 0x00, sizeof(PRDriverState));
         driver->driverNum = i;
         driver->polarity = defaultPolarity;
+        if (updateDevice) DriverUpdateState(driver);
     }
-    for (i = 0; i < maxDriverGroups; i++)
+    for (i = 0; i < kPRDriverGroupsMax; i++)
     {
         PRDriverGroupConfig *group = &driverGroups[i];
         memset(group, 0x00, sizeof(PRDriverGroupConfig));
         group->groupNum = i;
         group->polarity = defaultPolarity;
     }
-    for (i = 0; i < maxSwitchRules; i++)
+
+    // Create empty switch rule for clearing the rules in the device.
+    PRSwitchRule emptySwitchRule; 
+    memset(&emptySwitchRule, 0x00, sizeof(PRSwitchRule));
+
+    for (i = 0; i < kPRSwitchRulesCount; i++)
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
+
+        // Send blank rule for each event type to Device if necessary
+        if (updateDevice && i <= kPRSwitchPhysicalLast) {
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0);
+        }
+
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
@@ -98,32 +114,6 @@ void PRDevice::Reset()
     num_collected_bytes = 0;
 
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
-}
-
-void PRDevice::Shutdown()
-{
-    int i;
-    PRDriverState driverState;
-    PRSwitchRule switchRule;
-
-    // Deactivate all drivers
-    for (i = 0; i < maxDrivers; i++)
-    {
-        // Get each driver's current state just in case polarity was changed from the default.
-        DriverGetState(i, &driverState);
-        driverState.state = false;
-        DriverUpdateState(&driverState);
-    }
-
-    // Deactivate all switch rules
-    switchRule.notifyHost = false;
-    for (i = kPRSwitchPhysicalFirst; i < kPRSwitchPhysicalLast; i++)
-    {
-        SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &switchRule, NULL, 0);
-        SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &switchRule, NULL, 0);
-        SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &switchRule, NULL, 0);
-        SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &switchRule, NULL, 0);
-    }
 }
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)

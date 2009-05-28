@@ -90,6 +90,7 @@ typedef enum PRMachineType {
 
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType); /**< Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed.  Returns #kPRHandleInvalid if an error occurred. */
 PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existing P-ROC device handle. */
+PR_EXPORT void PRReset(PRHandle handle, bool updateDevice); /**< Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC to turn off drivers and switch rules. */
 
 /** @} */ // End of Device Creation & Deletion
 
@@ -97,6 +98,9 @@ PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existin
 /** @defgroup drivers Driver Manipulation
  * @{
  */
+
+#define kPRDriverGroupsMax (26)   /**< Number of available driver groups. */
+#define kPRDriverCount (256)          /**< Total number of drivers */
 
 typedef struct PRDriverGlobalConfig {
     bool_t enableOutputs; // Formerly enable_direct_outputs
@@ -235,6 +239,7 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 #define kPRSwitchPhysicalLast (223)  /**< Switch number of the last physical switch.  */
 #define kPRSwitchVirtualFirst (224)  /**< Switch number of the first virtual switch.  */
 #define kPRSwitchVirtualLast (255)   /**< Switch number of the last virtual switch.   */
+#define kPRSwitchRulesCount ((kPRSwitchVirtualLast + 1) << 2) /**< Total number of available switch rules. */
 
 typedef struct PRSwitchConfig {
     bool_t clear; // Drive the clear output

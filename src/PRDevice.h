@@ -44,6 +44,7 @@ class PRDevice
 public:
     static PRDevice *Create(PRMachineType machineType);
     ~PRDevice();
+    void Reset(bool updateDevice);
 protected:
     PRDevice(PRMachineType machineType);
 
@@ -121,8 +122,6 @@ protected:
 
 
     // Local Device State
-    void Shutdown();
-    void Reset();
     PRMachineType machineType;
     PRDriverGlobalConfig driverGlobalConfig;
     PRDriverGroupConfig driverGroups[maxDriverGroups];

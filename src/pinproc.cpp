@@ -72,6 +72,12 @@ PR_EXPORT void PRDelete(PRHandle handle)
         delete (PRDevice*)handle;
 }
 
+/** Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC device. */
+PR_EXPORT void PRReset(PRHandle handle, bool updateDevice)
+{
+    return handleAsDevice->Reset(updateDevice);
+}
+
 // Events
 
 /** Get all of the available events that have been received. */
