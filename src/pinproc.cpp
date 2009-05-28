@@ -73,9 +73,9 @@ PR_EXPORT void PRDelete(PRHandle handle)
 }
 
 /** Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC device. */
-PR_EXPORT void PRReset(PRHandle handle, bool updateDevice)
+PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
 {
-    return handleAsDevice->Reset(updateDevice);
+    return handleAsDevice->Reset(resetFlags);
 }
 
 // Events

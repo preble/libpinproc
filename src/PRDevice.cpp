@@ -33,7 +33,7 @@
 PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
     // Reset internally maintainted driver and switch structures, but do not update the device.
-    Reset(false);
+    Reset(kPRResetFlagDefault);
 }
 
 PRDevice::~PRDevice()
@@ -58,13 +58,10 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
-    // Reset internally maintainted driver and switch structures, but do not update the device.
-    dev->Reset(false);
-
     return dev;
 }
 
-void PRDevice::Reset(bool updateDevice)
+PRResult PRDevice::Reset(uint32_t resetFlags)
 {
     bool defaultPolarity = machineType != kPRMachineWPC;
     int i;
@@ -75,7 +72,7 @@ void PRDevice::Reset(bool updateDevice)
         memset(driver, 0x00, sizeof(PRDriverState));
         driver->driverNum = i;
         driver->polarity = defaultPolarity;
-        if (updateDevice) DriverUpdateState(driver);
+        if (resetFlags & kPRResetFlagUpdateDevice) DriverUpdateState(driver);
     }
     for (i = 0; i < kPRDriverGroupsMax; i++)
     {
@@ -95,7 +92,7 @@ void PRDevice::Reset(bool updateDevice)
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
 
         // Send blank rule for each event type to Device if necessary
-        if (updateDevice && i <= kPRSwitchPhysicalLast) {
+        if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) {
             SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
             SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
             SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
@@ -105,7 +102,7 @@ void PRDevice::Reset(bool updateDevice)
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
-        if (switchRule->switchNum >= kPRSwitchVirtualFirst && switchRule->switchNum <= kPRSwitchVirtualLast)
+        if (switchRule->switchNum >= kPRSwitchVirtualFirst) // Disabled for compiler warning (always true due to data type): && switchRule->switchNum <= kPRSwitchVirtualLast)
             freeSwitchRuleIndexes.push(ruleIndex);
     }
 
@@ -114,6 +111,7 @@ void PRDevice::Reset(bool updateDevice)
     num_collected_bytes = 0;
 
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
+    return kPRSuccess;
 }
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)

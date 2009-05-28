@@ -417,7 +417,7 @@ int main(int argc, const char **argv)
 
     // Clean up P-ROC.
     printf("Disabling P-ROC drivers and switch rules...\n");
-    PRReset(proc,true); // Reset the device structs and write them into the device.
+    PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
 
     // Destroy the P-ROC device handle:
     PRDelete(proc);

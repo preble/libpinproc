@@ -44,7 +44,7 @@ class PRDevice
 public:
     static PRDevice *Create(PRMachineType machineType);
     ~PRDevice();
-    void Reset(bool updateDevice);
+    PRResult Reset(uint32_t resetFlags);
 protected:
     PRDevice(PRMachineType machineType);
 

@@ -90,7 +90,15 @@ typedef enum PRMachineType {
 
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType); /**< Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed.  Returns #kPRHandleInvalid if an error occurred. */
 PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existing P-ROC device handle. */
-PR_EXPORT void PRReset(PRHandle handle, bool updateDevice); /**< Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC to turn off drivers and switch rules. */
+
+#define kPRResetFlagDefault (0) /**< Only resets state in memory and does not write changes to the device. */
+#define kPRResetFlagUpdateDevice (1) /**< Instructs PRReset() to update the device once it has reset the configuration to its defaults. */
+
+/**
+ * @brief Resets internally maintained driver and switch rule structures.
+ * @param resetFlags Specify #kPRResetFlagDefault to only reset the configuration in host memory.  #kPRResetFlagUpdateDevice will write the default configuration to the device, effectively disabling all drivers and switch rules. 
+ */
+PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags);
 
 /** @} */ // End of Device Creation & Deletion
 
