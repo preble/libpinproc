@@ -41,6 +41,7 @@
 #define kBumpersSection "PRBumpers"
 #define kCoilsSection "PRCoils"
 #define kSwitchesSection "PRSwitches"
+#define kNumberField "number"
 
 #define kFlipperPulseTime (34) // 34 ms
 #define kBumperPulseTime (25) // 25 ms
@@ -243,9 +244,9 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
         int swNum, coilMain, coilHold;
         std::string flipperName;
         *flippersIt >> flipperName;
-        yamlDoc[kSwitchesSection][flipperName] >> swNum;
-        yamlDoc[kCoilsSection][flipperName + "Main"] >> coilMain;
-        yamlDoc[kCoilsSection][flipperName + "Hold"] >> coilHold;
+        yamlDoc[kSwitchesSection][flipperName][kNumberField] >> swNum;
+        yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> coilMain;
+        yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> coilHold;
         ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
     }
 
@@ -256,8 +257,8 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
         // WPC  Slingshots
         std::string bumperName;
         *bumpersIt >> bumperName;
-        yamlDoc[kSwitchesSection][bumperName] >> swNum;
-        yamlDoc[kCoilsSection][bumperName] >> coilNum;
+        yamlDoc[kSwitchesSection][bumperName][kNumberField] >> swNum;
+        yamlDoc[kCoilsSection][bumperName][kNumberField] >> coilNum;
         ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
     }
 }

@@ -1,4 +1,4 @@
-# P-ROC Game Description file for Judge Dredd
+# P-ROC Game Description file for Twilight Zone
 PRGame:
     machineType: wpc
 PRFlippers:
@@ -12,13 +12,13 @@ PRBumpers:
 PRSwitches:
     flipperLwR:
         number: 1
-    flipperLwL: 
+    flipperLwL:
         number: 3
-    flipperUpR: 
+    flipperUpR:
         number: 5
-    flipperUpL: 
+    flipperUpL:
         number: 7
-    slingL: 
+    slingL:
         number: 96
     slingR: 
         number: 97
@@ -39,7 +39,10 @@ PRCoils:
         number: 38
     flipperUpLHold: 
         number: 39
-    slingL: 
+    slingL:
         number: 54
     slingR: 
         number: 55
+PRLamps:
+    doorTheCamera: 
+        number: 80
