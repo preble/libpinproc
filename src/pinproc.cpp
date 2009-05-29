@@ -78,6 +78,14 @@ PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
     return handleAsDevice->Reset(resetFlags);
 }
 
+// I/O
+
+/** Flush all pending write data out to the P-ROC */
+PR_EXPORT PRResult PRFlushWriteData(PRHandle handle)
+{
+    return handleAsDevice->FlushWriteData();
+}
+
 // Events
 
 /** Get all of the available events that have been received. */
@@ -85,7 +93,6 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
 {
     return handleAsDevice->GetEvents(eventsOut, maxEvents);
 }
-
 
 // Drivers
 PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
