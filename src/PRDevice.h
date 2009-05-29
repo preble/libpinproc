@@ -53,6 +53,8 @@ public:
     // public libpinproc API:
     int GetEvents(PREvent *events, int maxEvents);
 
+    PRResult FlushWriteData();
+
     PRResult DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig);
     PRResult DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig);
     PRResult DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfig);
@@ -81,9 +83,6 @@ protected:
     
     /** Schedules data to be written to the P-ROC.  */
     PRResult PrepareWriteData(uint32_t * buffer, int32_t numWords);
-
-    /** Initiates a burst write of all data scheduled to be written to the P-ROC.  */
-    PRResult FlushWriteData();
 
     /** Writes data to P-ROC.
      * Returns #kPFailure if the number of words read does not match the number requested.
