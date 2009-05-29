@@ -247,7 +247,8 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 #define kPRSwitchPhysicalLast (223)  /**< Switch number of the last physical switch.  */
 #define kPRSwitchVirtualFirst (224)  /**< Switch number of the first virtual switch.  */
 #define kPRSwitchVirtualLast (255)   /**< Switch number of the last virtual switch.   */
-#define kPRSwitchRulesCount ((kPRSwitchVirtualLast + 1) << 2) /**< Total number of available switch rules. */
+#define kPRSwitchCount (256)
+#define kPRSwitchRulesCount (kPRSwitchCount << 2) /**< Total number of available switch rules. */
 
 typedef struct PRSwitchConfig {
     bool_t clear; // Drive the clear output
