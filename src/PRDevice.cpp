@@ -115,6 +115,7 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     unrequestedDataQueue.empty();
     requestedDataQueue.empty();
     num_collected_bytes = 0;
+    numPreparedWriteWords = 0;
 
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
     return kPRSuccess;
@@ -159,7 +160,7 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
 
     DEBUG(PRLog("Driver Global words: %x %x\n", burst[0], burst[1]));
     DEBUG(PRLog("Watchdog words: %x %x\n", burst[2], burst[3]));
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 PRResult PRDevice::DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig)
@@ -179,7 +180,7 @@ PRResult PRDevice::DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfi
     rc = CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
 
     DEBUG(PRLog("Words: %x %x\n", burst[0], burst[1]));
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 PRResult PRDevice::DriverGetState(uint8_t driverNum, PRDriverState *driverState)
@@ -207,7 +208,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     rc = CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
     DEBUG(PRLog("Words: %x %x %x\n", burst[0], burst[1], burst[2]));
 
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 
@@ -221,7 +222,7 @@ PRResult PRDevice::DriverWatchdogTickle()
                                    driverGlobalConfig.watchdogEnable,
                                    driverGlobalConfig.watchdogResetTime);
     
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 
@@ -243,7 +244,7 @@ PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
     DEBUG(PRLog("Configuring Switch Logic"));
     DEBUG(PRLog("Words: %x %x\n",burst[0],burst[1]));
 
-    rc = WriteData(burst, burstWords);
+    rc = PrepareWriteData(burst, burstWords);
     return rc;
 }
 
@@ -314,7 +315,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
             
             DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
             // Write the rule:
-            res = WriteData(burst, burstSize);
+            res = PrepareWriteData(burst, burstSize);
             if (res != kPRSuccess)
             {
                 DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
@@ -322,7 +323,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 newRule->changeOutput = false;
                 newRule->linkActive = false;
                 CreateSwitchUpdateRulesBurst(burst, newRule);
-                if (WriteData(burst, burstSize) == kPRSuccess)
+                if (PrepareWriteData(burst, burstSize) == kPRSuccess)
                     DEBUG(PRLog("Disabled successfully.\n"));
                 else
                     DEBUG(PRLog("Failed to disable.\n"));
@@ -339,7 +340,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
         DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:
-        res = WriteData(burst, burstSize);
+        res = PrepareWriteData(burst, burstSize);
     }
     
     return res;
@@ -358,7 +359,7 @@ int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
     DEBUG(PRLog("Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
                 burst[4],burst[5],burst[6]));
 
-    rc = WriteData(burst, burstWords);
+    rc = PrepareWriteData(burst, burstWords);
     return rc;
 }
 
@@ -379,7 +380,7 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
         dmd_command_buffer[k+1] = p_dmd_frame_buffer_words[k];
     }
 
-    return WriteData(dmd_command_buffer, words_per_frame+1);
+    return PrepareWriteData(dmd_command_buffer, words_per_frame+1);
 
     // The following code prints out the init lines for the 4 Xilinx BlockRAMs
     // in the FPGA.  It's used to make an image for the P-ROC to display on power-up.
@@ -495,6 +496,36 @@ PRResult PRDevice::RequestData(uint32_t module_select, uint32_t start_addr, int3
 {
     uint32_t requestWord = CreateRegRequestWord(module_select, start_addr, num_words);
     return WriteData(&requestWord, 1);
+}
+
+PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
+{
+    if (numWords > maxWriteWords)
+    { 
+        DEBUG(PRLog("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords));
+        return kPRFailure;
+    }
+
+    // If there are already some words prepared to be written and the addition of the new
+    // words will be too many, flush the currently prepared words to the P-ROC now.
+    if (numPreparedWriteWords + numWords > maxWriteWords)
+    {
+        if (FlushWriteData() == kPRFailure);
+        return kPRFailure;
+    }
+
+    memcpy(preparedWriteWords + numPreparedWriteWords, words, numWords * 4);
+    numPreparedWriteWords += numWords;
+
+    return kPRSuccess;
+}
+
+PRResult PRDevice::FlushWriteData()
+{
+    PRResult res;
+    res = WriteData(preparedWriteWords, numPreparedWriteWords);
+    numPreparedWriteWords = 0; // Reset word counter
+    return res;
 }
 
 PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)

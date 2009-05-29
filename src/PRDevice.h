@@ -38,6 +38,7 @@ using namespace std;
 #define maxDriverGroups (26)
 #define maxDrivers (256)
 #define maxSwitchRules (256<<2) // 8 bits of switchNum indicies plus bits for debounced and state.
+#define maxWriteWords (1536) // Hardware supports 2048 word bursts, but restrict to 1536 for margin.
 
 class PRDevice
 {
@@ -76,6 +77,13 @@ protected:
     PRResult VerifyChipID();
 
     // Raw write and read methods
+    //
+    
+    /** Schedules data to be written to the P-ROC.  */
+    PRResult PrepareWriteData(uint32_t * buffer, int32_t numWords);
+
+    /** Initiates a burst write of all data scheduled to be written to the P-ROC.  */
+    PRResult FlushWriteData();
 
     /** Writes data to P-ROC.
      * Returns #kPFailure if the number of words read does not match the number requested.
@@ -111,6 +119,9 @@ protected:
 
     queue<uint32_t> unrequestedDataQueue; /**< Queue of words received from the device that were not requested via RequestData().  Usually switch events. */
     queue<uint32_t> requestedDataQueue; /**< Queue of words received from the device as the result of a call to RequestData(). */
+
+    uint32_t preparedWriteWords[maxWriteWords];
+    int32_t numPreparedWriteWords;
 
     uint8_t collected_bytes_fifo[FTDI_BUFFER_SIZE];
     int32_t collected_bytes_rd_addr;
