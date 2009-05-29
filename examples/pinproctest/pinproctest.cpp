@@ -94,13 +94,7 @@ void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yaml
 {
     int i;
     int mappedDriverGroupEnableIndex[kPRDriverGroupsMax];
-
-    // This mapping determines which enable line is driven for each group of 8 outputs, 
-    // starting with output 0-7.  The first 4 groups are not used in WPC.  
-    // The next 6 correspond to coil/flasher circuits.  The next 8 correspond to the 
-    // lamp matrix.  The last 8 are unused.
     int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0};
-
     int rowEnableIndex1;
     int rowEnableIndex0;
     bool tickleSternWatchdog;
@@ -124,8 +118,6 @@ void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yaml
             slowGroupTime = driverLoopTime * 100; // microseconds
             break;
         }
-
-        // TODO: Add kPRMachineStern
     }
 
     PRDriverGlobalConfig globals;
@@ -446,7 +438,7 @@ int main(int argc, const char **argv)
     // Pulse a coil for testing purposes.
     //PRDriverPulse(proc, 53, 100);
     // Schedule a feature lamp for testing purposes.
-    PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    //PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);
 
