@@ -35,6 +35,7 @@
 #include "../../include/pinproc.h" // Include libpinproc's header.
 #include <fstream>
 #include <yaml-cpp/yaml.h>
+#include <sys/time.h>
 
 #define kFlippersSection "PRFlippers"
 #define kBumpersSection "PRBumpers"
@@ -153,8 +154,6 @@ void ConfigureDrivers(PRHandle proc, YAML::Node& yamlDoc)
 
 void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
 {
-    int i;
-
     // Configure switch controller registers (if the defaults aren't acceptable)
     PRSwitchConfig switchConfig;
     switchConfig.clear = false;
@@ -164,15 +163,6 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     switchConfig.pulsesPerBurst = 6;
     switchConfig.pulseHalfPeriodTime = 13; // milliseconds
     PRSwitchUpdateConfig(proc, &switchConfig);
-
-    // Configures rules to notify the host for every debounced switch event.
-    for (i = 0; i <= kPRSwitchPhysicalLast; i++)
-    {
-        PRSwitchRule sw;
-        sw.notifyHost = true;
-        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
-        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
-    }
 }
 
 void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, int holdCoilNum, int pulseTime)
@@ -187,7 +177,9 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverGetState(proc, holdCoilNum, &drivers[1]);
     PRDriverStatePulse(&drivers[1],0);  // Turn on indefintely (set pulse for 0ms)
     sw.notifyHost = false;
-    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    sw.notifyHost = true;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, drivers, numDriverRules);
 
     // Flipper off rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
@@ -195,7 +187,9 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverGetState(proc, holdCoilNum, &drivers[1]);
     PRDriverStateDisable(&drivers[1]); // Disable hold coil
     sw.notifyHost = false;
-    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    sw.notifyHost = true;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, drivers, numDriverRules);
 }
 
 void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
@@ -208,7 +202,9 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     PRDriverGetState(proc, coilNum, &drivers[0]);
     PRDriverStatePulse(&drivers[0],pulseTime); // Pulse coil for 34ms.
     sw.notifyHost = false;
-    PRSwitchUpdateRule(proc,swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    sw.notifyHost = true;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, drivers, numDriverRules);
 }
 
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
@@ -271,7 +267,7 @@ void ConfigureDMD(PRHandle proc)
 // starting with dim dots at the top.
 void UpdateDots( unsigned char * dots, unsigned int dotOffset )
 {
-    int i,j,k,color,mappedColor,loopCtr,byte_shifter;
+    int row,col,subFrame,color,mappedColor,loopCtr,byte_shifter;
     const int rate_reduction_divisor = 1;
 
     loopCtr = dotOffset/rate_reduction_divisor;
@@ -288,33 +284,34 @@ void UpdateDots( unsigned char * dots, unsigned int dotOffset )
         memset(dots,0,((kDMDColumns*kDMDRows)/8)*kDMDSubFrames);
     
         // Loop through all of the rows
-        for (i = kDMDRows - 1; i >= 0; i--)
+        for (row = kDMDRows - 1; row >= 0; row--)
         {
             // Map the color index to the DMD's physical color map
             int mappedColors[] = {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15};
             mappedColor = mappedColors[color];
 
             // Loop through each of 16 bytes in a row
-            for (j = 0; j < kDMDColumns / 8; j++)
+            for (col = 0; col < kDMDColumns / 8; col++)
             {
                 // Loop through each subframe
-                for (k = 0; k < kDMDSubFrames; k++)
+                for (subFrame = 0; subFrame < kDMDSubFrames; subFrame++)
                 {
                     // Turn on the byte in each sub-frame that's enabled 
                     // active for the color code.
-                    if ((mappedColor >> k) & 1 == 1) 
-                        dots[k*(kDMDColumns*kDMDRows/8)+((i%kDMDRows)*(kDMDColumns / 8))+j] = byte_shifter;
+                    if ((mappedColor >> subFrame) & 1 == 1) 
+                        dots[subFrame*(kDMDColumns*kDMDRows/8)+((row%kDMDRows)*(kDMDColumns / 8))+col] = byte_shifter;
                 }
             }
             // Determine where to change the color in order to progress from row 0 = color 0
             // to the last row being the last color.
-            if (i % (int)((kDMDRows/pow(2,kDMDSubFrames))) == 0) color--;
+            if (row % (int)((kDMDRows/pow(2,kDMDSubFrames))) == 0) color--;
             if (byte_shifter == 1) byte_shifter = 0x80;
             else byte_shifter = byte_shifter >> 1;
         }
     }
 }
 
+time_t startTime;
 bool runLoopRun = true;
 
 void RunLoop(PRHandle proc)
@@ -347,7 +344,9 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchOpenNondebounced: stateText = "open(ndb)"; break;
                 case kPREventTypeSwitchClosedNondebounced: stateText = "closed(ndb)"; break;
             }
-            printf("switch % 3d: %s\n", event->value, stateText);
+            struct timeval tv;
+            gettimeofday(&tv, NULL);
+            printf("%d.%03d switch % 3d: %s\n", tv.tv_sec-startTime, tv.tv_usec/1000, event->value, stateText);
         }
         usleep(10*1000); // Sleep for 10ms so we aren't pegging the CPU.
     }
@@ -364,6 +363,7 @@ int main(int argc, const char **argv)
 {
     // Set a signal handler so that we can exit gracefully on Ctrl-C:
     signal(SIGINT, sigint);
+    startTime = time(NULL);
 
     if (argc < 2)
     {
@@ -395,6 +395,8 @@ int main(int argc, const char **argv)
     PRHandle proc = PRCreate(machineType);
     if (proc == kPRHandleInvalid)
         return 1;
+    
+    PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     
     ConfigureDMD(proc); 
     ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
