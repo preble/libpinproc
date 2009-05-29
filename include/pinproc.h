@@ -102,6 +102,11 @@ PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags);
 
 /** @} */ // End of Device Creation & Deletion
 
+// I/O
+
+/** Flush all pending write data out to the P-ROC */
+PR_EXPORT PRResult PRFlushWriteData(PRHandle handle);
+
 // Drivers
 /** @defgroup drivers Driver Manipulation
  * @{
