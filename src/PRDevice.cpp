@@ -82,28 +82,34 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
         group->polarity = defaultPolarity;
     }
 
-    // Create empty switch rule for clearing the rules in the device.
-    PRSwitchRule emptySwitchRule; 
-    memset(&emptySwitchRule, 0x00, sizeof(PRSwitchRule));
-
+    freeSwitchRuleIndexes.empty();
+    
     for (i = 0; i < kPRSwitchRulesCount; i++)
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
-
-        // Send blank rule for each event type to Device if necessary
-        if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) {
-            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0);
-        }
 
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
         if (switchRule->switchNum >= kPRSwitchVirtualFirst) // Disabled for compiler warning (always true due to data type): && switchRule->switchNum <= kPRSwitchVirtualLast)
             freeSwitchRuleIndexes.push(ruleIndex);
+    }
+    
+    // Create empty switch rule for clearing the rules in the device.
+    PRSwitchRule emptySwitchRule; 
+    memset(&emptySwitchRule, 0x00, sizeof(PRSwitchRule));
+    
+    for (i = 0; i < kPRSwitchCount; i++)
+    {
+        // Send blank rule for each event type to Device if necessary
+        if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) 
+        {
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0);
+        }
     }
 
     unrequestedDataQueue.empty();
