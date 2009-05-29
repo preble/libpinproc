@@ -206,7 +206,7 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     sw.notifyHost = false;
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
     sw.notifyHost = true;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
 
     // Flipper off rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
@@ -216,7 +216,7 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     sw.notifyHost = false;
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
     sw.notifyHost = true;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
 }
 
 void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
@@ -231,7 +231,7 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     sw.notifyHost = false;
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
     sw.notifyHost = true;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
 }
 
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
