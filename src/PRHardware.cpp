@@ -316,6 +316,9 @@ PRResult PRHardwareOpen()
             uint32_t chipid;
             ftdi_read_chipid(&ftdic,&chipid);
             DEBUG(PRLog("FTDI chip_id = 0x%x\n", chipid));
+            // Set some defaults:
+            ftdi_read_data_set_chunksize(&ftdic, 4096);
+            ftdi_set_latency_timer(&ftdic, 2); // This helps make reads much faster.  16 appeared to be the default.
             ftdiInitialized = true;
             return kPRSuccess;
         }
