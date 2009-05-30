@@ -51,7 +51,7 @@
 #define kDMDSubFrames (4) // For color depth of 16
 
 /** Demonstration of the custom logging callback. */
-void TestLogger(const char *text)
+void TestLogger(PRLogLevel level, const char *text)
 {
     fprintf(stderr, "TEST: %s", text);
 }
