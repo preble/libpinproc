@@ -158,8 +158,8 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
                                             driverGlobalConfig->watchdogEnable,
                                             driverGlobalConfig->watchdogResetTime);
 
-    DEBUG(PRLog(kPRLogInfo, "Driver Global words: %x %x\n", burst[0], burst[1]));
-    DEBUG(PRLog(kPRLogInfo, "Watchdog words: %x %x\n", burst[2], burst[3]));
+    DEBUG(PRLog(kPRLogVerbose, "Driver Global words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog(kPRLogVerbose, "Watchdog words: %x %x\n", burst[2], burst[3]));
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -179,7 +179,7 @@ PRResult PRDevice::DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfi
     DEBUG(PRLog(kPRLogInfo, "Installing driver group\n"));
     rc = CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
 
-    DEBUG(PRLog(kPRLogInfo, "Words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n", burst[0], burst[1]));
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -199,14 +199,14 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
 
     if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom)
     {
-        DEBUG(PRLog(kPRLogInfo, "Refusing to update driver #%d; polarity differs on non-custom machine.\n", driverState->driverNum));
+        DEBUG(PRLog(kPRLogError, "Refusing to update driver #%d; polarity differs on non-custom machine.\n", driverState->driverNum));
         return kPRFailure;
     }
 
     drivers[driverState->driverNum] = *driverState;
 
     rc = CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
-    DEBUG(PRLog(kPRLogInfo, "Words: %x %x %x\n", burst[0], burst[1], burst[2]));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x\n", burst[0], burst[1], burst[2]));
 
     return PrepareWriteData(burst, burstWords);
 }
@@ -242,7 +242,7 @@ PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
     CreateSwitchUpdateConfigBurst(burst, switchConfig);
 
     DEBUG(PRLog(kPRLogInfo, "Configuring Switch Logic"));
-    DEBUG(PRLog(kPRLogInfo, "Words: %x %x\n",burst[0],burst[1]));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n",burst[0],burst[1]));
 
     rc = PrepareWriteData(burst, burstWords);
     return rc;
@@ -313,7 +313,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 CreateSwitchUpdateRulesBurst(burst, newRule);
             }
             
-            DEBUG(PRLog(kPRLogInfo, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+            DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
             // Write the rule:
             res = PrepareWriteData(burst, burstSize);
             if (res != kPRSuccess)
@@ -324,9 +324,9 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 newRule->linkActive = false;
                 CreateSwitchUpdateRulesBurst(burst, newRule);
                 if (PrepareWriteData(burst, burstSize) == kPRSuccess)
-                    DEBUG(PRLog(kPRLogInfo, "Disabled successfully.\n"));
+                    DEBUG(PRLog(kPRLogError, "Disabled successfully.\n"));
                 else
-                    DEBUG(PRLog(kPRLogInfo, "Failed to disable.\n"));
+                    DEBUG(PRLog(kPRLogError, "Failed to disable.\n"));
                 return res;
             }
             
@@ -337,7 +337,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     else 
     {
         CreateSwitchUpdateRulesBurst(burst, newRule);
-        DEBUG(PRLog(kPRLogInfo, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+        DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:
         res = PrepareWriteData(burst, burstSize);
@@ -356,7 +356,7 @@ int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
     CreateDMDUpdateConfigBurst(burst, dmdConfig);
 
     DEBUG(PRLog(kPRLogInfo, "Configuring DMD"));
-    DEBUG(PRLog(kPRLogInfo, "Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
                 burst[4],burst[5],burst[6]));
 
     rc = PrepareWriteData(burst, burstWords);
@@ -557,7 +557,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
 
     if (bytesWritten != bytesToWrite)
     {
-        DEBUG(PRLog(kPRLogInfo, "Error in WriteData: wrote %d of %d bytes\n", bytesWritten, bytesToWrite));
+        DEBUG(PRLog(kPRLogError, "Error in WriteData: wrote %d of %d bytes\n", bytesWritten, bytesToWrite));
         return kPRFailure;
     }
     else
@@ -594,7 +594,7 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
     else {
         rc = 0;
     }
-    DEBUG(PRLog(kPRLogInfo, "Read num bytes: %d\n", rc));
+    DEBUG(PRLog(kPRLogVerbose, "Read num bytes: %d\n", rc));
     return (rc);
 }
 
@@ -626,7 +626,7 @@ int32_t PRDevice::CollectReadData()
     num_collected_bytes += rc;
     if (rc > 0)
     {
-        DEBUG(PRLog(kPRLogInfo, "Collected bytes: %d\n", rc));
+        DEBUG(PRLog(kPRLogVerbose, "Collected bytes: %d\n", rc));
     }
     return (rc);
 }
@@ -641,7 +641,7 @@ PRResult PRDevice::SortReturningData()
 
     while (num_words >= 2) {
         rc = ReadData(rd_buffer, 1);
-        DEBUG(PRLog(kPRLogInfo, "New returning word: 0x%x\n", rd_buffer[0]));
+        DEBUG(PRLog(kPRLogVerbose, "New returning word: 0x%x\n", rd_buffer[0]));
 
         switch ( (rd_buffer[0] & P_ROC_COMMAND_MASK) >> P_ROC_COMMAND_SHIFT)
         {
@@ -657,7 +657,7 @@ PRResult PRDevice::SortReturningData()
             }
             case P_ROC_UNREQUESTED_DATA: {
                 ReadData(rd_buffer,1);
-                DEBUG(PRLog(kPRLogInfo, "Pushing onto unreq Q 0x%x\n", rd_buffer[0]));
+                DEBUG(PRLog(kPRLogVerbose, "Pushing onto unreq Q 0x%x\n", rd_buffer[0]));
                 unrequestedDataQueue.push(rd_buffer[0]);
                 break;
             }

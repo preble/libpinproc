@@ -72,6 +72,7 @@ typedef void * PRHandle;     /**< Opaque type used to reference an individual P-
 #define kPRHandleInvalid (0) /**< Value returned by PRCreate() on failure.  Indicates an invalid #PRHandle. */
 
 typedef enum PRLogLevel {
+    kPRLogVerbose,
     kPRLogInfo,
     kPRLogWarning,
     kPRLogError
