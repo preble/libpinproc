@@ -11,13 +11,15 @@ libpinproc requires:
 - [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
 
-Once required but not right now:
+The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
 
-- [yaml-cpp](http://code.google.com/p/yaml-cpp/): Should be checked out in the directory two levels below libpinproc in the full source tree (at the same level as ./P-ROC) in a directory named yaml-cpp.  Follow the build instructions, creating the build subdirectory.  The Makefiles and other project files expect to find libyaml-cpp.a in the yaml-cpp/build/bin directory.
-
-We are presently experimenting with different build mechanisms.  As such there are three ways to build libpinproc at this time: CMake, GNU Make, and the Xcode project (for Mac).  As the preferred method is presently CMake, here's how.  Before you get started, you will need CMake if you don't already have it.
+    sudo cp lib/libyaml-cpp.a /usr/local/lib/
+    sudo mkdir /usr/local/include/yaml-cpp
+    sudo cp include/*.h /usr/local/include/yaml-cpp/
 
 #### Building with CMake
+
+Download and install [CMake](http://www.cmake.org/cmake/resources/software.html).  Then:
 
     cd libpinproc
     mkdir build; cd build

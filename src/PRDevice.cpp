@@ -30,9 +30,10 @@
 
 #include "PRDevice.h"
 
-PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType), ftdiInitialized(false)
+PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
-    Reset();
+    // Reset internally maintainted driver and switch structures, but do not update the device.
+    Reset(kPRResetFlagDefault);
 }
 
 PRDevice::~PRDevice()
@@ -57,48 +58,68 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
-    dev->Reset();
-
     return dev;
 }
 
-void PRDevice::Reset()
+PRResult PRDevice::Reset(uint32_t resetFlags)
 {
     bool defaultPolarity = machineType != kPRMachineWPC;
     int i;
     memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
-    for (i = 0; i < maxDrivers; i++)
+    for (i = 0; i < kPRDriverCount; i++)
     {
         PRDriverState *driver = &drivers[i];
         memset(driver, 0x00, sizeof(PRDriverState));
         driver->driverNum = i;
         driver->polarity = defaultPolarity;
+        if (resetFlags & kPRResetFlagUpdateDevice) DriverUpdateState(driver);
     }
-    for (i = 0; i < maxDriverGroups; i++)
+    for (i = 0; i < kPRDriverGroupsMax; i++)
     {
         PRDriverGroupConfig *group = &driverGroups[i];
         memset(group, 0x00, sizeof(PRDriverGroupConfig));
         group->groupNum = i;
         group->polarity = defaultPolarity;
     }
-    for (i = 0; i < maxSwitchRules; i++)
+
+    freeSwitchRuleIndexes.empty();
+    
+    for (i = 0; i < kPRSwitchRulesCount; i++)
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
         memset(switchRule, 0x00, sizeof(PRSwitchRule));
+
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = defaultPolarity;
-        if (switchRule->switchNum >= kPRSwitchVirtualFirst && switchRule->switchNum <= kPRSwitchVirtualLast)
+        if (switchRule->switchNum >= kPRSwitchVirtualFirst) // Disabled for compiler warning (always true due to data type): && switchRule->switchNum <= kPRSwitchVirtualLast)
             freeSwitchRuleIndexes.push(ruleIndex);
+    }
+    
+    // Create empty switch rule for clearing the rules in the device.
+    PRSwitchRule emptySwitchRule; 
+    memset(&emptySwitchRule, 0x00, sizeof(PRSwitchRule));
+    
+    for (i = 0; i < kPRSwitchCount; i++)
+    {
+        // Send blank rule for each event type to Device if necessary
+        if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) 
+        {
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0);
+        }
     }
 
     unrequestedDataQueue.empty();
     requestedDataQueue.empty();
     num_collected_bytes = 0;
+    numPreparedWriteWords = 0;
 
     // TODO: Assign defaults based on machineType.  Some may have already been done above.
+    return kPRSuccess;
 }
-
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)
 {
@@ -139,7 +160,7 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
 
     DEBUG(PRLog("Driver Global words: %x %x\n", burst[0], burst[1]));
     DEBUG(PRLog("Watchdog words: %x %x\n", burst[2], burst[3]));
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 PRResult PRDevice::DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig)
@@ -159,7 +180,7 @@ PRResult PRDevice::DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfi
     rc = CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
 
     DEBUG(PRLog("Words: %x %x\n", burst[0], burst[1]));
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 PRResult PRDevice::DriverGetState(uint8_t driverNum, PRDriverState *driverState)
@@ -187,7 +208,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     rc = CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
     DEBUG(PRLog("Words: %x %x %x\n", burst[0], burst[1], burst[2]));
 
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 
@@ -201,7 +222,7 @@ PRResult PRDevice::DriverWatchdogTickle()
                                    driverGlobalConfig.watchdogEnable,
                                    driverGlobalConfig.watchdogResetTime);
     
-    return WriteData(burst, burstWords);
+    return PrepareWriteData(burst, burstWords);
 }
 
 
@@ -211,7 +232,23 @@ PRSwitchRuleInternal *PRDevice::GetSwitchRuleByIndex(uint16_t index)
     return &switchRules[index];
 }
 
-PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
+{
+    uint32_t rc;
+    const int burstWords = 2;
+    uint32_t burst[burstWords];
+
+    this->switchConfig = *switchConfig;
+    CreateSwitchUpdateConfigBurst(burst, switchConfig);
+
+    DEBUG(PRLog("Configuring Switch Logic"));
+    DEBUG(PRLog("Words: %x %x\n",burst[0],burst[1]));
+
+    rc = PrepareWriteData(burst, burstWords);
+    return rc;
+}
+
+PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
     // Updates a single rule with the associated linked driver state changes.
     const int burstSize = 4;
@@ -265,7 +302,7 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
                 newRule->linkIndex = freeSwitchRuleIndexes.front(); 
                 freeSwitchRuleIndexes.pop();
                 
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule);
                 
                 // Prepare for the next rule:
                 newRule = GetSwitchRuleByIndex(newRule->linkIndex);
@@ -273,20 +310,20 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
             else
             {
                 newRule->linkActive = false;
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule);
             }
             
             DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
             // Write the rule:
-            res = WriteData(burst, burstSize);
+            res = PrepareWriteData(burst, burstSize);
             if (res != kPRSuccess)
             {
                 DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
                 newRule = GetSwitchRuleByIndex(firstRuleIndex);
                 newRule->changeOutput = false;
                 newRule->linkActive = false;
-                CreateSwitchesUpdateRulesBurst(burst, newRule);
-                if (WriteData(burst, burstSize) == kPRSuccess)
+                CreateSwitchUpdateRulesBurst(burst, newRule);
+                if (PrepareWriteData(burst, burstSize) == kPRSuccess)
                     DEBUG(PRLog("Disabled successfully.\n"));
                 else
                     DEBUG(PRLog("Failed to disable.\n"));
@@ -299,11 +336,11 @@ PRResult PRDevice::SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, 
     }
     else 
     {
-        CreateSwitchesUpdateRulesBurst(burst, newRule);
+        CreateSwitchUpdateRulesBurst(burst, newRule);
         DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:
-        res = WriteData(burst, burstSize);
+        res = PrepareWriteData(burst, burstSize);
     }
     
     return res;
@@ -322,7 +359,7 @@ int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
     DEBUG(PRLog("Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
                 burst[4],burst[5],burst[6]));
 
-    rc = WriteData(burst, burstWords);
+    rc = PrepareWriteData(burst, burstWords);
     return rc;
 }
 
@@ -343,7 +380,7 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
         dmd_command_buffer[k+1] = p_dmd_frame_buffer_words[k];
     }
 
-    return WriteData(dmd_command_buffer, words_per_frame+1);
+    return PrepareWriteData(dmd_command_buffer, words_per_frame+1);
 
     // The following code prints out the init lines for the 4 Xilinx BlockRAMs
     // in the FPGA.  It's used to make an image for the P-ROC to display on power-up.
@@ -375,112 +412,39 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
 
 PRResult PRDevice::Open()
 {
-    int32_t i=0;
-    PRResult rc;
-    struct ftdi_device_list *devlist, *curdev;
-    char manufacturer[128], description[128];
-    uint32_t temp_word;
-
-    ftdiInitialized = false;
-
-    // Open the FTDI device
-    if (ftdi_init(&ftdic) != 0)
+    PRResult res = PRHardwareOpen();
+    if (res == kPRSuccess)
     {
-        DEBUG(PRLog("Failed to initialize FTDI.\n"));
-        return kPRFailure;
-    }
-
-    // Find all FTDI devices
-    // This is very basic and really only expects to see 1 device.  It needs to be
-    // smarter.  At the very least, it should check some register on the P-ROC versus
-    // an input parameter to ensure the software is set up for the same architecture as
-    // the P-ROC (Stern vs WPC).  Otherwise, it's possible to drive the coils the wrong
-    // polarity and blow fuses or fry transistors and all other sorts of badness.
-
-    // We first enumerate all of the devices:
-    int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
-    if (numDevices < 0) {
-        DEBUG(PRLog("ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
-        ftdi_deinit(&ftdic);
-        return kPRFailure;
-    }
-    else {
-        DEBUG(PRLog("Number of FTDI devices found: %d\n", numDevices));
-
-        for (curdev = devlist; curdev != NULL; i++) {
-            DEBUG(PRLog("Checking device %d\n", i));
-            if ((rc = (int32_t)ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0) {
-                DEBUG(PRLog("  ftdi_usb_get_strings failed: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
-            }
-            else {
-                DEBUG(PRLog("  Device #%d:\n", i));
-                DEBUG(PRLog("  Manufacturer: %s\n", manufacturer));
-                DEBUG(PRLog("  Description: %s\n", description));
-            }
-            curdev = curdev->next;
+        // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
+        // just in case it was already initialized from a previous application execution.
+        DEBUG(PRLog("Verifying P-ROC ID: \n"));
+        if (VerifyChipID() == kPRFailure) {
+            // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
+            // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
+            // before it allows access deeper into the chip.  This keeps garbage from getting
+            // in and wreaking havoc before software is up and running.
+            DEBUG(PRLog("Initializing P-ROC...\n"));
+            res = FlushReadBuffer();
+            uint32_t temp_word = P_ROC_INIT_PATTERN_A;
+            res = WriteData(&temp_word, 1);
+            temp_word = P_ROC_INIT_PATTERN_B;
+            res = WriteData(&temp_word, 1);
+            res = VerifyChipID();
         }
-
-    }
-
-    // Don't need the device list anymore
-    ftdi_list_free (&devlist);
-    // Did previous logic leave ftdic clean? Probably
-    // Need to de-init and re-init before opening usb?  Doubtful.
-    //ftdi_deinit(&ftdic);
-    //ftdi_init(&ftdic);
-
-
-    if ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0)
-    {
-        DEBUG(PRLog("ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
-        return kPRFailure;
-    }
-    else
-    {
-        rc = kPRSuccess;
-        if (ftdic.type == TYPE_R) {
-            uint32_t chipid;
-            ftdi_read_chipid(&ftdic,&chipid);
-            DEBUG(PRLog("FTDI chip_id = 0x%x\n", chipid));
-
-            // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
-            // just in case it was already initialized from a previous application execution.
-            DEBUG(PRLog("Verifying P-ROC ID: \n"));
-            if (VerifyChipID() == kPRFailure) {
-                // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
-                // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
-                // before it allows access deeper into the chip.  This keeps garbage from getting
-                // in and wreaking havoc before software is up and running.
-                DEBUG(PRLog("Initializing P-ROC...\n"));
-                rc = FlushReadBuffer();
-                temp_word = P_ROC_INIT_PATTERN_A;
-                rc = WriteData(&temp_word, 1);
-                temp_word = P_ROC_INIT_PATTERN_B;
-                rc = WriteData(&temp_word, 1);
-                rc = VerifyChipID();
-            }
-            else
-            {
-                DEBUG(PRLog("Failed to verify chip ID."));
-                rc = kPRFailure;
-            }
+        else
+        {
+            DEBUG(PRLog("Failed to verify chip ID."));
+            res = kPRFailure;
         }
     }
 
-    if (rc == kPRSuccess)
-        ftdiInitialized = true;
-
-    return rc;
+    return res;
 }
 
 PRResult PRDevice::Close()
 {
     // TODO: Add protection against closing a not-open ftdic.
-    if (ftdiInitialized)
-    {
-        ftdi_usb_close(&ftdic);
-        ftdi_deinit(&ftdic);
-    }
+    PRHardwareClose();
     return kPRSuccess;
 }
 
@@ -534,6 +498,36 @@ PRResult PRDevice::RequestData(uint32_t module_select, uint32_t start_addr, int3
     return WriteData(&requestWord, 1);
 }
 
+PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
+{
+    if (numWords > maxWriteWords)
+    { 
+        DEBUG(PRLog("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords));
+        return kPRFailure;
+    }
+
+    // If there are already some words prepared to be written and the addition of the new
+    // words will be too many, flush the currently prepared words to the P-ROC now.
+    if (numPreparedWriteWords + numWords > maxWriteWords)
+    {
+        if (FlushWriteData() == kPRFailure);
+        return kPRFailure;
+    }
+
+    memcpy(preparedWriteWords + numPreparedWriteWords, words, numWords * 4);
+    numPreparedWriteWords += numWords;
+
+    return kPRSuccess;
+}
+
+PRResult PRDevice::FlushWriteData()
+{
+    PRResult res;
+    res = WriteData(preparedWriteWords, numPreparedWriteWords);
+    numPreparedWriteWords = 0; // Reset word counter
+    return res;
+}
+
 PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
 {
     int32_t j,k;
@@ -561,7 +555,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
     }
 
     int bytesToWrite = numWords * 4;
-    int bytesWritten = (int32_t)ftdi_write_data(&ftdic, wr_buffer, bytesToWrite);
+    int bytesWritten = PRHardwareWrite(wr_buffer, bytesToWrite);
 
     if (bytesWritten != bytesToWrite)
     {
@@ -623,7 +617,7 @@ PRResult PRDevice::FlushReadBuffer()
 int32_t PRDevice::CollectReadData()
 {
     int32_t rc,i;
-    rc = ftdi_read_data(&ftdic, collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
+    rc = PRHardwareRead(collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
     for (i=0; i<rc; i=i++) {
         collected_bytes_fifo[collected_bytes_wr_addr] = collect_buffer[i];
         if (collected_bytes_wr_addr == (FTDI_BUFFER_SIZE-1))

@@ -91,12 +91,29 @@ typedef enum PRMachineType {
 PR_EXPORT PRHandle PRCreate(PRMachineType machineType); /**< Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed.  Returns #kPRHandleInvalid if an error occurred. */
 PR_EXPORT void PRDelete(PRHandle handle);               /**< Destroys an existing P-ROC device handle. */
 
+#define kPRResetFlagDefault (0) /**< Only resets state in memory and does not write changes to the device. */
+#define kPRResetFlagUpdateDevice (1) /**< Instructs PRReset() to update the device once it has reset the configuration to its defaults. */
+
+/**
+ * @brief Resets internally maintained driver and switch rule structures.
+ * @param resetFlags Specify #kPRResetFlagDefault to only reset the configuration in host memory.  #kPRResetFlagUpdateDevice will write the default configuration to the device, effectively disabling all drivers and switch rules. 
+ */
+PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags);
+
 /** @} */ // End of Device Creation & Deletion
+
+// I/O
+
+/** Flush all pending write data out to the P-ROC */
+PR_EXPORT PRResult PRFlushWriteData(PRHandle handle);
 
 // Drivers
 /** @defgroup drivers Driver Manipulation
  * @{
  */
+
+#define kPRDriverGroupsMax (26)   /**< Number of available driver groups. */
+#define kPRDriverCount (256)          /**< Total number of drivers */
 
 typedef struct PRDriverGlobalConfig {
     bool_t enableOutputs; // Formerly enable_direct_outputs
@@ -178,25 +195,25 @@ PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle);
 
 /** 
  * Changes the given #PRDriverState to reflect a disabled state.
- * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
 PR_EXPORT void PRDriverStateDisable(PRDriverState *driverState);
 /** 
  * Changes the given #PRDriverState to reflect a pulse state.
  * @param milliseconds Number of milliseconds to pulse the driver for.
- * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
 PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, int milliseconds);
 /** 
  * Changes the given #PRDriverState to reflect a scheduled state.
  * Assigns a repeating schedule to the given driver. 
- * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
 PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
 /** 
  * @brief Changes the given #PRDriverState to reflect a pitter-patter schedule state.
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver.
- * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchesUpdateRule() to have any effect.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  * 
  * Use originalOnTime to pulse the driver for a number of milliseconds before the pitter-patter schedule begins.
  */
@@ -235,10 +252,24 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 #define kPRSwitchPhysicalLast (223)  /**< Switch number of the last physical switch.  */
 #define kPRSwitchVirtualFirst (224)  /**< Switch number of the first virtual switch.  */
 #define kPRSwitchVirtualLast (255)   /**< Switch number of the last virtual switch.   */
+#define kPRSwitchCount (256)
+#define kPRSwitchRulesCount (kPRSwitchCount << 2) /**< Total number of available switch rules. */
+
+typedef struct PRSwitchConfig {
+    bool_t clear; // Drive the clear output
+    uint8_t directMatrixScanLoopTime; // milliseconds
+    uint8_t pulsesBeforeCheckingRX;
+    uint8_t inactivePulsesAfterBurst;
+    uint8_t pulsesPerBurst;
+    uint8_t pulseHalfPeriodTime; // milliseconds
+} PRSwitchConfig;
 
 typedef struct PRSwitchRule {
     bool_t notifyHost; /**< If true this switch change event will provided to the user via PRGetEvents(). */
 } PRSwitchRule;
+
+/** Update the switch controller configurion registers */
+PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig);
 
 /**
  * @brief Configures the handling of switch rules within P-ROC.
@@ -264,7 +295,7 @@ typedef struct PRSwitchRule {
  * @code
  * PRSwitchRule rule;
  * rule.notifyHost = true;
- * PRSwitchesUpdateRule(handle, switchNum, kPREventTypeSwitchOpenDebounced, &rule, NULL, 0);
+ * PRSwitchUpdateRule(handle, switchNum, kPREventTypeSwitchOpenDebounced, &rule, NULL, 0);
  * @endcode
  * 
  * Configuring a pop bumper switch to pulse the coil and a flash lamp for 50ms each:
@@ -277,11 +308,11 @@ typedef struct PRSwitchRule {
  * PRDriverGetState(handle, drvFlashLamp1, &drivers[1]);
  * PRDriverStatePulse(&drivers[0], 50);
  * PRDriverStatePulse(&drivers[1], 50);
- * PRSwitchesUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedNondebounced, 
+ * PRSwitchUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedNondebounced, 
  *                      &rule, drivers, 2);
  * // Now configure a switch rule to process scoring in software:
  * rule.notifyHost = true;
- * PRSwitchesUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedDebounced, 
+ * PRSwitchUpdateRule(handle, swPopBumper1, kPREventTypeSwitchClosedDebounced, 
  *                      &rule, NULL, 0);
  * @endcode
  * 
@@ -292,7 +323,7 @@ typedef struct PRSwitchRule {
  * @param linkedDrivers An array of #PRDriverState structures describing the driver state changes to be made when this switch rule is triggered.  May be NULL if numDrivers is 0.
  * @param numDrivers Number of elements in the linkedDrivers array.  May be zero or more.
  */
-PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
 /** @} */ // End of Switches & Events
 

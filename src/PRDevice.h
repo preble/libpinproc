@@ -29,28 +29,23 @@
  */
 
 #include "../include/pinproc.h"
+#include "PRCommon.h"
 #include "PRHardware.h"
 #include <queue>
-#include <ftdi.h>
 
 using namespace std;
 
 #define maxDriverGroups (26)
 #define maxDrivers (256)
 #define maxSwitchRules (256<<2) // 8 bits of switchNum indicies plus bits for debounced and state.
-
-#ifdef NDEBUG
-#  define DEBUG(block)
-#else
-#  define DEBUG(block) block
-#endif
-extern void PRLog(const char *format, ...);
+#define maxWriteWords (1536) // Hardware supports 2048 word bursts, but restrict to 1536 for margin.
 
 class PRDevice
 {
 public:
     static PRDevice *Create(PRMachineType machineType);
     ~PRDevice();
+    PRResult Reset(uint32_t resetFlags);
 protected:
     PRDevice(PRMachineType machineType);
 
@@ -58,13 +53,16 @@ public:
     // public libpinproc API:
     int GetEvents(PREvent *events, int maxEvents);
 
+    PRResult FlushWriteData();
+
     PRResult DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig);
     PRResult DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig);
     PRResult DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfig);
     PRResult DriverGetState(uint8_t driverNum, PRDriverState *driverState);
     PRResult DriverUpdateState(PRDriverState *driverState);
 
-    PRResult SwitchesUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+    PRResult SwitchUpdateConfig(PRSwitchConfig *switchConfig);
+    PRResult SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
     PRResult DriverWatchdogTickle();
 
@@ -81,6 +79,10 @@ protected:
     PRResult VerifyChipID();
 
     // Raw write and read methods
+    //
+    
+    /** Schedules data to be written to the P-ROC.  */
+    PRResult PrepareWriteData(uint32_t * buffer, int32_t numWords);
 
     /** Writes data to P-ROC.
      * Returns #kPFailure if the number of words read does not match the number requested.
@@ -117,8 +119,8 @@ protected:
     queue<uint32_t> unrequestedDataQueue; /**< Queue of words received from the device that were not requested via RequestData().  Usually switch events. */
     queue<uint32_t> requestedDataQueue; /**< Queue of words received from the device as the result of a call to RequestData(). */
 
-    bool ftdiInitialized;
-    ftdi_context ftdic;
+    uint32_t preparedWriteWords[maxWriteWords];
+    int32_t numPreparedWriteWords;
 
     uint8_t collected_bytes_fifo[FTDI_BUFFER_SIZE];
     int32_t collected_bytes_rd_addr;
@@ -130,13 +132,13 @@ protected:
 
 
     // Local Device State
-    void Reset();
     PRMachineType machineType;
     PRDriverGlobalConfig driverGlobalConfig;
     PRDriverGroupConfig driverGroups[maxDriverGroups];
     PRDriverState drivers[maxDrivers];
     PRDMDConfig dmdConfig;
 	
+    PRSwitchConfig switchConfig;
     PRSwitchRuleInternal switchRules[maxSwitchRules];
 	queue<uint32_t> freeSwitchRuleIndexes; /**< Indexes of available switch rules. */
     PRSwitchRuleInternal *GetSwitchRuleByIndex(uint16_t index);

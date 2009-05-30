@@ -72,6 +72,20 @@ PR_EXPORT void PRDelete(PRHandle handle)
         delete (PRDevice*)handle;
 }
 
+/** Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC device. */
+PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
+{
+    return handleAsDevice->Reset(resetFlags);
+}
+
+// I/O
+
+/** Flush all pending write data out to the P-ROC */
+PR_EXPORT PRResult PRFlushWriteData(PRHandle handle)
+{
+    return handleAsDevice->FlushWriteData();
+}
+
 // Events
 
 /** Get all of the available events that have been received. */
@@ -79,7 +93,6 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
 {
     return handleAsDevice->GetEvents(eventsOut, maxEvents);
 }
-
 
 // Drivers
 PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
@@ -181,9 +194,14 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsO
 
 // Switches
 
-PR_EXPORT PRResult PRSwitchesUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig)
 {
-    return handleAsDevice->SwitchesUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
+    return handleAsDevice->SwitchUpdateConfig(switchConfig);
+}
+
+PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+{
+    return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
 PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)

@@ -1,0 +1,48 @@
+# P-ROC Game Description file for Twilight Zone
+PRGame:
+    machineType: wpc
+PRFlippers:
+    - flipperLwR
+    - flipperLwL
+    - flipperUpR
+    - flipperUpL
+PRBumpers:
+    - slingL
+    - slingR
+PRSwitches:
+    flipperLwR:
+        number: 1
+    flipperLwL:
+        number: 3
+    flipperUpR:
+        number: 5
+    flipperUpL:
+        number: 7
+    slingL:
+        number: 96
+    slingR: 
+        number: 97
+PRCoils:
+    flipperLwRMain: 
+        number: 32
+    flipperLwRHold: 
+        number: 33
+    flipperLwLMain: 
+        number: 34
+    flipperLwLHold: 
+        number: 35
+    flipperUpRMain: 
+        number: 36
+    flipperUpRHold: 
+        number: 37
+    flipperUpLMain: 
+        number: 38
+    flipperUpLHold: 
+        number: 39
+    slingL:
+        number: 54
+    slingR: 
+        number: 55
+PRLamps:
+    doorTheCamera: 
+        number: 80
