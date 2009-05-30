@@ -57,6 +57,10 @@ void PRLogSetCallback(PRLogCallback callback)
     logCallback = callback;
 }
 
+void PRLogSetLevel(PRLogLevel level)
+{
+    logLevel = level;
+}
 
 #define handleAsDevice ((PRDevice*)handle)
 
