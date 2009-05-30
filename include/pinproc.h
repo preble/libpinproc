@@ -145,7 +145,7 @@ typedef struct PRDriverGroupConfig {
 
 typedef struct PRDriverState {
     uint16_t driverNum;
-    uint32_t outputDriveTime;
+    uint8_t outputDriveTime;
     bool_t polarity;
     bool_t state;
     bool_t waitForFirstTimeSlot;
@@ -179,7 +179,7 @@ PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum);
  * Pulses the given driver for a number of milliseconds. 
  * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
  */
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds);
+PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, uint8_t milliseconds);
 /** 
  * Assigns a repeating schedule to the given driver. 
  * This function is provided for convenience.  See PRDriverStateSchedule() for a full description.
@@ -203,7 +203,7 @@ PR_EXPORT void PRDriverStateDisable(PRDriverState *driverState);
  * @param milliseconds Number of milliseconds to pulse the driver for.
  * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
-PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, int milliseconds);
+PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, uint8_t milliseconds);
 /** 
  * Changes the given #PRDriverState to reflect a scheduled state.
  * Assigns a repeating schedule to the given driver. 

@@ -143,7 +143,6 @@ int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
 int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig)
 {
     uint32_t addr;
-    uint32_t i;
 
     addr = 0;
     burst[0] = CreateBurstCommand (P_ROC_BUS_SWITCH_CTRL_SELECT, addr, 1 );
