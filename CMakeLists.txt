@@ -13,6 +13,6 @@ link_directories(/usr/local/lib $ENV{EXTRA_LINK})
 set(FILES src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp)
 add_library(pinproc ${FILES})
 
-add_executable(pinproctest examples/pinproctest/pinproctest.cpp)
+add_executable(pinproctest examples/pinproctest/pinproctest.cpp examples/pinproctest/drivers.cpp examples/pinproctest/dmd.cpp examples/pinproctest/switches.cpp)
 target_link_libraries(pinproctest pinproc usb ftdi yaml-cpp)
 
