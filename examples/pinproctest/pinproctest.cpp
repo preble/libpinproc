@@ -116,10 +116,10 @@ void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yaml
     bool globalPolarity;
     bool activeLowMatrixRows;
     int driverLoopTime;
-    int watchdogResetTime;
     int slowGroupTime;
     int numMatrixGroups;
     bool encodeEnables;
+    int rowEnableSelect;
 
     switch (machineType) 
     {
