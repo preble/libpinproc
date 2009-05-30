@@ -264,7 +264,7 @@ PRResult PRHardwareOpen()
     // Open the FTDI device
     if (ftdi_init(&ftdic) != 0)
     {
-        DEBUG(PRLog("Failed to initialize FTDI.\n"));
+        DEBUG(PRLog(kPRLogError, "Failed to initialize FTDI.\n"));
         return kPRFailure;
     }
     
@@ -278,22 +278,22 @@ PRResult PRHardwareOpen()
     // We first enumerate all of the devices:
     int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
     if (numDevices < 0) {
-        DEBUG(PRLog("ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
+        DEBUG(PRLog(kPRLogError, "ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
         ftdi_deinit(&ftdic);
         return kPRFailure;
     }
     else {
-        DEBUG(PRLog("Number of FTDI devices found: %d\n", numDevices));
+        DEBUG(PRLog(kPRLogInfo, "Number of FTDI devices found: %d\n", numDevices));
         
         for (curdev = devlist; curdev != NULL; i++) {
-            DEBUG(PRLog("Checking device %d\n", i));
+            DEBUG(PRLog(kPRLogInfo, "Checking device %d\n", i));
             if ((rc = (int32_t)ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0) {
-                DEBUG(PRLog("  ftdi_usb_get_strings failed: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
+                DEBUG(PRLog(kPRLogInfo, "  ftdi_usb_get_strings failed: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
             }
             else {
-                DEBUG(PRLog("  Device #%d:\n", i));
-                DEBUG(PRLog("  Manufacturer: %s\n", manufacturer));
-                DEBUG(PRLog("  Description: %s\n", description));
+                DEBUG(PRLog(kPRLogInfo, "  Device #%d:\n", i));
+                DEBUG(PRLog(kPRLogInfo, "  Manufacturer: %s\n", manufacturer));
+                DEBUG(PRLog(kPRLogInfo, "  Description: %s\n", description));
             }
             curdev = curdev->next;
         }
@@ -305,7 +305,7 @@ PRResult PRHardwareOpen()
     
     if ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0)
     {
-        DEBUG(PRLog("ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
+        DEBUG(PRLog(kPRLogError, "ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
         return kPRFailure;
     }
     else
@@ -314,7 +314,7 @@ PRResult PRHardwareOpen()
         if (ftdic.type == TYPE_R) {
             uint32_t chipid;
             ftdi_read_chipid(&ftdic,&chipid);
-            DEBUG(PRLog("FTDI chip_id = 0x%x\n", chipid));
+            DEBUG(PRLog(kPRLogInfo, "FTDI chip_id = 0x%x\n", chipid));
             // Set some defaults:
             ftdi_read_data_set_chunksize(&ftdic, 4096);
             ftdi_set_latency_timer(&ftdic, 2); // This helps make reads much faster.  16 appeared to be the default.
@@ -323,7 +323,7 @@ PRResult PRHardwareOpen()
         }
         else
         {
-            DEBUG(PRLog("FTDI type != TYPE_R: 0x%x\n", ftdic.type));
+            DEBUG(PRLog(kPRLogError, "FTDI type != TYPE_R: 0x%x\n", ftdic.type));
             return kPRFailure;
         }
     }

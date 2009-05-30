@@ -71,8 +71,17 @@ typedef int32_t PRResult; /**< See: #kPRSuccess and #kPRFailure. */
 typedef void * PRHandle;     /**< Opaque type used to reference an individual P-ROC device.  Created with PRCreate() and destroyed with PRDelete().  This value is used as the first parameter to all P-ROC API function calls. */
 #define kPRHandleInvalid (0) /**< Value returned by PRCreate() on failure.  Indicates an invalid #PRHandle. */
 
-typedef void (*PRLogCallback)(const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
+typedef enum PRLogLevel {
+    kPRLogVerbose,
+    kPRLogInfo,
+    kPRLogWarning,
+    kPRLogError
+} PRLogLevel;
+    
+typedef void (*PRLogCallback)(PRLogLevel level, const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
 PR_EXPORT void PRLogSetCallback(PRLogCallback callback); /**< Replaces the default logging handler with the given callback function. */
+
+PR_EXPORT void PRLogSetLevel(PRLogLevel level);
 
 /** 
  * @defgroup device Device Creation & Deletion
