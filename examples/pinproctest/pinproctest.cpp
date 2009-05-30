@@ -405,7 +405,11 @@ int main(int argc, const char **argv)
     PRLogSetCallback(TestLogger);
     
     YAML::Node yamlDoc;
-    LoadConfiguration(yamlDoc, yamlFilename);
+    if (LoadConfiguration(yamlDoc, yamlFilename) != kPRSuccess)
+    {
+        fprintf(stderr, "Failed to load configuration file %s\n", yamlFilename);
+        return 1;
+    }
 
     PRMachineType machineType = kPRMachineInvalid;
     std::string machineTypeString;
