@@ -784,6 +784,51 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
     }
 }
 
+PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+{
+    uint32_t * buffer;
+
+    buffer = (uint32_t *)malloc((numWriteWords * 4) + 1);
+    buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
+    memcpy(buffer+1, writeBuffer, numWriteWords * 4);
+    WriteData(buffer, numWriteWords + 1);
+    free (buffer);
+}
+
+PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
+{
+    uint32_t rc;
+    uint8_t i;
+
+    // Send out the request.
+    rc = RequestData(moduleSelect, startingAddr, numReadWords);
+
+    i = 0; // Reset i so it can be used to prevent an infinite loop below
+
+    // Wait for data to return.  Give it 10 loops before giving up.
+    // Expect numReadWords + 1 word with the address.
+    while (requestedDataQueue.size() < (numReadWords + 1) && i++ < 10) 
+    {
+        sleep (.01); // 10 milliseconds should be plenty of time.
+        SortReturningData();
+    }
+
+    // Make sure all of the requested words are available before processing them.
+    // Too many words is just as bad as not enough words.  
+    // If too many come back, can they be trusted?
+    if (requestedDataQueue.size() == numReadWords + 1)
+    {
+        requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
+        for (i = 0; i < numReadWords; i++)
+        {
+            readBuffer[i] =  requestedDataQueue.front(); 
+            requestedDataQueue.pop(); 
+        }
+        return kPRSuccess;
+    }
+    else return kPRFailure;
+}
+
 
 int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
 {
