@@ -24,6 +24,12 @@
  */
 #include "pinproctest.h"
 
+typedef struct SwitchStatus {
+    PREventType state;
+    uint32_t lastEventTime;
+} SwitchStatus;
+
+static SwitchStatus switches[kPRSwitchPhysicalLast + 1];
 
 void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
 {
@@ -36,6 +42,13 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     switchConfig.pulsesPerBurst = 6;
     switchConfig.pulseHalfPeriodTime = 13; // milliseconds
     PRSwitchUpdateConfig(proc, &switchConfig);
+
+    // Go through the switches array and reset the current status of each switch
+    for (int i = 0; i <= kPRSwitchPhysicalLast; i++)
+    {
+        switches[i].state = kPREventTypeInvalid;
+        switches[i].lastEventTime = 0;
+    }
 }
 
 void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, int holdCoilNum, int pulseTime)
@@ -105,5 +118,44 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
         yamlDoc[kSwitchesSection][bumperName][kNumberField] >> swNum;
         yamlDoc[kCoilsSection][bumperName][kNumberField] >> coilNum;
         ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
+    }
+}
+
+void UpdateSwitchState( PREvent * event )
+{
+    switches[event->value].state = event->type;
+    switches[event->value].lastEventTime = event->time;
+}
+
+void LoadSwitchStates( PRHandle proc )
+{
+    int i;
+    PREventType procSwitchStates[kPRSwitchPhysicalLast + 1];
+
+    // Get all of the switch states from the P-ROC.
+    if (PRSwitchGetStates( proc, procSwitchStates, kPRSwitchPhysicalLast + 1 ) == kPRFailure)
+    {
+        fprintf(stderr, "Error: Unable to retrieve switch states\n");
+    }
+    else
+    {
+        // Copy the returning states into the local switches array.
+        for (i = 0; i <= kPRSwitchPhysicalLast; i++)
+        {
+            switches[i].state = procSwitchStates[i];
+        }
+
+        fprintf(stderr, "\nCurrent Switch States: 0 : ");
+        for (i = 0; i < kPRSwitchPhysicalLast + 1; i++)
+        {
+            fprintf(stderr, "%d ", switches[i].state);
+            if ((i + 1) % 32 == 0) 
+            {
+                printf("\n");
+                if (i != kPRSwitchPhysicalLast) 
+                    fprintf(stderr, "Current Switch States: %d : ", i);
+            }
+        }
+        fprintf(stderr, "\n");
     }
 }

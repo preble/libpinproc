@@ -63,6 +63,7 @@ public:
 
     PRResult SwitchUpdateConfig(PRSwitchConfig *switchConfig);
     PRResult SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+    PRResult SwitchGetStates(PREventType * switchStates, uint16_t numSwitches);
 
     PRResult DriverWatchdogTickle();
 
