@@ -254,6 +254,8 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
                     case 'F':
                     case 'f':
                         return (str[2]-'0') - 1;
+                    default:
+                        return 32 + 16 * ((x / 10) - 1) + ((x % 10) - 1);
                 }
             }
         }
