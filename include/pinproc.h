@@ -77,11 +77,13 @@ typedef enum PRLogLevel {
     kPRLogWarning,
     kPRLogError
 } PRLogLevel;
-    
+
 typedef void (*PRLogCallback)(PRLogLevel level, const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
 PR_EXPORT void PRLogSetCallback(PRLogCallback callback); /**< Replaces the default logging handler with the given callback function. */
 
 PR_EXPORT void PRLogSetLevel(PRLogLevel level);
+
+PR_EXPORT const char *PRGetLastErrorText();
 
 /** 
  * @defgroup device Device Creation & Deletion

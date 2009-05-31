@@ -264,7 +264,7 @@ PRResult PRHardwareOpen()
     // Open the FTDI device
     if (ftdi_init(&ftdic) != 0)
     {
-        DEBUG(PRLog(kPRLogError, "Failed to initialize FTDI.\n"));
+        PRSetLastErrorText("Failed to initialize FTDI.");
         return kPRFailure;
     }
     
@@ -278,7 +278,7 @@ PRResult PRHardwareOpen()
     // We first enumerate all of the devices:
     int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
     if (numDevices < 0) {
-        DEBUG(PRLog(kPRLogError, "ftdi_usb_find_all failed: %d: %s\n", numDevices, ftdi_get_error_string(&ftdic)));
+        PRSetLastErrorText("ftdi_usb_find_all failed: %d: %s", numDevices, ftdi_get_error_string(&ftdic));
         ftdi_deinit(&ftdic);
         return kPRFailure;
     }
@@ -305,7 +305,7 @@ PRResult PRHardwareOpen()
     
     if ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0)
     {
-        DEBUG(PRLog(kPRLogError, "ERROR: Unable to open ftdi device: %d: %s\n", rc, ftdi_get_error_string(&ftdic)));
+        PRSetLastErrorText("Unable to open ftdi device: %d: %s", rc, ftdi_get_error_string(&ftdic));
         return kPRFailure;
     }
     else
@@ -323,7 +323,7 @@ PRResult PRHardwareOpen()
         }
         else
         {
-            DEBUG(PRLog(kPRLogError, "FTDI type != TYPE_R: 0x%x\n", ftdic.type));
+            PRSetLastErrorText("FTDI type != TYPE_R: 0x%x", ftdic.type);
             return kPRFailure;
         }
     }

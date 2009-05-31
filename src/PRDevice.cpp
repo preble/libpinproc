@@ -199,7 +199,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
 
     if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom)
     {
-        DEBUG(PRLog(kPRLogError, "Refusing to update driver #%d; polarity differs on non-custom machine.\n", driverState->driverNum));
+        PRSetLastErrorText("Refusing to update driver #%d; polarity differs on non-custom machine.", driverState->driverNum);
         return kPRFailure;
     }
 
@@ -256,7 +256,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     
     if (switchNum > kPRSwitchPhysicalLast) // Always true due to data type.
     {
-        DEBUG(PRLog(kPRLogError, "Switch rule out of range 0-%d\n", kPRSwitchPhysicalLast));
+        PRSetLastErrorText("Switch rule out of range 0-%d", kPRSwitchPhysicalLast);
         return kPRFailure;
     }
 
@@ -264,7 +264,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     // the links.
     if (numDrivers > 0 && freeSwitchRuleIndexes.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
     {
-        DEBUG(PRLog(kPRLogError, "Not enough free switch rule indexes: %d available, need %d\n", freeSwitchRuleIndexes.size(), numDrivers));
+        PRSetLastErrorText("Not enough free switch rule indexes: %d available, need %d", freeSwitchRuleIndexes.size(), numDrivers);
         return kPRFailure;
     }
 
@@ -500,7 +500,7 @@ PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
 {
     if (numWords > maxWriteWords)
     { 
-        DEBUG(PRLog(kPRLogError, "%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords));
+        PRSetLastErrorText("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords);
         return kPRFailure;
     }
 
@@ -509,7 +509,7 @@ PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
     if (numPreparedWriteWords + numWords > maxWriteWords)
     {
         if (FlushWriteData() == kPRFailure);
-        return kPRFailure;
+            return kPRFailure;
     }
 
     memcpy(preparedWriteWords + numPreparedWriteWords, words, numWords * 4);
@@ -557,7 +557,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
 
     if (bytesWritten != bytesToWrite)
     {
-        DEBUG(PRLog(kPRLogError, "Error in WriteData: wrote %d of %d bytes\n", bytesWritten, bytesToWrite));
+        PRSetLastErrorText("Error in WriteData: wrote %d of %d bytes", bytesWritten, bytesToWrite);
         return kPRFailure;
     }
     else

@@ -31,6 +31,8 @@
 #include "../include/pinproc.h"
 #include "PRDevice.h"
 
+#define MAX_TEXT (1024)
+
 typedef void (*PRLogCallback)(PRLogLevel level, const char *text);
 
 PRLogCallback logCallback = NULL;
@@ -41,11 +43,10 @@ void PRLog(PRLogLevel level, const char *format, ...)
     if (level < logLevel)
         return;
     
-    const int maxLogLineLength = 1024;
-    char line[maxLogLineLength];
+    char line[MAX_TEXT];
     va_list ap;
     va_start(ap, format);
-    vsnprintf(line, maxLogLineLength, format, ap);
+    vsnprintf(line, MAX_TEXT, format, ap);
     if (logCallback)
         logCallback(level, line);
     else
@@ -60,6 +61,21 @@ void PRLogSetCallback(PRLogCallback callback)
 void PRLogSetLevel(PRLogLevel level)
 {
     logLevel = level;
+}
+
+char lastErrorText[MAX_TEXT];
+
+void PRSetLastErrorText(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(lastErrorText, MAX_TEXT, format, ap);
+    PRLog(kPRLogError, "%s\n", lastErrorText);
+}
+
+PR_EXPORT const char *PRGetLastErrorText()
+{
+    return lastErrorText;
 }
 
 #define handleAsDevice ((PRDevice*)handle)

@@ -31,6 +31,7 @@
 #  define DEBUG(block) block
 #endif
 
-extern void PRLog(PRLogLevel level, const char *format, ...);
+void PRLog(PRLogLevel level, const char *format, ...);
+void PRSetLastErrorText(const char *format, ...);
 
 #endif // _PRCOMMON_H_
