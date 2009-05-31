@@ -139,6 +139,10 @@ PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverSta
 {
     return handleAsDevice->DriverUpdateState(driverState);
 }
+PR_EXPORT PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineType machineType)
+{
+    return handleAsDevice->DriverLoadMachineTypeDefaults(machineType);
+}
 
 // Driver Helper functions:
 PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
