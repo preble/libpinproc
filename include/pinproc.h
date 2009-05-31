@@ -334,6 +334,9 @@ PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchC
  */
 PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
 
+/** Returns a list of PREventTypes describing the states of the requested number of switches  */
+PR_EXPORT PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches);
+
 /** @} */ // End of Switches & Events
 
 // DMD

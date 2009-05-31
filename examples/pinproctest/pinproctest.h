@@ -54,6 +54,8 @@ void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yaml
 
 void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc);
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc);
+void UpdateSwitchState (PREvent * event);
+void LoadSwitchStates (PRHandle proc);
 
 void ConfigureDMD(PRHandle proc);
 void UpdateDots(unsigned char * dots, unsigned int dotOffset);

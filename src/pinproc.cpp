@@ -212,6 +212,11 @@ PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREven
     return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
+PR_EXPORT PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches)
+{
+    return handleAsDevice->SwitchGetStates(switchStates, numSwitches);
+}
+
 PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)
 {
     return handleAsDevice->DMDUpdateConfig(dmdConfig);

@@ -100,3 +100,4 @@ void UpdateDots( unsigned char * dots, unsigned int dotOffset )
         }
     }
 }
+
