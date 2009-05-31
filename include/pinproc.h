@@ -178,6 +178,13 @@ PR_EXPORT PRResult PRDriverGetState(PRHandle handle, uint8_t driverNum, PRDriver
  * @brief Sets the state of the given driver (lamp or coil).
  */
 PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverState);
+/**
+ * @brief Loads the driver defaults for the given machine type.
+ * 
+ * PRReset() calls this function internally; this function is useful for basing custom driver settings off of the defaults for a particular machine.
+ * @note This function does not update the P-ROC hardware, only the internal data structures.  Use PRDriverGetGlobalConfig() and PRDriverGetGroupConfig() to retrieve the settings.
+ */
+PR_EXPORT PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineType machineType);
 
 // Driver Helper functions:
 

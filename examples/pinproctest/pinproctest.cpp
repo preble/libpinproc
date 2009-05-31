@@ -174,24 +174,22 @@ int main(int argc, const char **argv)
     ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
     ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
 
-    // Make Drivers the last thing to configure so watchdog doesn't expire
-    // before the RunLoop begins.
-    ConfigureDrivers(proc, machineType, yamlDoc);
-
-    printf("Running.  Hit Ctrl-C to exit.\n");
-
     // Pulse a coil for testing purposes.
     //PRDriverPulse(proc, 53, 100);
     // Schedule a feature lamp for testing purposes.
     PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);
+    PRFlushWriteData(proc);
 
+    printf("Running.  Hit Ctrl-C to exit.\n");
+    
     RunLoop(proc);
 
     // Clean up P-ROC.
     printf("Disabling P-ROC drivers and switch rules...\n");
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
+    PRFlushWriteData(proc);
 
     // Destroy the P-ROC device handle:
     PRDelete(proc);

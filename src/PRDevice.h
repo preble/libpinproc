@@ -60,6 +60,7 @@ public:
     PRResult DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfig);
     PRResult DriverGetState(uint8_t driverNum, PRDriverState *driverState);
     PRResult DriverUpdateState(PRDriverState *driverState);
+    PRResult DriverLoadMachineTypeDefaults(PRMachineType machineType, uint32_t resetFlags = kPRResetFlagDefault);
 
     PRResult SwitchUpdateConfig(PRSwitchConfig *switchConfig);
     PRResult SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);

@@ -63,24 +63,15 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
 
 PRResult PRDevice::Reset(uint32_t resetFlags)
 {
-    bool defaultPolarity = machineType != kPRMachineWPC;
     int i;
-    memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
-    for (i = 0; i < kPRDriverCount; i++)
-    {
-        PRDriverState *driver = &drivers[i];
-        memset(driver, 0x00, sizeof(PRDriverState));
-        driver->driverNum = i;
-        driver->polarity = defaultPolarity;
-        if (resetFlags & kPRResetFlagUpdateDevice) DriverUpdateState(driver);
-    }
-    for (i = 0; i < kPRDriverGroupsMax; i++)
-    {
-        PRDriverGroupConfig *group = &driverGroups[i];
-        memset(group, 0x00, sizeof(PRDriverGroupConfig));
-        group->groupNum = i;
-        group->polarity = defaultPolarity;
-    }
+    
+    // Make sure the data queues are empty.
+    while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
+    while (!requestedDataQueue.empty()) requestedDataQueue.pop();
+    num_collected_bytes = 0;
+    numPreparedWriteWords = 0;
+    
+    DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
     // Make sure the free list is empty.
     while (!freeSwitchRuleIndexes.empty()) freeSwitchRuleIndexes.pop();
@@ -92,7 +83,7 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
-        switchRule->driver.polarity = defaultPolarity;
+        switchRule->driver.polarity = driverGlobalConfig.globalPolarity;
         if (switchRule->switchNum >= kPRSwitchVirtualFirst) // Disabled for compiler warning (always true due to data type): && switchRule->switchNum <= kPRSwitchVirtualLast)
             freeSwitchRuleIndexes.push(ruleIndex);
     }
@@ -113,13 +104,6 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
         }
     }
 
-    // Make sure the data queues are empty.
-    while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
-    while (!requestedDataQueue.empty()) requestedDataQueue.pop();
-    num_collected_bytes = 0;
-    numPreparedWriteWords = 0;
-
-    // TODO: Assign defaults based on machineType.  Some may have already been done above.
     return kPRSuccess;
 }
 
@@ -213,6 +197,170 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     return PrepareWriteData(burst, burstWords);
 }
 
+PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint32_t resetFlags)
+{
+    int i;
+    PRResult res = kPRSuccess;
+    
+    //const int WPCDriverLoopTime = 4; // milliseconds
+    //const int SternDriverLoopTime = 2; // milliseconds
+    
+    const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0};
+    const int mappedSternDriverGroupEnableIndex[] = {0, 0, 0, 0, 1, 0, 2, 3, 0, 0, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9};
+    const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 0, 0, 0, 0, 0, 0, 0, 0};
+    const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200};
+    const int mappedWPCDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0};
+    const int mappedSternDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7};
+    
+    const int watchdogResetTime = 1000; // milliseconds
+    
+    int mappedDriverGroupEnableIndex[kPRDriverGroupsMax];
+    int mappedDriverGroupSlowTime[kPRDriverGroupsMax];
+    int mappedDriverGroupActivateIndex[kPRDriverGroupsMax];
+    int rowEnableIndex1;
+    int rowEnableIndex0;
+    bool tickleSternWatchdog;
+    bool globalPolarity;
+    bool activeLowMatrixRows;
+    int driverLoopTime;
+    //int slowGroupTime;
+    int numMatrixGroups;
+    bool encodeEnables;
+    int rowEnableSelect;
+    
+    switch (machineType) 
+    {
+        case kPRMachineWPC: 
+        {
+            memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, 
+                   sizeof(mappedDriverGroupEnableIndex)); 
+            rowEnableIndex1 = 6; // Unused in WPC
+            rowEnableIndex0 = 6;
+            tickleSternWatchdog = false;
+            globalPolarity = false;
+            activeLowMatrixRows = true;
+            driverLoopTime = 4; // milliseconds
+            memcpy(mappedDriverGroupSlowTime,mappedWPCDriverGroupSlowTime, 
+                   sizeof(mappedDriverGroupSlowTime)); 
+            memcpy(mappedDriverGroupActivateIndex,mappedWPCDriverGroupActivateIndex, 
+                   sizeof(mappedDriverGroupActivateIndex)); 
+            numMatrixGroups = 8;
+            encodeEnables = false;
+            rowEnableSelect = 0;
+            break;
+        }
+            
+        case kPRMachineStern: 
+        {
+            memcpy(mappedDriverGroupEnableIndex,mappedSternDriverGroupEnableIndex, 
+                   sizeof(mappedDriverGroupEnableIndex)); 
+            rowEnableIndex1 = 6; // Unused in Stern
+            rowEnableIndex0 = 10;
+            tickleSternWatchdog = true;
+            globalPolarity = true;
+            activeLowMatrixRows = false;
+            driverLoopTime = 2; // milliseconds
+            memcpy(mappedDriverGroupSlowTime,mappedSternDriverGroupSlowTime, 
+                   sizeof(mappedDriverGroupSlowTime)); 
+            memcpy(mappedDriverGroupActivateIndex,mappedSternDriverGroupActivateIndex, 
+                   sizeof(mappedDriverGroupActivateIndex)); 
+            numMatrixGroups = 16;
+            encodeEnables = true;
+            rowEnableSelect = 0;
+            break;
+        }
+    }
+    
+    memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
+    for (i = 0; i < kPRDriverCount; i++)
+    {
+        PRDriverState *driver = &drivers[i];
+        memset(driver, 0x00, sizeof(PRDriverState));
+        driver->driverNum = i;
+        driver->polarity = globalPolarity;
+        if (resetFlags & kPRResetFlagUpdateDevice) 
+            res = DriverUpdateState(driver);
+    }
+    for (i = 0; i < kPRDriverGroupsMax; i++)
+    {
+        PRDriverGroupConfig *group = &driverGroups[i];
+        memset(group, 0x00, sizeof(PRDriverGroupConfig));
+        group->groupNum = i;
+        group->polarity = globalPolarity;
+    }
+    
+    PRDriverGlobalConfig globals;
+    globals.enableOutputs = false;
+    globals.globalPolarity = globalPolarity;
+    globals.useClear = false;
+    globals.strobeStartSelect = false;
+    globals.startStrobeTime = driverLoopTime; // milliseconds per output loop
+    globals.matrixRowEnableIndex1 = rowEnableIndex1;
+    globals.matrixRowEnableIndex0 = rowEnableIndex0;
+    globals.activeLowMatrixRows = activeLowMatrixRows;
+    globals.tickleSternWatchdog = tickleSternWatchdog;
+    globals.encodeEnables = encodeEnables;
+    globals.watchdogExpired = false;
+    globals.watchdogEnable = true;
+    globals.watchdogResetTime = watchdogResetTime;
+    
+    // We want to start up safely, so we'll update the global driver config twice.
+    // When we toggle enableOutputs like this P-ROC will reset the polarity:
+    
+    // Enable now without the outputs enabled:
+    if (resetFlags & kPRResetFlagUpdateDevice)
+        res = DriverUpdateGlobalConfig(&globals);
+    else
+        driverGlobalConfig = globals;
+    
+    // Now enable the outputs to protect against the polarity being driven incorrectly:
+    globals.enableOutputs = true;
+    if (resetFlags & kPRResetFlagUpdateDevice)
+        res = DriverUpdateGlobalConfig(&globals);
+    else
+        driverGlobalConfig = globals;
+    
+    // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
+    // with driver #32.  The following 6 groups are configured for coils/flashlamps.
+    
+    PRDriverGroupConfig group;
+    for (i = 4; i < 10; i++)
+    {
+        DriverGetGroupConfig(i, &group);
+        group.slowTime = 0;
+        group.enableIndex = mappedDriverGroupEnableIndex[i];
+        group.rowActivateIndex = 0;
+        group.rowEnableSelect = 0;
+        group.matrixed = false;
+        group.polarity = globalPolarity;
+        group.active = 1;
+        group.disableStrobeAfter = false;
+        
+        if (resetFlags & kPRResetFlagUpdateDevice)
+            res = DriverUpdateGroupConfig(&group);
+        else
+            driverGroups[i] = group;
+    }
+    
+    // The following 8 groups are configured for the feature lamp matrix.
+    for (i = 10; i < 10 + numMatrixGroups; i++) {
+        DriverGetGroupConfig(i, &group);
+        group.slowTime = mappedDriverGroupSlowTime[i];
+        group.enableIndex = mappedDriverGroupEnableIndex[i];
+        group.rowActivateIndex = mappedDriverGroupActivateIndex[i];
+        group.rowEnableSelect = rowEnableSelect;
+        group.matrixed = 1;
+        group.polarity = globalPolarity;
+        group.active = 1;
+        group.disableStrobeAfter = mappedDriverGroupSlowTime[i] != 0;
+        
+        if (resetFlags & kPRResetFlagUpdateDevice)
+            res = DriverUpdateGroupConfig(&group);
+        else
+            driverGroups[i] = group;
+    }
+    return res;
+}
 
 PRResult PRDevice::DriverWatchdogTickle()
 {
