@@ -28,6 +28,7 @@
  */
 #include "pinproctest.h"
 
+PRMachineType machineType = kPRMachineInvalid;
 
 /** Demonstration of the custom logging callback. */
 void TestLogger(PRLogLevel level, const char *text)
@@ -147,7 +148,6 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    PRMachineType machineType = kPRMachineInvalid;
     std::string machineTypeString;
     yamlDoc["PRGame"]["machineType"] >> machineTypeString;
     if (machineTypeString == "wpc")
