@@ -31,19 +31,24 @@
 #include "../include/pinproc.h"
 #include "PRDevice.h"
 
-typedef void (*PRLogCallback)(const char *text);
+#define MAX_TEXT (1024)
+
+typedef void (*PRLogCallback)(PRLogLevel level, const char *text);
 
 PRLogCallback logCallback = NULL;
+PRLogLevel logLevel = kPRLogError;
 
-void PRLog(const char *format, ...)
+void PRLog(PRLogLevel level, const char *format, ...)
 {
-    const int maxLogLineLength = 1024;
-    char line[maxLogLineLength];
+    if (level < logLevel)
+        return;
+    
+    char line[MAX_TEXT];
     va_list ap;
     va_start(ap, format);
-    vsnprintf(line, maxLogLineLength, format, ap);
+    vsnprintf(line, MAX_TEXT, format, ap);
     if (logCallback)
-        logCallback(line);
+        logCallback(level, line);
     else
         fprintf(stderr, line);
 }
@@ -53,6 +58,25 @@ void PRLogSetCallback(PRLogCallback callback)
     logCallback = callback;
 }
 
+void PRLogSetLevel(PRLogLevel level)
+{
+    logLevel = level;
+}
+
+char lastErrorText[MAX_TEXT];
+
+void PRSetLastErrorText(const char *format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vsnprintf(lastErrorText, MAX_TEXT, format, ap);
+    PRLog(kPRLogError, "%s\n", lastErrorText);
+}
+
+PR_EXPORT const char *PRGetLastErrorText()
+{
+    return lastErrorText;
+}
 
 #define handleAsDevice ((PRDevice*)handle)
 
@@ -124,7 +148,7 @@ PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
     PRDriverStateDisable(&driver);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds)
+PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, uint8_t milliseconds)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
@@ -160,7 +184,7 @@ PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
     driver->patterOffTime = 0;
     driver->patterEnable = false;
 }
-PR_EXPORT void PRDriverStatePulse(PRDriverState *driver, int milliseconds)
+PR_EXPORT void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
 {
     driver->state = 1;
     driver->timeslots = 0;

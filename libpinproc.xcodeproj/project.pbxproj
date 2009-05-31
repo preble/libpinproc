@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		66640E5E0FD1CFB6003135D8 /* dmd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66640E5B0FD1CFB6003135D8 /* dmd.cpp */; };
+		66640E5F0FD1CFB6003135D8 /* drivers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66640E5C0FD1CFB6003135D8 /* drivers.cpp */; };
+		66640E600FD1CFB6003135D8 /* switches.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66640E5D0FD1CFB6003135D8 /* switches.cpp */; };
 		6682492C0FC079050051560E /* pinproc.h in Headers */ = {isa = PBXBuildFile; fileRef = 6682492B0FC079050051560E /* pinproc.h */; };
 		6682493A0FC07B2A0051560E /* pinproc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 668249390FC07B2A0051560E /* pinproc.cpp */; };
 		668249420FC07D900051560E /* PRDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 668249400FC07D900051560E /* PRDevice.h */; };
@@ -29,6 +32,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		66640E5B0FD1CFB6003135D8 /* dmd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dmd.cpp; path = examples/pinproctest/dmd.cpp; sourceTree = "<group>"; };
+		66640E5C0FD1CFB6003135D8 /* drivers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = drivers.cpp; path = examples/pinproctest/drivers.cpp; sourceTree = "<group>"; };
+		66640E5D0FD1CFB6003135D8 /* switches.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = switches.cpp; path = examples/pinproctest/switches.cpp; sourceTree = "<group>"; };
+		66640E610FD1D010003135D8 /* pinproctest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pinproctest.h; path = examples/pinproctest/pinproctest.h; sourceTree = "<group>"; };
 		6682492B0FC079050051560E /* pinproc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pinproc.h; path = include/pinproc.h; sourceTree = "<group>"; };
 		668249390FC07B2A0051560E /* pinproc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pinproc.cpp; path = src/pinproc.cpp; sourceTree = "<group>"; };
 		668249400FC07D900051560E /* PRDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PRDevice.h; path = src/PRDevice.h; sourceTree = "<group>"; };
@@ -105,7 +112,11 @@
 		668249D30FC0A2C10051560E /* pinproctest */ = {
 			isa = PBXGroup;
 			children = (
+				66640E610FD1D010003135D8 /* pinproctest.h */,
 				668249E20FC0A3960051560E /* pinproctest.cpp */,
+				66640E5B0FD1CFB6003135D8 /* dmd.cpp */,
+				66640E5C0FD1CFB6003135D8 /* drivers.cpp */,
+				66640E5D0FD1CFB6003135D8 /* switches.cpp */,
 			);
 			name = pinproctest;
 			sourceTree = "<group>";
@@ -192,6 +203,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				668249E30FC0A3960051560E /* pinproctest.cpp in Sources */,
+				66640E5E0FD1CFB6003135D8 /* dmd.cpp in Sources */,
+				66640E5F0FD1CFB6003135D8 /* drivers.cpp in Sources */,
+				66640E600FD1CFB6003135D8 /* switches.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

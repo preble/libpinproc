@@ -71,8 +71,19 @@ typedef int32_t PRResult; /**< See: #kPRSuccess and #kPRFailure. */
 typedef void * PRHandle;     /**< Opaque type used to reference an individual P-ROC device.  Created with PRCreate() and destroyed with PRDelete().  This value is used as the first parameter to all P-ROC API function calls. */
 #define kPRHandleInvalid (0) /**< Value returned by PRCreate() on failure.  Indicates an invalid #PRHandle. */
 
-typedef void (*PRLogCallback)(const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
+typedef enum PRLogLevel {
+    kPRLogVerbose,
+    kPRLogInfo,
+    kPRLogWarning,
+    kPRLogError
+} PRLogLevel;
+
+typedef void (*PRLogCallback)(PRLogLevel level, const char *text); /**< Function pointer type for a custom logging callback.  See: PRLogSetCallback(). */
 PR_EXPORT void PRLogSetCallback(PRLogCallback callback); /**< Replaces the default logging handler with the given callback function. */
+
+PR_EXPORT void PRLogSetLevel(PRLogLevel level);
+
+PR_EXPORT const char *PRGetLastErrorText();
 
 /** 
  * @defgroup device Device Creation & Deletion
@@ -145,7 +156,7 @@ typedef struct PRDriverGroupConfig {
 
 typedef struct PRDriverState {
     uint16_t driverNum;
-    uint32_t outputDriveTime;
+    uint8_t outputDriveTime;
     bool_t polarity;
     bool_t state;
     bool_t waitForFirstTimeSlot;
@@ -179,7 +190,7 @@ PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum);
  * Pulses the given driver for a number of milliseconds. 
  * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
  */
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, int milliseconds);
+PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, uint8_t milliseconds);
 /** 
  * Assigns a repeating schedule to the given driver. 
  * This function is provided for convenience.  See PRDriverStateSchedule() for a full description.
@@ -203,7 +214,7 @@ PR_EXPORT void PRDriverStateDisable(PRDriverState *driverState);
  * @param milliseconds Number of milliseconds to pulse the driver for.
  * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
-PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, int milliseconds);
+PR_EXPORT void PRDriverStatePulse(PRDriverState *driverState, uint8_t milliseconds);
 /** 
  * Changes the given #PRDriverState to reflect a scheduled state.
  * Assigns a repeating schedule to the given driver. 

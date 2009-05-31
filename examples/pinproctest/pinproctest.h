@@ -1,4 +1,5 @@
 /*
+ * The MIT License
  * Copyright (c) 2009 Gerry Stellenberg, Adam Preble
  *
  * Permission is hereby granted, free of charge, to any person
@@ -22,16 +23,37 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _PRCOMMON_H_
-#define _PRCOMMON_H_
+/*
+ *  pinproctest.cpp
+ *  libpinproc
+ */
+#include <string.h>
+#include <stdio.h>
+#include <signal.h>
+#include <unistd.h>
+#include <cmath>
+#include "../../include/pinproc.h" // Include libpinproc's header.
+#include <fstream>
+#include <yaml-cpp/yaml.h>
+#include <sys/time.h>
 
-#ifdef NDEBUG
-#  define DEBUG(block)
-#else
-#  define DEBUG(block) block
-#endif
+#define kFlippersSection "PRFlippers"
+#define kBumpersSection "PRBumpers"
+#define kCoilsSection "PRCoils"
+#define kSwitchesSection "PRSwitches"
+#define kNumberField "number"
 
-void PRLog(PRLogLevel level, const char *format, ...);
-void PRSetLastErrorText(const char *format, ...);
+#define kFlipperPulseTime (34) // 34 ms
+#define kBumperPulseTime (25) // 25 ms
 
-#endif // _PRCOMMON_H_
+#define kDMDColumns (128)
+#define kDMDRows (32)
+#define kDMDSubFrames (4) // For color depth of 16
+
+void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yamlDoc);
+
+void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc);
+void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc);
+
+void ConfigureDMD(PRHandle proc);
+void UpdateDots(unsigned char * dots, unsigned int dotOffset);

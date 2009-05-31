@@ -47,13 +47,13 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
 
     if (dev == NULL)
     {
-        DEBUG(PRLog("Error allocating memory for P-ROC device\n"));
+        DEBUG(PRLog(kPRLogError, "Error allocating memory for P-ROC device\n"));
         return NULL;
     }
 
     if (!dev->Open())
     {
-        DEBUG(PRLog("Error opening P-ROC device.\n"));
+        DEBUG(PRLog(kPRLogError, "Error opening P-ROC device.\n"));
         delete dev;
         return NULL;
     }
@@ -150,7 +150,7 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
     uint32_t burst[burstWords];
     int32_t rc;
 
-    DEBUG(PRLog("Installing driver globals\n"));
+    DEBUG(PRLog(kPRLogInfo, "Installing driver globals\n"));
 
     this->driverGlobalConfig = *driverGlobalConfig;
     rc = CreateDriverUpdateGlobalConfigBurst(burst, driverGlobalConfig);
@@ -158,8 +158,8 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
                                             driverGlobalConfig->watchdogEnable,
                                             driverGlobalConfig->watchdogResetTime);
 
-    DEBUG(PRLog("Driver Global words: %x %x\n", burst[0], burst[1]));
-    DEBUG(PRLog("Watchdog words: %x %x\n", burst[2], burst[3]));
+    DEBUG(PRLog(kPRLogVerbose, "Driver Global words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog(kPRLogVerbose, "Watchdog words: %x %x\n", burst[2], burst[3]));
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -176,10 +176,10 @@ PRResult PRDevice::DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfi
     int32_t rc;
 
     driverGroups[driverGroupConfig->groupNum] = *driverGroupConfig;
-    DEBUG(PRLog("Installing driver group\n"));
+    DEBUG(PRLog(kPRLogInfo, "Installing driver group\n"));
     rc = CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
 
-    DEBUG(PRLog("Words: %x %x\n", burst[0], burst[1]));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n", burst[0], burst[1]));
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -195,18 +195,18 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     uint32_t burst[burstWords];
     int32_t rc;
 
-    DEBUG(PRLog("Updating driver #%d\n", driverState->driverNum));
+    DEBUG(PRLog(kPRLogInfo, "Updating driver #%d\n", driverState->driverNum));
 
     if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom)
     {
-        DEBUG(PRLog("Refusing to update driver #%d; polarity differs on non-custom machine.\n", driverState->driverNum));
+        PRSetLastErrorText("Refusing to update driver #%d; polarity differs on non-custom machine.", driverState->driverNum);
         return kPRFailure;
     }
 
     drivers[driverState->driverNum] = *driverState;
 
     rc = CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
-    DEBUG(PRLog("Words: %x %x %x\n", burst[0], burst[1], burst[2]));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x\n", burst[0], burst[1], burst[2]));
 
     return PrepareWriteData(burst, burstWords);
 }
@@ -241,8 +241,8 @@ PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
     this->switchConfig = *switchConfig;
     CreateSwitchUpdateConfigBurst(burst, switchConfig);
 
-    DEBUG(PRLog("Configuring Switch Logic"));
-    DEBUG(PRLog("Words: %x %x\n",burst[0],burst[1]));
+    DEBUG(PRLog(kPRLogInfo, "Configuring Switch Logic"));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n",burst[0],burst[1]));
 
     rc = PrepareWriteData(burst, burstWords);
     return rc;
@@ -256,7 +256,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     
     if (switchNum > kPRSwitchPhysicalLast) // Always true due to data type.
     {
-        DEBUG(PRLog("Switch rule out of range 0-%d\n", kPRSwitchPhysicalLast));
+        PRSetLastErrorText("Switch rule out of range 0-%d", kPRSwitchPhysicalLast);
         return kPRFailure;
     }
 
@@ -264,7 +264,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     // the links.
     if (numDrivers > 0 && freeSwitchRuleIndexes.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
     {
-        DEBUG(PRLog("Not enough free switch rule indexes: %d available, need %d\n", freeSwitchRuleIndexes.size(), numDrivers));
+        PRSetLastErrorText("Not enough free switch rule indexes: %d available, need %d", freeSwitchRuleIndexes.size(), numDrivers);
         return kPRFailure;
     }
 
@@ -283,7 +283,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     uint16_t firstRuleIndex = newRuleIndex;
     PRSwitchRuleInternal *newRule = GetSwitchRuleByIndex(newRuleIndex);
     if (newRule->eventType != eventType)
-        DEBUG(PRLog("Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
+        DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
     newRule->notifyHost = rule->notifyHost;
     newRule->changeOutput = false;
     newRule->linkActive = false;
@@ -313,20 +313,20 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 CreateSwitchUpdateRulesBurst(burst, newRule);
             }
             
-            DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+            DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
             // Write the rule:
             res = PrepareWriteData(burst, burstSize);
             if (res != kPRSuccess)
             {
-                DEBUG(PRLog("Error while writing switch update, attempting to revert switch rule to a safe state..."));
+                DEBUG(PRLog(kPRLogError, "Error while writing switch update, attempting to revert switch rule to a safe state..."));
                 newRule = GetSwitchRuleByIndex(firstRuleIndex);
                 newRule->changeOutput = false;
                 newRule->linkActive = false;
                 CreateSwitchUpdateRulesBurst(burst, newRule);
                 if (PrepareWriteData(burst, burstSize) == kPRSuccess)
-                    DEBUG(PRLog("Disabled successfully.\n"));
+                    DEBUG(PRLog(kPRLogError, "Disabled successfully.\n"));
                 else
-                    DEBUG(PRLog("Failed to disable.\n"));
+                    DEBUG(PRLog(kPRLogError, "Failed to disable.\n"));
                 return res;
             }
             
@@ -337,7 +337,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     else 
     {
         CreateSwitchUpdateRulesBurst(burst, newRule);
-        DEBUG(PRLog("Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
+        DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:
         res = PrepareWriteData(burst, burstSize);
@@ -355,8 +355,8 @@ int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
     this->dmdConfig = *dmdConfig;
     CreateDMDUpdateConfigBurst(burst, dmdConfig);
 
-    DEBUG(PRLog("Configuring DMD"));
-    DEBUG(PRLog("Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
+    DEBUG(PRLog(kPRLogInfo, "Configuring DMD"));
+    DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
                 burst[4],burst[5],burst[6]));
 
     rc = PrepareWriteData(burst, burstWords);
@@ -417,24 +417,21 @@ PRResult PRDevice::Open()
     {
         // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
         // just in case it was already initialized from a previous application execution.
-        DEBUG(PRLog("Verifying P-ROC ID: \n"));
+        DEBUG(PRLog(kPRLogInfo, "Verifying P-ROC ID: \n"));
         if (VerifyChipID() == kPRFailure) {
             // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
             // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
             // before it allows access deeper into the chip.  This keeps garbage from getting
             // in and wreaking havoc before software is up and running.
-            DEBUG(PRLog("Initializing P-ROC...\n"));
+            DEBUG(PRLog(kPRLogInfo, "Initializing P-ROC...\n"));
             res = FlushReadBuffer();
             uint32_t temp_word = P_ROC_INIT_PATTERN_A;
             res = WriteData(&temp_word, 1);
             temp_word = P_ROC_INIT_PATTERN_B;
             res = WriteData(&temp_word, 1);
             res = VerifyChipID();
-        }
-        else
-        {
-            DEBUG(PRLog("Failed to verify chip ID."));
-            res = kPRFailure;
+            if (res == kPRFailure)
+                DEBUG(PRLog(kPRLogWarning, "Unable to read Chip ID - P-ROC could not be initialized.\n"));
         }
     }
 
@@ -474,19 +471,20 @@ PRResult PRDevice::VerifyChipID()
 
         if (wordsRead == 5) {
             //std::cout << rc << " words read.  \n"
-            DEBUG(PRLog("FPGA Chip ID: 0x%x\n", buffer[1]));
-            DEBUG(PRLog("FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
-            DEBUG(PRLog("Watchdog Settings: 0x%x\n", buffer[3]));
-            DEBUG(PRLog("Switches: 0x%x\n", buffer[4]));
+            DEBUG(PRLog(kPRLogInfo, "FPGA Chip ID: 0x%x\n", buffer[1]));
+            DEBUG(PRLog(kPRLogInfo, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
+            DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
+            DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
             rc = kPRSuccess;
         }
         else {
-            DEBUG(PRLog("Error reading Chip IP and Version.  Incorrect number of bytes received from read_data().\n"));
+            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Incorrect number of bytes received from read_data().\n"));
             rc = kPRFailure;
         }
     }
-    else {
-        DEBUG(PRLog("Unable to read Chip ID - P-ROC not yet initialized.\n"));
+    else 
+    {
+        // Return failure without logging; calling function must log.
         rc = kPRFailure;
     }
     return (rc);
@@ -502,7 +500,7 @@ PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
 {
     if (numWords > maxWriteWords)
     { 
-        DEBUG(PRLog("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords));
+        PRSetLastErrorText("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords);
         return kPRFailure;
     }
 
@@ -511,7 +509,7 @@ PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
     if (numPreparedWriteWords + numWords > maxWriteWords)
     {
         if (FlushWriteData() == kPRFailure);
-        return kPRFailure;
+            return kPRFailure;
     }
 
     memcpy(preparedWriteWords + numPreparedWriteWords, words, numWords * 4);
@@ -559,7 +557,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
 
     if (bytesWritten != bytesToWrite)
     {
-        DEBUG(PRLog("Error in WriteData: wrote %d of %d bytes\n", bytesWritten, bytesToWrite));
+        PRSetLastErrorText("Error in WriteData: wrote %d of %d bytes", bytesWritten, bytesToWrite);
         return kPRFailure;
     }
     else
@@ -596,7 +594,7 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
     else {
         rc = 0;
     }
-    DEBUG(PRLog("Read num bytes: %d\n", rc));
+    DEBUG(PRLog(kPRLogVerbose, "Read num bytes: %d\n", rc));
     return (rc);
 }
 
@@ -628,7 +626,7 @@ int32_t PRDevice::CollectReadData()
     num_collected_bytes += rc;
     if (rc > 0)
     {
-        DEBUG(PRLog("Collected bytes: %d\n", rc));
+        DEBUG(PRLog(kPRLogVerbose, "Collected bytes: %d\n", rc));
     }
     return (rc);
 }
@@ -643,7 +641,7 @@ PRResult PRDevice::SortReturningData()
 
     while (num_words >= 2) {
         rc = ReadData(rd_buffer, 1);
-        DEBUG(PRLog("New returning word: 0x%x\n", rd_buffer[0]));
+        DEBUG(PRLog(kPRLogVerbose, "New returning word: 0x%x\n", rd_buffer[0]));
 
         switch ( (rd_buffer[0] & P_ROC_COMMAND_MASK) >> P_ROC_COMMAND_SHIFT)
         {
@@ -659,7 +657,7 @@ PRResult PRDevice::SortReturningData()
             }
             case P_ROC_UNREQUESTED_DATA: {
                 ReadData(rd_buffer,1);
-                DEBUG(PRLog("Pushing onto unreq Q 0x%x\n", rd_buffer[0]));
+                DEBUG(PRLog(kPRLogVerbose, "Pushing onto unreq Q 0x%x\n", rd_buffer[0]));
                 unrequestedDataQueue.push(rd_buffer[0]);
                 break;
             }
