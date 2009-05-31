@@ -71,49 +71,6 @@ PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
 }
 
 
-#define drawdot(subFrame) dots[subFrame*(kDMDColumns*kDMDRows/8) + ((row*kDMDColumns+col)/8)] |= 1 << (col % 8)
-unsigned char frame[kDMDColumns*kDMDRows] = {0xff};
-void UpdateDots2(unsigned char *dots, unsigned int dotOffset)
-{
-    int row, col;
-    memset(dots, 0x00, 4*kDMDColumns*kDMDRows/8);
-    
-    if (1) //frame[0] == 0xff)
-    {
-        //FILE *f = fopen("../../../../DMDAnimator/Gir Robot.dmd", "rb");
-        //FILE *f = fopen("../../../../DMDAnimator/Invader Zim.dmd", "rb");
-        FILE *f = NULL;
-        switch((dotOffset / 100) % 4)
-        {
-            case 0: f = fopen("../../../../DMDAnimator/Gir.dmd", "rb"); break;
-            case 1: f = fopen("../../../../DMDAnimator/Invader Zim.dmd", "rb"); break;
-            case 2: f = fopen("../../../../DMDAnimator/Gir Robot.dmd", "rb"); break;
-            case 3: f = fopen("../../../../DMDAnimator/Gnomes.dmd", "rb"); break;
-        }
-        int n;
-        n = fread(frame, 1, 1, f);
-        n = fread(frame, 1, sizeof(frame), f);
-        fclose(f);
-    }
-    
-    for (row = kDMDRows - 1; row >= 0; row--)
-    {
-        // Loop through each of 16 bytes in a row
-        for (col = 0; col < kDMDColumns; col++)
-        {
-            int dot = frame[row * kDMDColumns + col];
-            switch (dot)
-            {
-                case 0:
-                    break;
-                case 1: drawdot(0); break;
-                case 2: drawdot(0); drawdot(2); break;
-                case 3: drawdot(0); drawdot(1); drawdot(2); drawdot(3); break;
-            }
-        }
-    }
-}
-
 time_t startTime;
 bool runLoopRun = true;
 
@@ -132,7 +89,7 @@ void RunLoop(PRHandle proc)
         PRDriverWatchdogTickle(proc);
          
         // Create a dot pattern to test the DMD
-        UpdateDots2(dots,dotOffset++);
+        UpdateDots(dots,dotOffset++);
         PRDMDDraw(proc,dots);
 
         int numEvents = PRGetEvents(proc, events, maxEvents);
