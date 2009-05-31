@@ -24,6 +24,8 @@
  */
 #include "pinproctest.h"
 
+extern PRMachineType machineType;
+
 typedef struct SwitchStatus {
     PREventType state;
     uint32_t lastEventTime;
@@ -96,15 +98,16 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
 {
     // WPC  Flippers
+    std::string numStr;
     const YAML::Node& flippers = yamlDoc[kFlippersSection];
     for (YAML::Iterator flippersIt = flippers.begin(); flippersIt != flippers.end(); ++flippersIt)
     {
         int swNum, coilMain, coilHold;
         std::string flipperName;
         *flippersIt >> flipperName;
-        yamlDoc[kSwitchesSection][flipperName][kNumberField] >> swNum;
-        yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> coilMain;
-        yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> coilHold;
+        yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
+        yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
+        yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
         ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
     }
     
@@ -115,8 +118,8 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
         // WPC  Slingshots
         std::string bumperName;
         *bumpersIt >> bumperName;
-        yamlDoc[kSwitchesSection][bumperName][kNumberField] >> swNum;
-        yamlDoc[kCoilsSection][bumperName][kNumberField] >> coilNum;
+        yamlDoc[kSwitchesSection][bumperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
+        yamlDoc[kCoilsSection][bumperName][kNumberField] >> numStr; coilNum = PRDecode(machineType, numStr.c_str());
         ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
     }
 }

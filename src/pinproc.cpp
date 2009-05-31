@@ -231,6 +231,49 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsO
     driver->patterEnable = true;
 }
 
+PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
+{
+    if (str == NULL)
+        return 0;
+    if (strlen(str) != 3)
+        return atoi(str);
+    uint16_t x = (str[1]-'0') * 10 + (str[2]-'0');
+    
+    if (machineType == kPRMachineWPC)
+    {
+        switch (str[0])
+        {
+            case 'L':
+            case 'l':
+                return 80 + 8 * ((x / 10) - 1) + ((x % 10) -1);
+            case 'C':
+            case 'c':
+                if (x <= 28)
+                    return x + 39;
+                else
+                    return x + 7;
+            case 'G':
+            case 'g':
+                return x + 71;
+            case 'S':
+            case 's':
+            {
+                switch (str[1])
+                {
+                    case 'D':
+                    case 'd':
+                        return 8 + ((str[2]-'0') - 1);
+                    case 'F':
+                    case 'f':
+                        return (str[2]-'0') - 1;
+                    default:
+                        return 32 + 16 * ((x / 10) - 1) + ((x % 10) - 1);
+                }
+            }
+        }
+    }
+    return atoi(str);
+}
 
 // Switches
 
