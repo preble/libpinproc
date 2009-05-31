@@ -145,7 +145,8 @@ void LoadSwitchStates( PRHandle proc )
             switches[i].state = procSwitchStates[i];
         }
 
-        fprintf(stderr, "\nCurrent Switch States: 0 : ");
+        int zero = 0;
+        fprintf(stderr, "\nCurrent Switch States: %3d : ", zero);
         for (i = 0; i < kPRSwitchPhysicalLast + 1; i++)
         {
             fprintf(stderr, "%d ", switches[i].state);
@@ -153,7 +154,7 @@ void LoadSwitchStates( PRHandle proc )
             {
                 printf("\n");
                 if (i != kPRSwitchPhysicalLast) 
-                    fprintf(stderr, "Current Switch States: %d : ", i);
+                    fprintf(stderr, "Current Switch States: %3d : ", i+1);
             }
         }
         fprintf(stderr, "\n");
