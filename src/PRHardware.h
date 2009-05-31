@@ -73,6 +73,9 @@ const uint32_t P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT        = 30;
 const uint32_t P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT         = 14;
 const uint32_t P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT     = 0;
 
+const uint32_t P_ROC_SWITCH_CTRL_STATE_BASE_ADDR           = 4;
+const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 11;
+
 const uint32_t P_ROC_EVENT_SWITCH_NUM_MASK                 = 0xFF;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_MASK               = 0x100;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_SHIFT              = 8;

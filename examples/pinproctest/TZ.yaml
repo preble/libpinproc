@@ -11,17 +11,17 @@ PRBumpers:
     - slingR
 PRSwitches:
     flipperLwR:
-        number: 1
+        number: SF2
     flipperLwL:
-        number: 3
+        number: SF4
     flipperUpR:
-        number: 5
+        number: SF6
     flipperUpL:
-        number: 7
+        number: SF8
     slingL:
-        number: 96
+        number: S34
     slingR: 
-        number: 97
+        number: S35
 PRCoils:
     flipperLwRMain: 
         number: 32
@@ -40,19 +40,17 @@ PRCoils:
     flipperUpLHold: 
         number: 39
     slingL:
-        number: 50
+        number: C11
     slingR: 
-        number: 49
-    shooterDiverter:
-        number: 55
-    outhole:
-        number: 47
-    ballRelease:
-        number: 48
-    rocketKicker:
-        number: 41
+        number: C10
     slotKickout:
-        number: 40
+        number: C01
+    rocketKickout: 
+        number: C02
+    outhole:
+        number: C08
+    ballRelease:
+        number: C09
 PRLamps:
     doorTheCamera: 
-        number: 80
+        number: L11

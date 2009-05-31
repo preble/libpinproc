@@ -237,6 +237,13 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedu
  */
 PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 
+/**
+ * @brief Converts a coil, lamp, switch, or GI string into a P-ROC driver number.
+ * The following formats are accepted: Cxx (coil), Lxx (lamp), Sxx (matrix switch), SFx (flipper grounded switch), or SDx (dedicated grounded switch).
+ * If the string does not match this format it will be converted into an integer using atoi().
+ */
+PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str);
+
 /** @} */ // End of Drivers
 
 // Switches
@@ -342,6 +349,9 @@ PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchC
  * @param numDrivers Number of elements in the linkedDrivers array.  May be zero or more.
  */
 PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+
+/** Returns a list of PREventTypes describing the states of the requested number of switches  */
+PR_EXPORT PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches);
 
 /** @} */ // End of Switches & Events
 

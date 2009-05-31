@@ -65,14 +65,16 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 {
     int i;
     
-    unrequestedDataQueue.empty();
-    requestedDataQueue.empty();
+    // Make sure the data queues are empty.
+    while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
+    while (!requestedDataQueue.empty()) requestedDataQueue.pop();
     num_collected_bytes = 0;
     numPreparedWriteWords = 0;
     
     DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
-    freeSwitchRuleIndexes.empty();
+    // Make sure the free list is empty.
+    while (!freeSwitchRuleIndexes.empty()) freeSwitchRuleIndexes.pop();
     
     for (i = 0; i < kPRSwitchRulesCount; i++)
     {
@@ -494,6 +496,74 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     return res;
 }
 
+PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwitches )
+{
+    uint32_t rc;
+    uint32_t stateWord, debounceWord;
+    uint8_t i, j;
+    PREventType eventType;
+
+    // Request one state word and one debounce word at a time.  Could make more efficient
+    // use of the USB bus by requesting a burst of state words and then a burst of debounce
+    // words, but doing one word at a time makes it easier to process each switch when the 
+    // data returns.  Also, this function shouldn't be called during timing sensitive
+    // situations; so the inefficiencies are acceptable.
+    for (i = 0; i < numSwitches / 32; i++)
+    {
+        rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                         P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
+        rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                         P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+    }
+
+    // Expect 4 words for each 32 switches.  The state and debounce words, 
+    // and the address words for both.
+    uint16_t numWords = 4 * (numSwitches / 32);  
+                                                  
+    i = 0; // Reset i so it can be used to prevent an infinite loop below
+
+    // Wait for data to return.  Give it 10 loops before giving up.
+    while (requestedDataQueue.size() < numWords && i++ < 10) 
+    {
+        sleep (.01); // 10 milliseconds should be plenty of time.
+        SortReturningData();
+    }
+
+    // Make sure all of the requested words are available before processing them.
+    // Too many words is just as bad as not enough words.  
+    // If too many come back, can they be trusted?
+    if (requestedDataQueue.size() == numWords)
+    {
+        // Process the returning words.
+        for (i = 0; i < numSwitches / 32; i++)
+        {
+            requestedDataQueue.pop(); // Ignore address word.  TODO: Verify this address word.
+            stateWord = requestedDataQueue.front(); // This is the switch state word.
+            requestedDataQueue.pop(); 
+            requestedDataQueue.pop(); // Ignore address word.  TODO: Verify this address word.
+            debounceWord = requestedDataQueue.front(); // This is the debounce word.
+            requestedDataQueue.pop(); 
+
+            // Loop through each bit of the words, combining them into an eventType
+            for (j = 0; j < 32; j++)
+            {
+                // Only process the number of switches requested via numSwitches
+                if ((i * 32) + j < numSwitches)
+                {
+                    if (stateWord >> j & 1)
+                        if (debounceWord >> j & 1) eventType = kPREventTypeSwitchOpenDebounced;
+                        else eventType = kPREventTypeSwitchOpenNondebounced;
+                    else if (debounceWord >> j & 1) eventType = kPREventTypeSwitchClosedDebounced;
+                    else eventType = kPREventTypeSwitchClosedNondebounced;
+                    switchStates[(i * 32) + j] = eventType;
+                }
+            }
+        }
+        return kPRSuccess;
+    }
+    else return kPRFailure;
+}
+
 int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
 {
     uint32_t rc;
@@ -793,14 +863,17 @@ PRResult PRDevice::SortReturningData()
 
         switch ( (rd_buffer[0] & P_ROC_COMMAND_MASK) >> P_ROC_COMMAND_SHIFT)
         {
-                // Must be a bug in the P-ROC.  Unrequested packets are returning looking
-                // like requested packets.  Commenting out requested packets for now.
             case P_ROC_REQUESTED_DATA: {
-                int bytesRead = ReadData(rd_buffer,
+                // Push the address word so it can be used to identify the subsequent data.
+                requestedDataQueue.push(rd_buffer[0]);
+                int wordsRead = ReadData(rd_buffer,
                                          (rd_buffer[0] & P_ROC_HEADER_LENGTH_MASK) >>
                                          P_ROC_HEADER_LENGTH_SHIFT);
-                for (int i = 0; i < bytesRead; i++)
+                for (int i = 0; i < wordsRead; i++)
+                {
+                    DEBUG(PRLog(kPRLogVerbose, "Pushing onto unreq Q 0x%x\n", rd_buffer[i]));
                     requestedDataQueue.push(rd_buffer[i]);
+                }
                 break;
             }
             case P_ROC_UNREQUESTED_DATA: {

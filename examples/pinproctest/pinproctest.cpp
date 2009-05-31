@@ -28,6 +28,7 @@
  */
 #include "pinproctest.h"
 
+PRMachineType machineType = kPRMachineInvalid;
 
 /** Demonstration of the custom logging callback. */
 void TestLogger(PRLogLevel level, const char *text)
@@ -84,6 +85,9 @@ void RunLoop(PRHandle proc)
     unsigned char dots[4*((128*32)/8)]; 
     unsigned int dotOffset = 0;
 
+    // Retrieve and store initial switch states. 
+    LoadSwitchStates(proc);
+
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
@@ -107,6 +111,7 @@ void RunLoop(PRHandle proc)
             struct timeval tv;
             gettimeofday(&tv, NULL);
             printf("%d.%03d switch % 3d: %s\n", tv.tv_sec-startTime, tv.tv_usec/1000, event->value, stateText);
+            UpdateSwitchState( event );
         }
         PRFlushWriteData(proc);
         usleep(10*1000); // Sleep for 10ms so we aren't pegging the CPU.
@@ -143,7 +148,6 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    PRMachineType machineType = kPRMachineInvalid;
     std::string machineTypeString;
     yamlDoc["PRGame"]["machineType"] >> machineTypeString;
     if (machineTypeString == "wpc")
