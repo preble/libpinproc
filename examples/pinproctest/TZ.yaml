@@ -40,9 +40,19 @@ PRCoils:
     flipperUpLHold: 
         number: 39
     slingL:
-        number: 54
+        number: 50
     slingR: 
+        number: 49
+    shooterDiverter:
         number: 55
+    outhole:
+        number: 47
+    ballRelease:
+        number: 48
+    rocketKicker:
+        number: 41
+    slotKickout:
+        number: 40
 PRLamps:
     doorTheCamera: 
         number: 80
