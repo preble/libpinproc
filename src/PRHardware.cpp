@@ -240,7 +240,7 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
  * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.
  */
 
-#if !defined(USE_LIBFTDI)
+#if !defined(USE_D2XX)
 #define USE_LIBFTDI 1
 #endif
 
@@ -346,3 +346,134 @@ int PRHardwareWrite(uint8_t *buffer, int bytes)
 }
 
 #endif // USE_LIBFTDI
+
+#if USE_D2XX
+#include "ftd2xx.h"
+
+#define BUF_SIZE 16
+#define MAX_DEVICES 1
+
+// Globals
+static FT_HANDLE ftHandles[MAX_DEVICES];
+static FT_HANDLE ftHandle;
+
+PRResult PRHardwareOpen()
+{
+    char 	cBufWrite[BUF_SIZE];
+    char * 	pcBufLD[MAX_DEVICES + 1];
+    char 	cBufLD[MAX_DEVICES][64];
+    FT_STATUS	ftStatus;
+    int	iNumDevs = 0;
+    int	i, j;
+    int	iDevicesOpen = 0;
+
+    for(i = 0; i < MAX_DEVICES; i++) {
+        pcBufLD[i] = cBufLD[i];
+        ftHandles[i] = NULL;
+    }
+    pcBufLD[MAX_DEVICES] = NULL;
+    
+    ftStatus = FT_ListDevices(pcBufLD, &iNumDevs, FT_LIST_ALL | FT_OPEN_BY_SERIAL_NUMBER);
+    
+    if(ftStatus != FT_OK) {
+        DEBUG(PRLog(kPRLogInfo,"Error: FT_ListDevices(%d)\n", ftStatus));
+        return kPRFailure;
+    }
+    
+    for(j = 0; j < BUF_SIZE; j++) {
+        cBufWrite[j] = j;
+    }
+    
+    for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ); i++) {
+        DEBUG(PRLog(kPRLogInfo,"Device %d Serial Number - %s\n", i, cBufLD[i]));
+    }
+
+    for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ) ; i++) {
+        /* Setup */
+        if((ftStatus = FT_OpenEx(cBufLD[i], FT_OPEN_BY_SERIAL_NUMBER, &ftHandles[i])) != FT_OK){
+            /* 
+                This can fail if the ftdi_sio driver is loaded
+                use lsmod to check this and rmmod ftdi_sio to remove
+                also rmmod usbserial
+            */
+            DEBUG(PRLog(kPRLogInfo,"Error FT_OpenEx(%d), device\n", ftStatus, i));
+            return kPRFailure;
+        }
+    
+        DEBUG(PRLog(kPRLogInfo,"Opened device %s\n", cBufLD[i]));
+        ftHandle = ftHandles[i];
+
+        if((ftStatus = FT_SetBaudRate(ftHandles[i], 1228800)) != FT_OK) {
+            DEBUG(PRLog(kPRLogInfo,"Error FT_SetBaudRate(%d), cBufLD[i] = %s\n", ftStatus, cBufLD[i]));
+        }
+    
+        iDevicesOpen++;
+    }
+
+    if (iDevicesOpen > 0) 
+    {
+      FT_ResetDevice(ftHandle);
+      DEBUG(PRLog(kPRLogInfo,"FTDI Device Opened\n"));
+      return kPRSuccess;
+    }
+    else return kPRFailure;
+}
+    
+void PRHardwareClose()
+{
+    int i;
+
+    for(i = 0; i < MAX_DEVICES; i++) {
+        if(ftHandles[i] != NULL) {
+            FT_Close(ftHandles[i]);
+            ftHandles[i] = NULL;
+            DEBUG(PRLog(kPRLogInfo,"Closed device\n"));
+        }
+    }
+}
+
+int PRHardwareRead(uint8_t *buffer, int maxBytes)
+{
+    FT_STATUS ftStatus; 
+    DWORD bytesToRead;
+    DWORD bytesRead;
+    int i;
+
+    ftStatus = FT_GetQueueStatus(ftHandle,&bytesToRead);
+    if (ftStatus != FT_OK) return 0;
+   
+    if (maxBytes < bytesToRead) bytesToRead = maxBytes;
+    ftStatus = FT_Read(ftHandle, buffer, bytesToRead, &bytesRead);
+    if (ftStatus == FT_OK) {
+        DEBUG(PRLog(kPRLogVerbose,"Read %d bytes:\n",bytesRead));
+        for (i=0; i<bytesRead; i++) {
+            DEBUG(PRLog(kPRLogVerbose,"Read byte: %x\n",buffer[i]));
+        }
+        return (int)bytesRead;
+    }
+    else return 0;
+}
+
+int PRHardwareWrite(uint8_t *buffer, int bytes)
+{
+    FT_STATUS ftStatus=0; 
+    DWORD bytesWritten=0;
+    int i;
+
+    DEBUG(PRLog(kPRLogVerbose,"Writing %d bytes:\n",bytes));
+    ftStatus = FT_Write(ftHandle, buffer, (DWORD)bytes, &bytesWritten);
+    if (ftStatus == FT_OK) 
+    {
+        DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes:\n",bytesWritten));
+        if (bytesWritten != bytes) DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes, should have written %d bytes",bytesWritten,bytes));
+        else {
+            for (i=0; i<bytesWritten; i++) {
+                DEBUG(PRLog(kPRLogVerbose,"Wrote byte: %x\n",buffer[i]));
+            }
+        }
+        return (int)bytesWritten;
+    }
+    else return 0;
+}
+
+#endif // D2XX
