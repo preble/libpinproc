@@ -22,6 +22,24 @@ PRSwitches:
         number: S34
     slingR: 
         number: S35
+    outhole:
+        number: S18
+    troughFarLeft:
+        number: S25
+    troughLeft:
+        number: S17
+    troughMiddle:
+        number: S16
+    troughRight:
+        number: S15
+    shooterLane:
+        number: S27
+    startButton:
+        number: S13
+    rocketKickout:
+        number: S28
+    slotKickout:
+        number: S58
 PRCoils:
     flipperLwRMain: 
         number: 32
@@ -52,5 +70,7 @@ PRCoils:
     ballRelease:
         number: C09
 PRLamps:
-    doorTheCamera: 
+    startButton:
+        number: L88
+    doorTheCamera:
         number: L11
