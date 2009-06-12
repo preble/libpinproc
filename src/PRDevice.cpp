@@ -879,7 +879,7 @@ int32_t PRDevice::CollectReadData()
 {
     int32_t rc,i;
     rc = PRHardwareRead(collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
-    for (i=0; i<rc; i=i++) {
+    for (i=0; i<rc; i++) {
         collected_bytes_fifo[collected_bytes_wr_addr] = collect_buffer[i];
         if (collected_bytes_wr_addr == (FTDI_BUFFER_SIZE-1))
             collected_bytes_wr_addr = 0;
