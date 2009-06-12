@@ -525,7 +525,7 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     // Wait for data to return.  Give it 10 loops before giving up.
     while (requestedDataQueue.size() < numWords && i++ < 10) 
     {
-        sleep (.01); // 10 milliseconds should be plenty of time.
+        PRSleep (10); // 10 milliseconds should be plenty of time.
         SortReturningData();
     }
 
@@ -677,7 +677,7 @@ PRResult PRDevice::VerifyChipID()
     max_count = 0;
     //std::cout << "Waiting for read data ";
     while (num_collected_bytes < (bufferWords*4) && max_count < 10) {
-        sleep(.01);
+        PRSleep(10);
         //std::cout << ". ";
         rc = CollectReadData();
         max_count++;
@@ -809,7 +809,7 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
     // Expect numReadWords + 1 word with the address.
     while (requestedDataQueue.size() < (numReadWords + 1) && i++ < 10) 
     {
-        sleep (.01); // 10 milliseconds should be plenty of time.
+        PRSleep (10); // 10 milliseconds should be plenty of time.
         SortReturningData();
     }
 

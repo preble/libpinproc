@@ -39,7 +39,9 @@
     #if defined(PR_BUILDING_PR)
         #define PR_EXPORT __declspec(dllexport) extern
     #else
-        #define PR_EXPORT __declspec(dllimport) extern
+        // TODO: Decide what to do here:
+        //#define PR_EXPORT __declspec(dllimport) extern
+        #define PR_EXPORT
     #endif
 #endif
 

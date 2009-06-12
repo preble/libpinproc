@@ -29,6 +29,13 @@
 #include <stdint.h>
 #include "../include/pinproc.h"
 
+#if defined(__WIN32__)
+    #include <windows.h>
+    #define PRSleep(milliseconds) Sleep(milliseconds)
+#else
+    #define PRSleep(milliseconds) sleep(milliseconds/1000)
+#endif
+
 const int32_t FTDI_VENDOR_ID = 0x0403;
 const int32_t FTDI_FT245RL_PRODUCT_ID = 0x6001;
 

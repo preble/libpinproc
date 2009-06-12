@@ -31,6 +31,10 @@
 #include "../include/pinproc.h"
 #include "PRDevice.h"
 
+#if defined(__WIN32__)
+    #include <stardg.h>
+#endif
+
 #define MAX_TEXT (1024)
 
 typedef void (*PRLogCallback)(PRLogLevel level, const char *text);
