@@ -240,8 +240,12 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
  * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.
  */
 
+#if defined(__WIN32__)
+    #define USE_D2XX 1
+#endif
+
 #if !defined(USE_D2XX)
-#define USE_LIBFTDI 1
+    #define USE_LIBFTDI 1
 #endif
 
 #if USE_LIBFTDI
