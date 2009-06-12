@@ -30,10 +30,7 @@
 
 #include "../include/pinproc.h"
 #include "PRDevice.h"
-
-#if defined(__WIN32__)
-    #include <stardg.h>
-#endif
+#include <stdarg.h>
 
 #define MAX_TEXT (1024)
 
