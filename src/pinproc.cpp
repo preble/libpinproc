@@ -30,6 +30,7 @@
 
 #include "../include/pinproc.h"
 #include "PRDevice.h"
+#include <stdarg.h>
 
 #define MAX_TEXT (1024)
 
@@ -108,6 +109,18 @@ PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
 PR_EXPORT PRResult PRFlushWriteData(PRHandle handle)
 {
     return handleAsDevice->FlushWriteData();
+}
+
+/** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData */
+PR_EXPORT PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+{
+    return handleAsDevice->WriteDataRaw(moduleSelect, startingAddr, numWriteWords, writeBuffer);
+}
+
+/** Read data from the P-ROC. */
+PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
+{
+    return handleAsDevice->ReadDataRaw(moduleSelect, startingAddr, numReadWords, readBuffer);
 }
 
 // Events

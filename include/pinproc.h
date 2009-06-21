@@ -39,7 +39,9 @@
     #if defined(PR_BUILDING_PR)
         #define PR_EXPORT __declspec(dllexport) extern
     #else
-        #define PR_EXPORT __declspec(dllimport) extern
+        // TODO: Decide what to do here:
+        //#define PR_EXPORT __declspec(dllimport) extern
+        #define PR_EXPORT
     #endif
 #endif
 
@@ -115,8 +117,14 @@ PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags);
 
 // I/O
 
-/** Flush all pending write data out to the P-ROC */
+/** Flush all pending write data out to the P-ROC. */
 PR_EXPORT PRResult PRFlushWriteData(PRHandle handle);
+
+/** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData). */
+PR_EXPORT PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer);
+
+/** Read data from the P-ROC. */
+PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
 
 // Drivers
 /** @defgroup drivers Driver Manipulation

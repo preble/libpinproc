@@ -525,7 +525,7 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     // Wait for data to return.  Give it 10 loops before giving up.
     while (requestedDataQueue.size() < numWords && i++ < 10) 
     {
-        sleep (.01); // 10 milliseconds should be plenty of time.
+        PRSleep (10); // 10 milliseconds should be plenty of time.
         SortReturningData();
     }
 
@@ -677,7 +677,7 @@ PRResult PRDevice::VerifyChipID()
     max_count = 0;
     //std::cout << "Waiting for read data ";
     while (num_collected_bytes < (bufferWords*4) && max_count < 10) {
-        sleep(.01);
+        PRSleep(10);
         //std::cout << ". ";
         rc = CollectReadData();
         max_count++;
@@ -784,6 +784,51 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
     }
 }
 
+PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+{
+    uint32_t * buffer;
+
+    buffer = (uint32_t *)malloc((numWriteWords * 4) + 1);
+    buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
+    memcpy(buffer+1, writeBuffer, numWriteWords * 4);
+    WriteData(buffer, numWriteWords + 1);
+    free (buffer);
+}
+
+PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
+{
+    uint32_t rc;
+    uint8_t i;
+
+    // Send out the request.
+    rc = RequestData(moduleSelect, startingAddr, numReadWords);
+
+    i = 0; // Reset i so it can be used to prevent an infinite loop below
+
+    // Wait for data to return.  Give it 10 loops before giving up.
+    // Expect numReadWords + 1 word with the address.
+    while (requestedDataQueue.size() < (numReadWords + 1) && i++ < 10) 
+    {
+        PRSleep (10); // 10 milliseconds should be plenty of time.
+        SortReturningData();
+    }
+
+    // Make sure all of the requested words are available before processing them.
+    // Too many words is just as bad as not enough words.  
+    // If too many come back, can they be trusted?
+    if (requestedDataQueue.size() == numReadWords + 1)
+    {
+        requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
+        for (i = 0; i < numReadWords; i++)
+        {
+            readBuffer[i] =  requestedDataQueue.front(); 
+            requestedDataQueue.pop(); 
+        }
+        return kPRSuccess;
+    }
+    else return kPRFailure;
+}
+
 
 int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
 {
@@ -834,7 +879,7 @@ int32_t PRDevice::CollectReadData()
 {
     int32_t rc,i;
     rc = PRHardwareRead(collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
-    for (i=0; i<rc; i=i++) {
+    for (i=0; i<rc; i++) {
         collected_bytes_fifo[collected_bytes_wr_addr] = collect_buffer[i];
         if (collected_bytes_wr_addr == (FTDI_BUFFER_SIZE-1))
             collected_bytes_wr_addr = 0;

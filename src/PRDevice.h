@@ -54,6 +54,8 @@ public:
     int GetEvents(PREvent *events, int maxEvents);
 
     PRResult FlushWriteData();
+    PRResult WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * buffer);
+    PRResult ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
 
     PRResult DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig);
     PRResult DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig);
@@ -86,9 +88,7 @@ protected:
     /** Schedules data to be written to the P-ROC.  */
     PRResult PrepareWriteData(uint32_t * buffer, int32_t numWords);
 
-    /** Writes data to P-ROC.
-     * Returns #kPFailure if the number of words read does not match the number requested.
-     */
+    /** Writes data to the P-ROC immediately. */
     PRResult WriteData(uint32_t * buffer, int32_t numWords);
 
     /**
