@@ -11,17 +11,43 @@ PRBumpers:
     - slingR
 PRSwitches:
     flipperLwR:
-        number: 1
+        number: SF2
     flipperLwL: 
-        number: 3
+        number: SF4
     flipperUpR: 
-        number: 5
+        number: SF6
     flipperUpL: 
-        number: 7
+        number: SF8
+    fireL:
+        number: S11
+    fireR:
+        number: S12
+    startButton:
+        number: S13
+    shooterLane:
+        number: S27
+    buyIn:
+        number: S31
+    ballShooter:
+        number: S41
+    superGame:
+        number: S44
     slingL: 
-        number: 96
+        number: S51
     slingR: 
-        number: 97
+        number: S52
+    outhole:
+        number: S18
+    trough1:
+        number: S81
+    trough2:
+        number: S82
+    trough3:
+        number: S83
+    trough4:
+        number: S84
+    trough6:
+        number: S85
 PRCoils:
     flipperLwRMain: 
         number: 32
@@ -40,6 +66,14 @@ PRCoils:
     flipperUpLHold: 
         number: 39
     slingL: 
-        number: 54
+        number: C15
     slingR: 
-        number: 55
+        number: C16
+    resetDropTarget:
+        number: C05
+    trough:
+        number: C13
+    shooterR:
+        number: C08
+    shooterL:
+        number: C09
