@@ -24,11 +24,13 @@ PRSwitches:
         number: S12
     startButton:
         number: S13
-    shooterLane:
-        number: S27
+    shooterL:
+        number: S15
+    shooterR:
+        number: S41
     buyIn:
         number: S31
-    ballShooter:
+    ballShooterR:
         number: S41
     superGame:
         number: S44
@@ -36,8 +38,10 @@ PRSwitches:
         number: S51
     slingR: 
         number: S52
-    outhole:
-        number: S18
+    popperL:
+        number: S73
+    popperR:
+        number: S74
     trough1:
         number: S81
     trough2:
@@ -46,8 +50,12 @@ PRSwitches:
         number: S83
     trough4:
         number: S84
-    trough6:
+    trough5:
         number: S85
+    trough6:
+        number: S86
+    troughTop:
+        number: S87
 PRCoils:
     flipperLwRMain: 
         number: 32
@@ -65,15 +73,36 @@ PRCoils:
         number: 38
     flipperUpLHold: 
         number: 39
-    slingL: 
-        number: C15
-    slingR: 
-        number: C16
+    popperL:
+        number: C02
+    popperR:
+        number: C03
     resetDropTarget:
         number: C05
-    trough:
-        number: C13
     shooterR:
         number: C08
     shooterL:
         number: C09
+    trough:
+        number: C13
+    slingL: 
+        number: C15
+    slingR: 
+        number: C16
+PRLamps:
+    buyIn:
+        number: L38
+    superGame:
+        number: L87
+    startButton:
+        number: L88
+    gi01:
+        number: G01
+    gi02:
+        number: G02
+    gi03:
+        number: G03
+    gi04:
+        number: G04
+    gi05:
+        number: G05
