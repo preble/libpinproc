@@ -38,6 +38,18 @@ PRSwitches:
         number: S51
     slingR: 
         number: S52
+    captiveBall2:
+        number: S53
+    dropTargetJ:
+        number: S54
+    dropTargetU:
+        number: S55
+    dropTargetD:
+        number: S56
+    dropTargetG:
+        number: S57
+    dropTargetE:
+        number: S58
     popperL:
         number: S73
     popperR:
@@ -92,6 +104,16 @@ PRCoils:
 PRLamps:
     buyIn:
         number: L38
+    dropTargetJ:
+        number: L71
+    dropTargetU:
+        number: L72
+    dropTargetD:
+        number: L73
+    dropTargetG:
+        number: L74
+    dropTargetE:
+        number: L75
     superGame:
         number: L87
     startButton:
