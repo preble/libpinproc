@@ -26,6 +26,10 @@ PRSwitches:
         number: S13
     shooterL:
         number: S15
+    subwayEnter1:
+        number: S37
+    subwayEnter2:
+        number: S38
     shooterR:
         number: S41
     buyIn:
