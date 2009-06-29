@@ -293,6 +293,8 @@ PR_EXPORT PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates
     return handleAsDevice->SwitchGetStates(switchStates, numSwitches);
 }
 
+// DMD
+
 PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)
 {
     return handleAsDevice->DMDUpdateConfig(dmdConfig);
@@ -302,3 +304,29 @@ PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots)
     return handleAsDevice->DMDDraw(dots);
 }
 
+// JTAG
+
+PR_EXPORT PRResult PRJTAGDriveOutputs(PRHandle handle, PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
+{
+    return handleAsDevice->PRJTAGDriveOutputs(jtagOutputs, toggleClk);
+}
+
+PR_EXPORT PRResult PRJTAGWriteTDOMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData)
+{
+    return handleAsDevice->PRJTAGWriteTDOMemory(tableOffset, numWords, tdoData);
+}
+
+PR_EXPORT PRResult PRJTAGShiftTDOData(PRHandle handle, uint16_t numBits, bool_t dataBlockComplete)
+{
+    return handleAsDevice->PRJTAGShiftTDOData(numBits, dataBlockComplete);
+}
+
+PR_EXPORT PRResult PRJTAGReadTDIMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData)
+{
+    return handleAsDevice->PRJTAGReadTDIMemory(tableOffset, numWords, tdiData);
+}
+
+PR_EXPORT PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status)
+{
+    return handleAsDevice->PRJTAGGetStatus(status);
+}

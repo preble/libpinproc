@@ -73,6 +73,12 @@ public:
     PRResult DMDUpdateConfig(PRDMDConfig *dmdConfig);
     PRResult DMDDraw(uint8_t * dots);
 
+    PRResult PRJTAGDriveOutputs(PRJTAGOutputs * jtagOutputs, bool_t toggleClk);
+    PRResult PRJTAGWriteTDOMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData);
+    PRResult PRJTAGShiftTDOData(uint16_t numBits, bool_t dataBlockComplete);
+    PRResult PRJTAGReadTDIMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData);
+    PRResult PRJTAGGetStatus(PRJTAGStatus * status);
+
 protected:
 
     // Device I/O

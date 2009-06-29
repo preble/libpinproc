@@ -64,7 +64,7 @@ const uint32_t P_ROC_REG_ADDR_SHIFT         = 0;
 const uint32_t P_ROC_MODULE_SELECT_SHIFT    = 16;
 
 const uint32_t P_ROC_MANAGER_SELECT               = 0;
-const uint32_t P_ROC_BUS_MASTER_SELECT            = 1;
+const uint32_t P_ROC_BUS_JTAG_SELECT              = 1;
 const uint32_t P_ROC_BUS_SWITCH_CTRL_SELECT       = 2;
 const uint32_t P_ROC_BUS_DRIVER_CTRL_SELECT       = 3;
 const uint32_t P_ROC_BUS_STATE_CHANGE_PROC_SELECT = 4;
@@ -79,6 +79,33 @@ const uint32_t P_ROC_REG_DIPSWITCH_ADDR           = 3;
 const uint32_t P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT        = 30;
 const uint32_t P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT         = 14;
 const uint32_t P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT     = 0;
+
+const uint32_t P_ROC_JTAG_SHIFT_EXIT_SHIFT                 = 16;
+const uint32_t P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT             = 0;
+
+const uint32_t P_ROC_JTAG_CMD_CHANGE_STATE                 = 0;
+const uint32_t P_ROC_JTAG_CMD_SHIFT                        = 1;
+const uint32_t P_ROC_JTAG_CMD_TRANSITION                   = 2;
+const uint32_t P_ROC_JTAG_CMD_SET_PORTS                    = 3;
+
+const uint32_t P_ROC_JTAG_CMD_START_SHIFT                  = 31;
+const uint32_t P_ROC_JTAG_CMD_OE_SHIFT                     = 30;
+const uint32_t P_ROC_JTAG_CMD_CMD_SHIFT                    = 24;
+
+const uint32_t P_ROC_JTAG_TRANSITION_TCK_MASK_SHIFT        = 6;
+const uint32_t P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT        = 5;
+const uint32_t P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT        = 4;
+const uint32_t P_ROC_JTAG_TRANSITION_TCK_SHIFT             = 2;
+const uint32_t P_ROC_JTAG_TRANSITION_TDO_SHIFT             = 1;
+const uint32_t P_ROC_JTAG_TRANSITION_TMS_SHIFT             = 0;
+
+const uint32_t P_ROC_JTAG_STATUS_DONE_SHIFT                = 31;
+const uint32_t P_ROC_JTAG_STATUS_TDI_SHIFT                 = 16;
+
+const uint32_t P_ROC_JTAG_COMMAND_REG_BASE_ADDR            = 0x0;
+const uint32_t P_ROC_JTAG_STATUS_REG_BASE_ADDR             = 0x1;
+const uint32_t P_ROC_JTAG_TDO_MEMORY_BASE_ADDR             = 0x400;
+const uint32_t P_ROC_JTAG_TDI_MEMORY_BASE_ADDR             = 0x800;
 
 const uint32_t P_ROC_SWITCH_CTRL_STATE_BASE_ADDR           = 4;
 const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 11;
@@ -186,6 +213,10 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
 void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *eventType);
 int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType);
 int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
+
+int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
+int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
+int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t dataBlockComplete);
 
 
 PRResult PRHardwareOpen();
