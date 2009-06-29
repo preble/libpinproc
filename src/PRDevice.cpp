@@ -770,7 +770,7 @@ PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
     // words will be too many, flush the currently prepared words to the P-ROC now.
     if (numPreparedWriteWords + numWords > maxWriteWords)
     {
-        if (FlushWriteData() == kPRFailure);
+        if (FlushWriteData() == kPRFailure)
             return kPRFailure;
     }
 
@@ -830,13 +830,15 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
 
 PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
 {
+	PRResult res;
     uint32_t * buffer;
 
     buffer = (uint32_t *)malloc((numWriteWords * 4) + 1);
     buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
     memcpy(buffer+1, writeBuffer, numWriteWords * 4);
-    WriteData(buffer, numWriteWords + 1);
+    res = WriteData(buffer, numWriteWords + 1);
     free (buffer);
+	return res;
 }
 
 PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)

@@ -8,7 +8,8 @@ Library for Gerry Stellenberg's [P-ROC](http://pinballcontrollers.com/) (Pinball
 
 libpinproc requires:
 
-- [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.
+- [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.  Version 0.1.12 has been tested on Mac and Linux.  Mac users: If you want to use libpinproc under Cocoa or pygame, you may wish to try libusb 1.0.  See below.
+
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
 
 The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
@@ -16,6 +17,14 @@ The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/).
     sudo cp lib/libyaml-cpp.a /usr/local/lib/
     sudo mkdir /usr/local/include/yaml-cpp
     sudo cp include/*.h /usr/local/include/yaml-cpp/
+
+##### libusb-1.0 and libusb-compat
+
+Version 1.0.2 does not work out of the box since libftdi is written against libusb-0.1.  You can use the libusb-compat-0.1.2 project, however, which creates a library that provides the older libusb interface.  Because Macs do not come with pkg-config, you may need to run configure for libusb-compat as follows:
+
+    ./configure LIBUSB_1_0_CFLAGS=-I/usr/local/include/libusb-1.0 LIBUSB_1_0_LIBS="-L/usr/local/lib -lusb-1.0"
+
+Note that libusb-1.0 must have been built and installed prior to this step.  This also assumes that you installed libusb-1.0 with the default /usr/local prefix.
 
 #### Building with CMake
 
