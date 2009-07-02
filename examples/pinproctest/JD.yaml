@@ -26,6 +26,12 @@ PRSwitches:
         number: S13
     shooterL:
         number: S15
+    outlaneL:
+        number: S16
+    inlaneL:
+        number: S17
+    inlaneR:
+        number: S34
     subwayEnter1:
         number: S37
     subwayEnter2:
@@ -34,8 +40,10 @@ PRSwitches:
         number: S41
     buyIn:
         number: S31
-    ballShooterR:
-        number: S41
+    outlaneR:
+        number: S42
+    inlaneFarR:
+        number: S43
     superGame:
         number: S44
     slingL: 
