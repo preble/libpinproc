@@ -66,6 +66,8 @@ PRSwitches:
         number: S73
     popperR:
         number: S74
+    rightRampExit:
+        number: S76
     trough1:
         number: S81
     trough2:
@@ -113,6 +115,14 @@ PRCoils:
         number: C15
     slingR: 
         number: C16
+    flasherPursuitL:
+        number: C21
+    flasherPursuitR:
+        number: C22
+    flashersLowerLeft:
+        number: C25
+    flashersRtRamp:
+        number: C27
 PRLamps:
     buyIn:
         number: L38
