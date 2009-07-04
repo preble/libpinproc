@@ -119,10 +119,18 @@ PRCoils:
         number: C21
     flasherPursuitR:
         number: C22
+    flasherBlackout:
+        number: C23
+    flasherCursedEarth:
+        number: C24
     flashersLowerLeft:
         number: C25
+    flasherGlobe:
+        number: C26
     flashersRtRamp:
         number: C27
+    flashersInsert:
+        number: C28
 PRLamps:
     buyIn:
         number: L38
@@ -136,6 +144,8 @@ PRLamps:
         number: L74
     dropTargetE:
         number: L75
+    multiballJackpot:
+        number: L77
     superGame:
         number: L87
     startButton:
