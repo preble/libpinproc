@@ -234,6 +234,44 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
     return kPRSuccess;
 }
 
+int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs) {
+    burst[0] = CreateBurstCommand (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_COMMAND_REG_BASE_ADDR, 1 );
+    burst[1] = 0;
+    burst[1] = 1 << P_ROC_JTAG_CMD_START_SHIFT |
+               1 << P_ROC_JTAG_CMD_OE_SHIFT |
+               P_ROC_JTAG_CMD_SET_PORTS << P_ROC_JTAG_CMD_CMD_SHIFT |
+               jtagOutputs->tckMask << P_ROC_JTAG_TRANSITION_TCK_MASK_SHIFT | 
+               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT | 
+               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT | 
+               jtagOutputs->tck << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
+               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
+               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TCK_SHIFT; 
+    return kPRSuccess;
+
+}
+int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs) {
+    burst[0] = CreateBurstCommand (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_COMMAND_REG_BASE_ADDR, 1 );
+    burst[1] = 0;
+    burst[1] = 1 << P_ROC_JTAG_CMD_START_SHIFT |
+               1 << P_ROC_JTAG_CMD_OE_SHIFT |
+               P_ROC_JTAG_CMD_TRANSITION << P_ROC_JTAG_CMD_CMD_SHIFT |
+               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT | 
+               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT | 
+               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
+               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TMS_SHIFT; 
+    return kPRSuccess;
+
+}
+int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t dataBlockComplete) {
+    burst[0] = CreateBurstCommand (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_COMMAND_REG_BASE_ADDR, 1 );
+    burst[1] = 0;
+    burst[1] = 1 << P_ROC_JTAG_CMD_START_SHIFT |
+               1 << P_ROC_JTAG_CMD_OE_SHIFT |
+               P_ROC_JTAG_CMD_SHIFT << P_ROC_JTAG_CMD_CMD_SHIFT |
+               dataBlockComplete << P_ROC_JTAG_SHIFT_EXIT_SHIFT |
+               numBits << P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT; 
+    return kPRSuccess;
+}
 
 /**
  * This is where all FTDI driver-specific code should go.

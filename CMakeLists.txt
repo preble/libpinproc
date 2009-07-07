@@ -14,5 +14,6 @@ set(FILES src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp)
 add_library(pinproc ${FILES})
 
 add_executable(pinproctest examples/pinproctest/pinproctest.cpp examples/pinproctest/drivers.cpp examples/pinproctest/dmd.cpp examples/pinproctest/switches.cpp)
+add_executable(pinprocfw utils/pinprocfw/pinprocfw.cpp utils/pinprocfw/lenval.cpp)
 target_link_libraries(pinproctest pinproc usb ftdi yaml-cpp)
-
+target_link_libraries(pinprocfw pinproc usb ftdi)

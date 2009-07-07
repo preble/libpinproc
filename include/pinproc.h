@@ -387,6 +387,41 @@ PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots);
 
 /** @} */ // End of DMD
 
+
+// JTAG
+
+/**
+ * @defgroup jtag JTAG interface control
+ * @{
+ */
+
+typedef struct PRJTAGStatus {
+    bool_t commandComplete;
+    bool_t tdi;
+} PRJTAGStatus;
+
+typedef struct PRJTAGOutputs {
+    bool_t tckMask;
+    bool_t tmsMask;
+    bool_t tdoMask;
+    bool_t tck;
+    bool_t tms;
+    bool_t tdo;
+} PRJTAGOutputs;
+
+/** Force JTAG outputs (TCK, TDO, TMS) to specific values. Optionally toggle the clock when driving only TDO and/or TMS.*/
+PR_EXPORT PRResult PRJTAGDriveOutputs(PRHandle handle, PRJTAGOutputs * jtagOutputs, bool_t toggleClk);
+/** Store data to be shifted out on TDO */
+PR_EXPORT PRResult PRJTAGWriteTDOMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData);
+/** Shift stored TDO data onto the TDO pin, toggling TCK on every bit. */
+PR_EXPORT PRResult PRJTAGShiftTDOData(PRHandle handle, uint16_t numBits, bool_t dataBlockComplete);
+/** Get the contents of the TDI memory. */
+PR_EXPORT PRResult PRJTAGReadTDIMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData);
+/** Read the JTAG status register for the command complete bit and JTAG pin states. */
+PR_EXPORT PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status);
+
+/** @} */ // End of DMD
+
 /** @cond */
 PR_EXTERN_C_END
 /** @endcond */

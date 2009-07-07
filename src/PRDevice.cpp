@@ -623,7 +623,51 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
     //}
 }
 
+PRResult PRDevice::PRJTAGDriveOutputs(PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
+{
+    const int burstSize = 2;
+    uint32_t burst[burstSize];
 
+    if (toggleClk) CreateJTAGLatchOutputsBurst( burst, jtagOutputs );
+    else CreateJTAGForceOutputsBurst( burst, jtagOutputs );
+    return WriteData(burst, burstSize);
+}
+
+PRResult PRDevice::PRJTAGWriteTDOMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData)
+{
+    int32_t i;
+    const int maxBurstSize = 513;
+    uint32_t burst[maxBurstSize];
+
+    burst[0] = CreateBurstCommand(P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_TDO_MEMORY_BASE_ADDR + tableOffset, numWords);
+    for (i=0; i<numWords; i++) {
+        burst[i+1] = tdoData[i];
+    }
+
+    return WriteData(burst, numWords + 1);
+}
+
+PRResult PRDevice::PRJTAGShiftTDOData(uint16_t numBits, bool_t dataBlockComplete)
+{
+    const int burstSize = 2;
+    uint32_t burst[burstSize];
+
+    CreateJTAGShiftTDODataBurst( burst, numBits, dataBlockComplete );
+    return WriteData(burst, burstSize);
+}
+
+PRResult PRDevice::PRJTAGReadTDIMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData)
+{
+    ReadDataRaw (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_TDI_MEMORY_BASE_ADDR + tableOffset, numWords, tdiData);
+}
+
+PRResult PRDevice::PRJTAGGetStatus(PRJTAGStatus * status)
+{
+    uint32_t rdBuffer[1];
+    ReadDataRaw (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_STATUS_REG_BASE_ADDR, 1, rdBuffer);
+    status->commandComplete = rdBuffer[0] >> P_ROC_JTAG_STATUS_DONE_SHIFT;
+    status->tdi = rdBuffer[0] >> P_ROC_JTAG_STATUS_TDI_SHIFT;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // Device I/O
@@ -800,7 +844,7 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
 PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
 {
     uint32_t rc;
-    uint8_t i;
+    uint32_t i;
 
     // Send out the request.
     rc = RequestData(moduleSelect, startingAddr, numReadWords);
