@@ -110,6 +110,10 @@ const uint32_t P_ROC_JTAG_TDI_MEMORY_BASE_ADDR             = 0x800;
 const uint32_t P_ROC_SWITCH_CTRL_STATE_BASE_ADDR           = 4;
 const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 11;
 
+const uint32_t P_ROC_EVENT_TYPE_SWITCH                     = 0;
+const uint32_t P_ROC_EVENT_TYPE_DMD                        = 1;
+const uint32_t P_ROC_EVENT_TYPE_MASK                       = 0xC00;
+const uint32_t P_ROC_EVENT_TYPE_SHIFT                      = 10;
 const uint32_t P_ROC_EVENT_SWITCH_NUM_MASK                 = 0xFF;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_MASK               = 0x100;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_SHIFT              = 8;
@@ -176,9 +180,14 @@ const uint32_t P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT  = 11;
 const uint32_t P_ROC_SWITCH_RULE_CHANGE_OUTPUT_SHIFT = 9;
 const uint32_t P_ROC_SWITCH_RULE_DRIVER_NUM_SHIFT    = 0;
 
+const uint32_t P_ROC_STATE_CHANGE_CONFIG_ADDR        = 0x1000;
+
 const uint32_t P_ROC_DMD_NUM_COLUMNS_SHIFT           = 0;
 const uint32_t P_ROC_DMD_NUM_ROWS_SHIFT              = 8;
 const uint32_t P_ROC_DMD_NUM_SUB_FRAMES_SHIFT        = 16;
+const uint32_t P_ROC_DMD_NUM_FRAME_BUFFERS_SHIFT     = 24;
+const uint32_t P_ROC_DMD_AUTO_INC_WR_POINTER_SHIFT   = 29;
+const uint32_t P_ROC_DMD_ENABLE_FRAME_EVENTS_SHIFT   = 30;
 const uint32_t P_ROC_DMD_ENABLE_SHIFT                = 31;
 
 const uint32_t P_ROC_DMD_DOTCLK_HALF_PERIOD_SHIFT    = 0;

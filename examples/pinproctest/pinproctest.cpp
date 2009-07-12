@@ -78,6 +78,7 @@ bool runLoopRun = true;
 void RunLoop(PRHandle proc)
 {
     const int maxEvents = 16;
+    int i;
     PREvent events[maxEvents];
 
     // Create dot array using an array of bytes.  Each byte holds 8 dots.  Need
@@ -88,13 +89,22 @@ void RunLoop(PRHandle proc)
     // Retrieve and store initial switch states. 
     LoadSwitchStates(proc);
 
+    uint32_t rdBuffer[1];
+
+    // Send 3 frames
+    for (i=0; i<3; i++)
+    {
+      // Create a dot pattern to test the DMD
+      UpdateDots(dots,dotOffset++);
+      PRDMDDraw(proc,dots);
+    }
+
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
          
-        // Create a dot pattern to test the DMD
-        UpdateDots(dots,dotOffset++);
-        PRDMDDraw(proc,dots);
+        //PRReadData(proc, 5, 0, 1, rdBuffer);
+        //printf("dmd config: %x\n",rdBuffer[0]); 
 
         int numEvents = PRGetEvents(proc, events, maxEvents);
         for (int i = 0; i < numEvents; i++)
@@ -110,8 +120,25 @@ void RunLoop(PRHandle proc)
             }
             struct timeval tv;
             gettimeofday(&tv, NULL);
-            printf("%d.%03d switch % 3d: %s\n", tv.tv_sec-startTime, tv.tv_usec/1000, event->value, stateText);
-            UpdateSwitchState( event );
+            
+            switch (event->type)
+            {
+                case kPREventTypeSwitchOpenDebounced: 
+                case kPREventTypeSwitchClosedDebounced:
+                case kPREventTypeSwitchOpenNondebounced:
+                case kPREventTypeSwitchClosedNondebounced:
+                {
+                    printf("%d.%03d switch % 3d: %s\n", tv.tv_sec-startTime, tv.tv_usec/1000, event->value, stateText);
+                    UpdateSwitchState( event );
+                    break;
+                }
+                case kPREventTypeDMDFrameDisplayed:
+                {
+                    UpdateDots(dots,dotOffset++);
+                    PRDMDDraw(proc,dots);
+                    break;
+                }
+            }
         }
         PRFlushWriteData(proc);
         usleep(10*1000); // Sleep for 10ms so we aren't pegging the CPU.
@@ -168,6 +195,7 @@ int main(int argc, const char **argv)
         return 1;
     }
     
+    PRLogSetLevel (kPRLogInfo);
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     
     ConfigureDMD(proc); 
@@ -177,7 +205,8 @@ int main(int argc, const char **argv)
     // Pulse a coil for testing purposes.
     //PRDriverPulse(proc, 53, 100);
     // Schedule a feature lamp for testing purposes.
-    PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    //PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);
     PRFlushWriteData(proc);
@@ -188,6 +217,7 @@ int main(int argc, const char **argv)
 
     // Clean up P-ROC.
     printf("Disabling P-ROC drivers and switch rules...\n");
+
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     PRFlushWriteData(proc);
 

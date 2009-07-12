@@ -38,6 +38,7 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     // Configure switch controller registers (if the defaults aren't acceptable)
     PRSwitchConfig switchConfig;
     switchConfig.clear = false;
+    switchConfig.hostEventsEnable = true;
     switchConfig.directMatrixScanLoopTime = 2; // milliseconds
     switchConfig.pulsesBeforeCheckingRX = 10;
     switchConfig.inactivePulsesAfterBurst = 12;
