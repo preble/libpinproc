@@ -468,6 +468,8 @@ void xsvfTmsTransition( short tms )
     jtagOutputs.tdoMask = 0;
     jtagOutputs.tmsMask = 1;
     jtagOutputs.tms = tms;
+    jtagOutputs.tdo = 0; // Unused but initialized.
+    jtagOutputs.tck = 0; // Unused but initialized.
     PRJTAGDriveOutputs(proc, &jtagOutputs, true);
 }
 
