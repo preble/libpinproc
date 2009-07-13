@@ -45,21 +45,21 @@ Download and install [CMake](http://www.cmake.org/cmake/resources/software.html)
 
 Download and install [MinGW](http://sourceforge.net/projects/mingw/files/). (Tested with MinGW 5.1.4)
 
-Follow directions about for building yaml-cpp with the following exception:
+Follow directions above for building yaml-cpp with the following exception:
  add '-G "MinGW Makefiles' to the cmake command line.
 
 To build libpinproc:
  edit CMakeLists.txt:
-  add "ftd2xx" to the target_link_libraries lines
+  add "ftd2xx" to the target_link_libraries lines,
   remove "usb" and "ftdi" from the target_link_libraries lines
 
 Until an automatic build process/structure is worked out:
- copy ftd2xx.h to libpinproc/src
- copy yaml header files to libpinproc/examples/pinproctest
+ copy ftd2xx.h to libpinproc/src,
+ copy yaml header files to libpinproc/examples/pinproctest,
  change libpinproc/examples/pinproctest/pinproctest.h to look for yaml.h locally
 
 Follow instructions above for building libpinproc with cmake with the following exceptions:
- add '-G "MinGW Makefiles' to the cmake command line.
+ add '-G "MinGW Makefiles' to the cmake command line,
  use mingw-make instead of make
  
 ### License
