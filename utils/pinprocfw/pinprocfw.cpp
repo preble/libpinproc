@@ -468,6 +468,8 @@ void xsvfTmsTransition( short tms )
     jtagOutputs.tdoMask = 0;
     jtagOutputs.tmsMask = 1;
     jtagOutputs.tms = tms;
+    jtagOutputs.tdo = 0; // Unused but initialized.
+    jtagOutputs.tck = 0; // Unused but initialized.
     PRJTAGDriveOutputs(proc, &jtagOutputs, true);
 }
 
@@ -553,7 +555,8 @@ void waitTime(long microsec)
         // Read the JTAG status register to exercise the USB bus
         PRJTAGGetStatus(proc, &jtagStatus);
 
-        sleep( ( microsec - 2000L ) / 1000000L);
+        PRSleep( ( microsec - 2000L ) / 1000L);
+        //sleep( ( microsec - 2000L ) / 1000000L);
     }
     else    /* Satisfy FPGA JTAG configuration, startup TCK cycles */
     {
@@ -566,6 +569,7 @@ void waitTime(long microsec)
           PRJTAGGetStatus(proc, &jtagStatus);
         }
         //{
+        //PRSleep( ( microsec + 19999L ) / 1000L );
         //sleep( ( microsec + 19999L ) / 1000000L );
         //sleep( 1 );
             //pulseClock();

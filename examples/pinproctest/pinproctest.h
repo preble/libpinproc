@@ -49,6 +49,7 @@
 #define kDMDColumns (128)
 #define kDMDRows (32)
 #define kDMDSubFrames (4) // For color depth of 16
+#define kDMDFrameBuffers (3) // 3 is the max
 
 void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yamlDoc);
 

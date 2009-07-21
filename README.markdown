@@ -37,6 +37,31 @@ Download and install [CMake](http://www.cmake.org/cmake/resources/software.html)
 
 The CMakeLists.txt file is presently designed to be run from a directory inside the libpinproc directory.  This will build both libpinproc and pinproctest.  Binaries will be placed in the directory that make was run from.
 
+#### Building in Windows with minGW/CMake
+
+Download and install [ftd2xx for Windows](http://www.ftdichip.com/Drivers/D2XX.htm).  It's recommended to use the [setup executable](http://www.ftdichip.com/Drivers/CDM/CDM%202.04.16.exe) for the driver install and the [zip file](http://www.ftdichip.com/Drivers/CDM/CDM%202.04.16%20WHQL%20Certified.zip) for the build source/dlls.
+
+Download and install [CMake](http://www.cmake.org/cmake/resources/software.html). 
+
+Download and install [MinGW](http://sourceforge.net/projects/mingw/files/). (Tested with MinGW 5.1.4)
+
+Follow directions above for building yaml-cpp with the following exception:
+ add '-G "MinGW Makefiles' to the cmake command line.
+
+To build libpinproc:
+ edit CMakeLists.txt:
+  add "ftd2xx" to the target_link_libraries lines,
+  remove "usb" and "ftdi" from the target_link_libraries lines
+
+Until an automatic build process/structure is worked out:
+ copy ftd2xx.h to libpinproc/src,
+ copy yaml header files to libpinproc/examples/pinproctest,
+ change libpinproc/examples/pinproctest/pinproctest.h to look for yaml.h locally
+
+Follow instructions above for building libpinproc with cmake with the following exceptions:
+ add '-G "MinGW Makefiles' to the cmake command line,
+ use mingw-make instead of make
+ 
 ### License
 
 Copyright (c) 2009 Gerry Stellenberg, Adam Preble

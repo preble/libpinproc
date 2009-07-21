@@ -73,6 +73,16 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     
     DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
+    // Disable dmd events if updating the device.
+#if 0
+    if (resetFlags & kPRResetFlagUpdateDevice) 
+    {
+        PRDMDConfig *dmdConfig = &(this->dmdConfig);
+        dmdConfig->enableFrameEvents = false;
+        DMDUpdateConfig(dmdConfig);
+    }
+#endif
+
     // Make sure the free list is empty.
     while (!freeSwitchRuleIndexes.empty()) freeSwitchRuleIndexes.pop();
     
@@ -121,11 +131,28 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
 
         events[i].value = event_data & P_ROC_EVENT_SWITCH_NUM_MASK;
         bool open = (event_data & P_ROC_EVENT_SWITCH_STATE_MASK) >> P_ROC_EVENT_SWITCH_STATE_SHIFT;
-        bool debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
-        if (open)
-            events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
-        else
-            events[i].type = debounced ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchOpenNondebounced;
+        
+        switch ((event_data & P_ROC_EVENT_TYPE_MASK) >> P_ROC_EVENT_TYPE_SHIFT)
+        {
+            case P_ROC_EVENT_TYPE_SWITCH:
+            {
+                bool debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
+                if (open)
+                    events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
+                else
+                    events[i].type = debounced ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchOpenNondebounced;
+                break; 
+            }
+
+            case P_ROC_EVENT_TYPE_DMD:
+            {
+                events[i].type = kPREventTypeDMDFrameDisplayed;
+                break;
+            }
+
+            default: events[i].type = kPREventTypeInvalid;
+           
+        } 
     }
     return i;
 }
@@ -385,7 +412,7 @@ PRSwitchRuleInternal *PRDevice::GetSwitchRuleByIndex(uint16_t index)
 PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
 {
     uint32_t rc;
-    const int burstWords = 2;
+    const int burstWords = 4;
     uint32_t burst[burstWords];
 
     this->switchConfig = *switchConfig;
@@ -602,25 +629,41 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
 
     // The following code prints out the init lines for the 4 Xilinx BlockRAMs
     // in the FPGA.  It's used to make an image for the P-ROC to display on power-up.
-    //if (print_dots) {
-    //print_dots = false;
-
-    //for (i=0; i<4; i++) {
-    //  std::cout << "For memory: "<< i << "\n";
-    //  // Need 4 lines to get 1 frame (4*256*4 = 4096)
-    //  // The rest will be all 0.
-    //  for (y=0; y<4; y++) {
-    //    std::cout << "defparam blockram.INIT_00 = 256'b";
-    //    for (j=31; j>=0; j--) {
-    //      for (x=7; x>=0; x--) {
-    //        std::cout << ((dmd_frame_buffer[(y*32)+j] >> ((i*8)+x)) & 1);
-    //      }
-    //    }
-    //    std::cout << ";\n";
-    //  }
-    //  std::cout << "\n\n\n";
-    //}
-    //}
+#if 0
+    // This is the original version... needs to be deleted.
+    for (i=0; i<4; i++) {
+      std::cout << "For memory: "<< i << "\n";
+      // Need 4 lines to get 1 frame (4*256*4 = 4096)
+      // The rest will be all 0.
+      for (y=0; y<4; y++) {
+        std::cout << "defparam blockram.INIT_00 = 256'b";
+        for (j=31; j>=0; j--) {
+          for (x=7; x>=0; x--) {
+            std::cout << ((dmd_frame_buffer[(y*32)+j] >> ((i*8)+x)) & 1);
+          }
+        }
+        std::cout << ";\n";
+      }
+      std::cout << "\n\n\n";
+    }
+#endif
+#if 0
+    for (i=0; i<4; i++) {
+      std::cout << "For memory: "<< i << "\n";
+      // Need 4 lines to get 1 frame (4*256*4 = 4096)
+      // The rest will be all 0.
+      for (y=0; y<4; y++) {
+        std::cout << "defparam blockram.INIT_00 = 256'b";
+        for (j=8; j>=0; j--) {
+          for (x=31; x>=0; x--) {
+            std::cout << ((dmd_frame_buffer[(y*32)+j] >> ((i*8)+x)) & 1);
+          }
+        }
+        std::cout << ";\n";
+      }
+      std::cout << "\n\n\n";
+    }
+#endif
 }
 
 PRResult PRDevice::PRJTAGDriveOutputs(PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
@@ -674,12 +717,39 @@ PRResult PRDevice::PRJTAGGetStatus(PRJTAGStatus * status)
 
 PRResult PRDevice::Open()
 {
+    uint32_t temp_word;
     PRResult res = PRHardwareOpen();
     if (res == kPRSuccess)
     {
         // Try to verify the P-ROC IS in the FPGA before initializing the FPGA's FTDI interface
         // just in case it was already initialized from a previous application execution.
         DEBUG(PRLog(kPRLogInfo, "Verifying P-ROC ID: \n"));
+
+        // Attempt to turn off events.  This is necessary if P-ROC wasn't shut down
+        // properly previously.  If the P-ROC isn't initialized, this request will
+        // be ignored.  
+        
+        PRDMDConfig dmdConfig;
+        dmdConfig.numRows = 32; // Doesn't matter.
+        dmdConfig.numColumns = 128; // Doesn't matter
+        dmdConfig.numSubFrames = 4; // Doesn't matter
+        dmdConfig.numFrameBuffers = 3; // Doesn't matter
+        dmdConfig.autoIncBufferWrPtr = false;
+        dmdConfig.enableFrameEvents = false;
+        DMDUpdateConfig(&dmdConfig);
+
+        PRSwitchConfig switchConfig;
+        switchConfig.clear = false;
+        switchConfig.hostEventsEnable = false;
+        switchConfig.directMatrixScanLoopTime = 2; // milliseconds
+        switchConfig.pulsesBeforeCheckingRX = 10;
+        switchConfig.inactivePulsesAfterBurst = 12;
+        switchConfig.pulsesPerBurst = 6;
+        switchConfig.pulseHalfPeriodTime = 13; // milliseconds
+        SwitchUpdateConfig(&switchConfig);
+
+        // Flush read data to ensure VerifyChipID starts with clean buffer.  
+        res = FlushReadBuffer();
         if (VerifyChipID() == kPRFailure) {
             // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
             // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
@@ -687,7 +757,7 @@ PRResult PRDevice::Open()
             // in and wreaking havoc before software is up and running.
             DEBUG(PRLog(kPRLogInfo, "Initializing P-ROC...\n"));
             res = FlushReadBuffer();
-            uint32_t temp_word = P_ROC_INIT_PATTERN_A;
+            temp_word = P_ROC_INIT_PATTERN_A;
             res = WriteData(&temp_word, 1);
             temp_word = P_ROC_INIT_PATTERN_B;
             res = WriteData(&temp_word, 1);
@@ -695,6 +765,7 @@ PRResult PRDevice::Open()
             if (res == kPRFailure)
                 DEBUG(PRLog(kPRLogWarning, "Unable to read Chip ID - P-ROC could not be initialized.\n"));
         }
+        else res = kPRSuccess;
     }
 
     return res;
@@ -914,10 +985,14 @@ PRResult PRDevice::FlushReadBuffer()
     numBytes = CollectReadData();
     k = 0;
     //std::cout << "Flushing rd buffer of " << num_words << "words\n";
-    while (k < numBytes) {
-        rc = ReadData(rd_buffer, 1);
-        k++;
-    }
+    
+    //while (k < numBytes) {
+    //    rc = ReadData(rd_buffer, 1);
+    //    k++;
+    //}
+    collected_bytes_rd_addr = 0;
+    collected_bytes_wr_addr = 0;
+    num_collected_bytes = 0;
     return rc;
 }
 

@@ -36,6 +36,9 @@ void ConfigureDMD(PRHandle proc)
     dmdConfig.numRows = kDMDRows;
     dmdConfig.numColumns = kDMDColumns;
     dmdConfig.numSubFrames = kDMDSubFrames;
+    dmdConfig.numFrameBuffers = kDMDFrameBuffers;
+    dmdConfig.autoIncBufferWrPtr = true;
+    dmdConfig.enableFrameEvents = true;
     
     for (i = 0; i < kDMDSubFrames; i++)
     {

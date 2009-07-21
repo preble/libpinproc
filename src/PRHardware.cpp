@@ -157,6 +157,9 @@ int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switch
                    P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT) |
                (switchConfig->pulseHalfPeriodTime << 
                    P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT);
+    burst[2] = CreateBurstCommand (P_ROC_BUS_STATE_CHANGE_PROC_SELECT, 
+                                   P_ROC_STATE_CHANGE_CONFIG_ADDR, 1 );
+    burst[3] = switchConfig->hostEventsEnable;
 
     return kPRSuccess;
 }
@@ -218,6 +221,9 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
     addr = 0;
     burst[0] = CreateBurstCommand (P_ROC_BUS_DMD_SELECT, addr, 1 );
     burst[1] = (1 << P_ROC_DMD_ENABLE_SHIFT) |
+               (dmd_config->enableFrameEvents << P_ROC_DMD_ENABLE_FRAME_EVENTS_SHIFT) |
+               (dmd_config->autoIncBufferWrPtr << P_ROC_DMD_AUTO_INC_WR_POINTER_SHIFT) |
+               (dmd_config->numFrameBuffers << P_ROC_DMD_NUM_FRAME_BUFFERS_SHIFT) |
                (dmd_config->numSubFrames << P_ROC_DMD_NUM_SUB_FRAMES_SHIFT) |
                (dmd_config->numRows << P_ROC_DMD_NUM_ROWS_SHIFT) |
                (dmd_config->numColumns << P_ROC_DMD_NUM_COLUMNS_SHIFT); 

@@ -268,12 +268,13 @@ typedef enum PREventType {
     kPREventTypeSwitchOpenDebounced      = 2, /**< The switch has gone from closed to open and the signal has been debounced. */
     kPREventTypeSwitchClosedNondebounced = 3, /**< The switch has gone from open to closed and the signal has not been debounced. */
     kPREventTypeSwitchOpenNondebounced   = 4, /**< The switch has gone from closed to open and the signal has not been debounced. */
+    kPREventTypeDMDFrameDisplayed        = 5, /**< A DMD frame has been displayed. */
     kPREventTypetLast = kPREventTypeSwitchOpenNondebounced
 } PREventType;
 
 typedef struct PREvent {
     PREventType type;  /**< The type of event that has occurred.  Usually a switch event at this point. */
-    uint32_t value;    /**< For switch events, the switch number that has changed. */
+    uint32_t value;    /**< For switch events, the switch number that has changed. For DMD events, the frame buffer that was just displayed. */
     uint32_t time;     /**< Time (in milliseconds) that this event occurred. */
 } PREvent;
 
@@ -290,6 +291,7 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 
 typedef struct PRSwitchConfig {
     bool_t clear; // Drive the clear output
+    bool_t hostEventsEnable; // Drive the clear output
     uint8_t directMatrixScanLoopTime; // milliseconds
     uint8_t pulsesBeforeCheckingRX;
     uint8_t inactivePulsesAfterBurst;
@@ -373,6 +375,9 @@ typedef struct PRDMDConfig {
     uint8_t numRows;
     uint16_t numColumns;
     uint8_t numSubFrames;
+    uint8_t numFrameBuffers;
+    bool_t autoIncBufferWrPtr;
+    bool_t enableFrameEvents;
     bool_t enable;
     uint8_t rclkLowCycles[8];
     uint8_t latchHighCycles[8];

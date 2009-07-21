@@ -13,6 +13,13 @@
 #ifndef PINPROCFW_H
 #define PINPROCFW_H
 
+#if defined(__WIN32__)
+    #include <windows.h>
+    #define PRSleep(milliseconds) Sleep(milliseconds)
+#else
+    #define PRSleep(milliseconds) sleep(milliseconds/1000)
+#endif
+
 /* Legacy error codes for xsvfExecute from original XSVF player v2.0 */
 #define XSVF_LEGACY_SUCCESS 1
 #define XSVF_LEGACY_ERROR   0
