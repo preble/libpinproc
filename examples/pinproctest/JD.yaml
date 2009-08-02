@@ -18,6 +18,14 @@ PRSwitches:
         number: SF6
     flipperUpL: 
         number: SF8
+    exit: 
+        number: SD5
+    down: 
+        number: SD6
+    up: 
+        number: SD7
+    enter: 
+        number: SD8
     fireL:
         number: S11
     fireR:
@@ -62,12 +70,16 @@ PRSwitches:
         number: S57
     dropTargetE:
         number: S58
+    magnetOverRing:
+        number: S71
     popperL:
         number: S73
     popperR:
         number: S74
     rightRampExit:
         number: S76
+    globePosition2:
+        number: S77
     trough1:
         number: S81
     trough2:
@@ -99,12 +111,18 @@ PRCoils:
         number: 38
     flipperUpLHold: 
         number: 39
+    craneMagnet:
+        number: C01
     popperL:
         number: C02
     popperR:
         number: C03
+    crane:
+        number: C04
     resetDropTarget:
         number: C05
+    globeMotor:
+        number: C06
     shooterR:
         number: C08
     shooterL:
