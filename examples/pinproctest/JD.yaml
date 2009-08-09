@@ -38,6 +38,8 @@ PRSwitches:
         number: S16
     inlaneL:
         number: S17
+    coinDoor:
+        number: S22
     inlaneR:
         number: S34
     subwayEnter1:
