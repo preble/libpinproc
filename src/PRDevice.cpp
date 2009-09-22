@@ -86,10 +86,11 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     // Make sure the free list is empty.
     while (!freeSwitchRuleIndexes.empty()) freeSwitchRuleIndexes.pop();
     
+	memset(switchRules, 0x00, sizeof(PRSwitchRuleInternal) * maxSwitchRules);
+	
     for (i = 0; i < kPRSwitchRulesCount; i++)
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
-        memset(switchRule, 0x00, sizeof(PRSwitchRule));
 
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
@@ -454,6 +455,12 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     {
         oldRule = GetSwitchRuleByIndex(oldRule->linkIndex);
         freeSwitchRuleIndexes.push(oldRule->linkIndex);
+		
+        if (freeSwitchRuleIndexes.size() > 128) // Detect a corrupted link-related values before it eats up all of the memory.
+        {
+			PRSetLastErrorText("Too many free switch rule indicies!");
+            return kPRFailure;
+        }
     }
     
     // Now let's setup the first actual rule:
