@@ -235,7 +235,6 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsO
 PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
 {
     uint16_t x;
-    printf("hello\n");
 
     if (str == NULL)
         return 0;
@@ -281,7 +280,6 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
     }
     else if (machineType == kPRMachineStern)
     {
-        printf("hi\n");
         switch (str[0])
         {
             case 'L':
@@ -302,7 +300,7 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
                         else return x + 7;
                     default:
                         if ((x - 1) % 16 < 8)
-                           return 32 + 8 * (x / 8)  + (7 - ((x - 1) % 8));
+                           return 32 + 8 * ((x - 1) / 8)  + (7 - ((x - 1) % 8));
                         else
                            return 32 + (x - 1);
                 }
