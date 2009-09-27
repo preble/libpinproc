@@ -58,7 +58,7 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
-    if (machineType != dev->GetReadMachineType())
+    if (machineType != kPRMachineCustom && machineType != dev->GetReadMachineType())
     {
         dev->Close();
         return NULL;
