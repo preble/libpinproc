@@ -44,6 +44,8 @@
 #define kNumberField "number"
 
 #define kFlipperPulseTime (34) // 34 ms
+#define kFlipperPatterOnTime (2) // 2 ms
+#define kFlipperPatterOffTime (18) // 2 ms
 #define kBumperPulseTime (25) // 25 ms
 
 #define kDMDColumns (128)
