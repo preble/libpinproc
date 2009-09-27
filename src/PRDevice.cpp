@@ -58,6 +58,12 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
+    if (machineType != dev->GetReadMachineType())
+    {
+        dev->Close();
+        return NULL;
+    }
+
     return dev;
 }
 
@@ -235,6 +241,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     
     const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupEnableIndex[] = {0, 0, 0, 0, 1, 0, 2, 3, 0, 0, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9};
+    const int lastWPCCoilDriverGroup = 9;
+    const int lastSternCoilDriverGroup = 7;
     const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200};
     const int mappedWPCDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -255,6 +263,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     int numMatrixGroups;
     bool encodeEnables;
     int rowEnableSelect;
+    int lastCoilDriverGroup;
     
     switch (machineType) 
     {
@@ -275,6 +284,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             numMatrixGroups = 8;
             encodeEnables = false;
             rowEnableSelect = 0;
+            lastCoilDriverGroup = lastWPCCoilDriverGroup;
             break;
         }
             
@@ -287,7 +297,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             tickleSternWatchdog = true;
             globalPolarity = true;
             activeLowMatrixRows = false;
-            driverLoopTime = 2; // milliseconds
+            driverLoopTime = 1; // milliseconds
             memcpy(mappedDriverGroupSlowTime,mappedSternDriverGroupSlowTime, 
                    sizeof(mappedDriverGroupSlowTime)); 
             memcpy(mappedDriverGroupActivateIndex,mappedSternDriverGroupActivateIndex, 
@@ -295,6 +305,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             numMatrixGroups = 16;
             encodeEnables = true;
             rowEnableSelect = 0;
+            lastCoilDriverGroup = lastSternCoilDriverGroup;
             break;
         }
     }
@@ -352,7 +363,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     // with driver #32.  The following 6 groups are configured for coils/flashlamps.
     
     PRDriverGroupConfig group;
-    for (i = 4; i < 10; i++)
+    for (i = 4; i <= lastCoilDriverGroup; i++)
     {
         DriverGetGroupConfig(i, &group);
         group.slowTime = 0;
@@ -785,6 +796,11 @@ PRResult PRDevice::Close()
     return kPRSuccess;
 }
 
+PRMachineType PRDevice::GetReadMachineType()
+{
+    return readMachineType;
+}
+
 PRResult PRDevice::VerifyChipID()
 {
     PRResult rc;
@@ -815,6 +831,8 @@ PRResult PRDevice::VerifyChipID()
             DEBUG(PRLog(kPRLogInfo, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
+            if (buffer[4] & 0x1) readMachineType = kPRMachineWPC;
+            else readMachineType = kPRMachineStern;
             rc = kPRSuccess;
         }
         else {
