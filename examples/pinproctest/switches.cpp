@@ -81,6 +81,30 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
 }
 
+void ConfigureSternFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, int pulseTime, int patterOnTime, int patterOffTime)
+{
+    printf("swNum: %d', coilnum: %d, pulseTime: %d, pon: %d, poff: %d\n", swNum,mainCoilNum,pulseTime,patterOnTime,patterOffTime);
+    const int numDriverRules = 1;
+    PRDriverState drivers[numDriverRules];
+    PRSwitchRule sw;
+    
+    // Flipper on rules
+    PRDriverGetState(proc, mainCoilNum, &drivers[0]);
+    PRDriverStatePatter(&drivers[0],patterOnTime,patterOffTime,pulseTime); // Pulse coil for 34ms.
+    sw.notifyHost = false;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    sw.notifyHost = true;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+    
+    // Flipper off rules
+    PRDriverGetState(proc, mainCoilNum, &drivers[0]);
+    PRDriverStateDisable(&drivers[0]); // Disable main coil
+    sw.notifyHost = false;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    sw.notifyHost = true;
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
+}
+
 void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
 {
     const int numDriverRules = 1;
@@ -106,10 +130,20 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
         int swNum, coilMain, coilHold;
         std::string flipperName;
         *flippersIt >> flipperName;
-        yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-        yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
-        yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
-        ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
+        if (machineType == kPRMachineWPC)
+        {
+            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
+            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
+            yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
+            ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
+        }
+        else if (machineType == kPRMachineStern)
+        {
+            printf("hi\n");
+            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
+            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
+            ConfigureSternFlipperSwitchRule (proc, swNum, coilMain, kFlipperPulseTime, kFlipperPatterOnTime, kFlipperPatterOffTime);
+        }
     }
     
     const YAML::Node& bumpers = yamlDoc[kBumpersSection];
