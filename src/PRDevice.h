@@ -87,6 +87,7 @@ protected:
     PRResult Close();
 
     PRResult VerifyChipID();
+    PRMachineType GetReadMachineType();
 
     // Raw write and read methods
     //
@@ -137,6 +138,7 @@ protected:
 
     uint8_t wr_buffer[16384];
     uint8_t collect_buffer[FTDI_BUFFER_SIZE];
+    PRMachineType readMachineType;
 
 
     // Local Device State
