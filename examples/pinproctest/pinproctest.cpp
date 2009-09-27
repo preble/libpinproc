@@ -206,7 +206,7 @@ int main(int argc, const char **argv)
     //PRDriverPulse(proc, 53, 100);
     // Schedule a feature lamp for testing purposes.
     PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
-    PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
+    //PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);
     PRFlushWriteData(proc);
