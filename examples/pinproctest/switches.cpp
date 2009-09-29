@@ -137,7 +137,7 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
             yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
             ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
         }
-        else if (machineType == kPRMachineStern)
+        else if (machineType == kPRMachineSternWhitestar || machineType == kPRMachineSternSAM)
         {
             printf("hi\n");
             yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
