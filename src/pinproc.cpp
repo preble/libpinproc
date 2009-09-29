@@ -278,7 +278,7 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
             }
         }
     }
-    else if (machineType == kPRMachineStern)
+    else if (machineType == kPRMachineSternSAM)
     {
         switch (str[0])
         {
@@ -303,6 +303,32 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
                            return 32 + 8 * ((x - 1) / 8)  + (7 - ((x - 1) % 8));
                         else
                            return 32 + (x - 1);
+                }
+            }
+        }
+    }
+    else if (machineType == kPRMachineSternWhitestar)
+    {
+        switch (str[0])
+        {
+            case 'L':
+            case 'l':
+                return 80 + 16 * (7 - ((x - 1) % 8)) + (x - 1) / 8;
+            case 'C':
+            case 'c':
+                return x + 31;
+            case 'S':
+            case 's':
+            {
+                switch (str[1])
+                {
+                    case 'D':
+                    case 'd':
+                        if (strlen(str) == 3) 
+                            return (str[2]-'0') + 7;
+                        else return x + 7;
+                    default:
+                        return 32 + 16 * (((x-1) / 8)) + (7-((x-1) % 8));
                 }
             }
         }
