@@ -58,7 +58,11 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
         return NULL;
     }
 
-    if (machineType != kPRMachineCustom && machineType != dev->GetReadMachineType())
+    PRMachineType readMachineType = dev->GetReadMachineType();
+
+    if (machineType != kPRMachineCustom &&
+        ( (machineType == kPRMachineWPC && readMachineType != kPRMachineWPC) ||
+          (machineType != kPRMachineWPC && readMachineType == kPRMachineWPC) ))
     {
         dev->Close();
         return NULL;
@@ -288,7 +292,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             break;
         }
             
-        case kPRMachineStern: 
+        case kPRMachineSternWhitestar: 
+        case kPRMachineSternSAM: 
         {
             memcpy(mappedDriverGroupEnableIndex,mappedSternDriverGroupEnableIndex, 
                    sizeof(mappedDriverGroupEnableIndex)); 
@@ -832,7 +837,7 @@ PRResult PRDevice::VerifyChipID()
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
             if (buffer[4] & 0x1) readMachineType = kPRMachineWPC;
-            else readMachineType = kPRMachineStern;
+            else readMachineType = kPRMachineSternWhitestar; // Choose SAM or Whitestar, doesn't matter.
             rc = kPRSuccess;
         }
         else {
