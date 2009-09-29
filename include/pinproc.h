@@ -96,7 +96,8 @@ typedef enum PRMachineType {
     kPRMachineInvalid = 0,
     kPRMachineCustom = 1,
     kPRMachineWPC = 2,
-    kPRMachineStern = 3, // May be split into kPRMachineWhitestar and kPRMachineSAM.
+    kPRMachineSternWhitestar = 3,
+    kPRMachineSternSAM = 4,
 } PRMachineType;
 
 // PRHandle Creation and Deletion
