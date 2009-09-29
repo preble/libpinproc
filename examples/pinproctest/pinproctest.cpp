@@ -179,8 +179,10 @@ int main(int argc, const char **argv)
     yamlDoc["PRGame"]["machineType"] >> machineTypeString;
     if (machineTypeString == "wpc")
         machineType = kPRMachineWPC;
-    else if(machineTypeString == "stern")
-        machineType = kPRMachineStern;
+    else if(machineTypeString == "sternWhitestar")
+        machineType = kPRMachineSternWhitestar;
+    else if(machineTypeString == "sternSAM")
+        machineType = kPRMachineSternSAM;
     else
     {
         fprintf(stderr, "Unknown machine type: %s\n", machineTypeString.c_str());
@@ -203,7 +205,7 @@ int main(int argc, const char **argv)
     ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
 
     // Pulse a coil for testing purposes.
-    //PRDriverPulse(proc, 53, 100);
+    PRDriverPulse(proc, 47, 30);
     // Schedule a feature lamp for testing purposes.
     PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
     //PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
