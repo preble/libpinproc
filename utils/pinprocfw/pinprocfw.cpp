@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 #include "../../include/pinproc.h" // Include libpinproc's header.
-PRMachineType machineType = kPRMachineWPC;
+PRMachineType machineType = kPRMachineCustom;  // Should work with all machines.
 
 /*============================================================================
 * XSVF #define
