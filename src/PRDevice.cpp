@@ -219,6 +219,29 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     uint32_t burst[burstWords];
     int32_t rc;
 
+    // Don't allow Constant Pulse (non-schedule with time = 0) for known high current drivers.
+    // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.  
+    // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
+    switch (readMachineType) {
+        kPRMachineWPC: {
+            if ((driverState->driverNum >= 40 && driverState->driverNum <= 47) ||
+                (driverState->driverNum == 32) ||
+                (driverState->driverNum == 34) ||
+                (driverState->driverNum == 36) ||
+                (driverState->driverNum == 38)) {
+                if (driverState->timeslots == 0 && driverState->outputDriveTime == 0) return kPRFailure;
+            }
+            break;
+        }
+        kPRMachineSternWhitestar:
+        kPRMachineSternSAM: {
+            if (driverState->driverNum >= 32 && driverState->driverNum <= 47) {
+                if (driverState->timeslots == 0 && driverState->outputDriveTime == 0) return kPRFailure;
+            }
+            break;
+        }
+    }
+
     DEBUG(PRLog(kPRLogInfo, "Updating driver #%d\n", driverState->driverNum));
 
     if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom)
@@ -243,12 +266,12 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     //const int WPCDriverLoopTime = 4; // milliseconds
     //const int SternDriverLoopTime = 2; // milliseconds
     
-    const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0};
+    const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 8, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupEnableIndex[] = {0, 0, 0, 0, 1, 0, 2, 3, 0, 0, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9};
     const int lastWPCCoilDriverGroup = 9;
     const int lastSternCoilDriverGroup = 7;
     const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 0, 0, 0, 0, 0, 0, 0, 0};
-    const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200};
+    const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
     const int mappedWPCDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7};
     
@@ -836,8 +859,9 @@ PRResult PRDevice::VerifyChipID()
             DEBUG(PRLog(kPRLogInfo, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
-            if (buffer[4] & 0x1) readMachineType = kPRMachineWPC;
-            else readMachineType = kPRMachineSternWhitestar; // Choose SAM or Whitestar, doesn't matter.
+
+            if (IsStern(buffer[4])) readMachineType = kPRMachineSternWhitestar; // Choose SAM or Whitestar, doesn't matter.
+            else readMachineType = kPRMachineWPC;
             rc = kPRSuccess;
         }
         else {
