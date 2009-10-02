@@ -81,7 +81,7 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     num_collected_bytes = 0;
     numPreparedWriteWords = 0;
     
-    DriverLoadMachineTypeDefaults(machineType, resetFlags);
+    if (machineType != kPRMachineCustom) DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
     // Disable dmd events if updating the device.
 #if 0
