@@ -44,6 +44,15 @@ const uint32_t P_ROC_INIT_PATTERN_A         = 0x801F1122;
 const uint32_t P_ROC_INIT_PATTERN_B         = 0x345678AB;
 const uint32_t P_ROC_CHIP_ID                = 0xFEEDBEEF;
 
+const uint32_t P_ROC_AUTO_STERN_DETECT_SHIFT     = 8;
+const uint32_t P_ROC_AUTO_STERN_DETECT_MASK      = 0x00000100;
+const uint32_t P_ROC_AUTO_STERN_DETECT_VALUE     = 0x1;
+const uint32_t P_ROC_MANUAL_STERN_DETECT_SHIFT   = 0;
+const uint32_t P_ROC_MANUAL_STERN_DETECT_MASK    = 0x00000001;
+const uint32_t P_ROC_MANUAL_STERN_DETECT_VALUE   = 0x00000000;
+const uint32_t P_ROC_BOARD_VERSION_SHIFT    = 7;
+const uint32_t P_ROC_BOARD_VERSION_MASK     = 0x00000080;
+
 const uint32_t P_ROC_ADDR_MASK              = 0x000FFFFF;
 const uint32_t P_ROC_HEADER_LENGTH_MASK     = 0x7FF00000;
 const uint32_t P_ROC_COMMAND_MASK           = 0x80000000;
@@ -208,6 +217,7 @@ typedef struct PRSwitchRuleInternal {
 } PRSwitchRuleInternal;
 
 
+bool_t IsStern (uint32_t hardware_data); 
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words);
 uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words);
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals);
