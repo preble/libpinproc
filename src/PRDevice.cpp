@@ -61,8 +61,11 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
     PRMachineType readMachineType = dev->GetReadMachineType();
 
     if (machineType != kPRMachineCustom &&
-        ( (machineType == kPRMachineWPC && readMachineType != kPRMachineWPC) ||
-          (machineType != kPRMachineWPC && readMachineType == kPRMachineWPC) ))
+        ( ((machineType == kPRMachineWPC) || (machineType == kPRMachineWPC95)) && 
+           (readMachineType != kPRMachineWPC && 
+            readMachineType !=  kPRMachineWPC95)) ||
+          (machineType != kPRMachineWPC && machineType != kPRMachineWPC95 && 
+           readMachineType == kPRMachineWPC) )
     {
         dev->Close();
         return NULL;
@@ -223,7 +226,8 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.  
     // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
     switch (readMachineType) {
-        kPRMachineWPC: {
+        kPRMachineWPC: 
+        kPRMachineWPC95: {
             if ((driverState->driverNum >= 40 && driverState->driverNum <= 47) ||
                 (driverState->driverNum == 32) ||
                 (driverState->driverNum == 34) ||
@@ -295,6 +299,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     switch (machineType) 
     {
         case kPRMachineWPC: 
+        case kPRMachineWPC95: 
         {
             memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, 
                    sizeof(mappedDriverGroupEnableIndex)); 
@@ -861,7 +866,7 @@ PRResult PRDevice::VerifyChipID()
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
 
             if (IsStern(buffer[4])) readMachineType = kPRMachineSternWhitestar; // Choose SAM or Whitestar, doesn't matter.
-            else readMachineType = kPRMachineWPC;
+            else readMachineType = kPRMachineWPC; // Choose WPC or WPC95, doesn't matter.
             rc = kPRSuccess;
         }
         else {
