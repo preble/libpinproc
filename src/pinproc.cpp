@@ -245,10 +245,63 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
         x = (str[2]-'0') * 10 + (str[3]-'0');
     else return atoi(str);
     
-    if (machineType == kPRMachineWPC)
+    if ((machineType == kPRMachineWPC) || (machineType == kPRMachineWPC95))
     {
         switch (str[0])
         {
+            case 'F':
+            case 'f':
+                switch (str[1])
+                {
+                    case 'L':
+                    case 'l':
+                        switch (str[2])
+                        {
+                            case 'R':
+                            case 'r':
+                                switch (str[3])
+                                {
+                                    case 'M':
+                                    case 'm':
+                                        return 32;
+                                    default:
+                                        return 33; 
+                                }
+                            default:
+                                switch (str[3])
+                                {
+                                    case 'M':
+                                    case 'm':
+                                        return 34;
+                                    default:
+                                        return 35; 
+                                }
+                        }
+                    default:
+                        switch (str[2])
+                        {
+                            case 'R':
+                            case 'r':
+                                switch (str[3])
+                                {
+                                    case 'M':
+                                    case 'm':
+                                        return 36;
+                                    default:
+                                        return 37; 
+                                }
+                            default:
+                                switch (str[3])
+                                {
+                                    case 'M':
+                                    case 'm':
+                                        return 38;
+                                    default:
+                                        return 39; 
+                                }
+                        }
+                }
+
             case 'L':
             case 'l':
                 return 80 + 8 * ((x / 10) - 1) + ((x % 10) -1);
@@ -256,8 +309,16 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
             case 'c':
                 if (x <= 28)
                     return x + 39;
-                else
-                    return x + 7;
+                else if (x <= 36)
+                    return x + 3;
+                else if (x <= 44)
+                {
+                    if (machineType == kPRMachineWPC95)
+                        return x + 7;
+                    else 
+                        return x + 101; // WPC 37-44 use 8-driver board
+                }
+                else return x + 102;
             case 'G':
             case 'g':
                 return x + 71;
