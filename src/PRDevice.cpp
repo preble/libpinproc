@@ -48,6 +48,7 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
     if (dev == NULL)
     {
         DEBUG(PRLog(kPRLogError, "Error allocating memory for P-ROC device\n"));
+		PRSetLastErrorText("Error allocating memory for P-ROC device");
         return NULL;
     }
 
@@ -68,6 +69,8 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
            readMachineType == kPRMachineWPC) )
     {
         dev->Close();
+        DEBUG(PRLog(kPRLogError, "Machine type 0x%x invalid for P-ROC board settings 0x%x.\n", machineType, readMachineType));
+		PRSetLastErrorText("Machine type error.");
         return NULL;
     }
 
