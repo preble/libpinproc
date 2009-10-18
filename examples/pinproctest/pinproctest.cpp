@@ -154,6 +154,8 @@ void sigint(int)
 
 int main(int argc, const char **argv)
 {
+    int i;
+
     // Set a signal handler so that we can exit gracefully on Ctrl-C:
     signal(SIGINT, sigint);
     startTime = time(NULL);
@@ -207,7 +209,10 @@ int main(int argc, const char **argv)
     // Pulse a coil for testing purposes.
     PRDriverPulse(proc, 47, 30);
     // Schedule a feature lamp for testing purposes.
-    PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
+    for (i=0; i<8; i++) {
+      PRDriverSchedule(proc, 80+i, 0xFF00FF00, 0, 0);
+    }
+    //PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
     //PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);

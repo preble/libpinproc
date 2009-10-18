@@ -33,9 +33,9 @@
 #include "PRCommon.h"
 
 bool_t IsStern (uint32_t hardware_data) {
-    if ( ((hardware_data & P_ROC_BOARD_VERSION_MASK) >> P_ROC_BOARD_VERSION_SHIFT) == 0x1) 
-        return ( ((hardware_data & P_ROC_AUTO_STERN_DETECT_MASK) >> P_ROC_AUTO_STERN_DETECT_SHIFT) == P_ROC_AUTO_STERN_DETECT_VALUE);
-    else 
+//    if ( ((hardware_data & P_ROC_BOARD_VERSION_MASK) >> P_ROC_BOARD_VERSION_SHIFT) == 0x1) 
+ //       return ( ((hardware_data & P_ROC_AUTO_STERN_DETECT_MASK) >> P_ROC_AUTO_STERN_DETECT_SHIFT) == P_ROC_AUTO_STERN_DETECT_VALUE);
+//    else 
         return ( ((hardware_data & P_ROC_MANUAL_STERN_DETECT_MASK) >> P_ROC_MANUAL_STERN_DETECT_SHIFT) == P_ROC_MANUAL_STERN_DETECT_VALUE);
 }
 
