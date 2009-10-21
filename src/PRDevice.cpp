@@ -61,12 +61,16 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
 
     PRMachineType readMachineType = dev->GetReadMachineType();
 
+    // Custom is always accepted
     if (machineType != kPRMachineCustom &&
+
+	// Don't accept if requested type is WPC/WPC95 but read machine is not.
         ( ((machineType == kPRMachineWPC) || (machineType == kPRMachineWPC95)) && 
            (readMachineType != kPRMachineWPC && 
-            readMachineType !=  kPRMachineWPC95)) ||
+            readMachineType !=  kPRMachineWPC95) ||
+	  // Also don't accept if the requested is not WPC/WPC95 but the P-ROC is.
           (machineType != kPRMachineWPC && machineType != kPRMachineWPC95 && 
-           readMachineType == kPRMachineWPC) )
+           readMachineType == kPRMachineWPC) ) )
     {
         dev->Close();
         DEBUG(PRLog(kPRLogError, "Machine type 0x%x invalid for P-ROC board settings 0x%x.\n", machineType, readMachineType));
