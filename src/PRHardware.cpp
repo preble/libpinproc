@@ -162,7 +162,11 @@ int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switch
                (switchConfig->pulsesPerBurst << 
                    P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT) |
                (switchConfig->pulseHalfPeriodTime << 
-                   P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT);
+                   P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT) |
+               (switchConfig->use_column_8 << 
+                   P_ROC_SWITCH_CONFIG_USE_COLUMN_8) |
+               (switchConfig->use_column_9 << 
+                   P_ROC_SWITCH_CONFIG_USE_COLUMN_9);
     burst[2] = CreateBurstCommand (P_ROC_BUS_STATE_CHANGE_PROC_SELECT, 
                                    P_ROC_STATE_CHANGE_CONFIG_ADDR, 1 );
     burst[3] = switchConfig->hostEventsEnable;

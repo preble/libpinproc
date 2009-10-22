@@ -303,6 +303,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     int rowEnableSelect;
     int lastCoilDriverGroup;
     
+    DEBUG(PRLog(kPRLogError, "In Defaults:, machineType = %x.\n", machineType));
     switch (machineType) 
     {
         case kPRMachineWPC: 
@@ -349,6 +350,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             break;
         }
     }
+    DEBUG(PRLog(kPRLogError, "Defaults:, setup done.\n", machineType));
     
     memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
     for (i = 0; i < kPRDriverCount; i++)
@@ -360,6 +362,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         if (resetFlags & kPRResetFlagUpdateDevice) 
             res = DriverUpdateState(driver);
     }
+    DEBUG(PRLog(kPRLogError, "Defaults:, Drivers done.\n", machineType));
     for (i = 0; i < kPRDriverGroupsMax; i++)
     {
         PRDriverGroupConfig *group = &driverGroups[i];
@@ -367,6 +370,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group->groupNum = i;
         group->polarity = globalPolarity;
     }
+    DEBUG(PRLog(kPRLogError, "Defaults:, Drivers groups set up.\n", machineType));
     
     PRDriverGlobalConfig globals;
     globals.enableOutputs = false;
@@ -382,6 +386,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     globals.watchdogExpired = false;
     globals.watchdogEnable = true;
     globals.watchdogResetTime = watchdogResetTime;
+    DEBUG(PRLog(kPRLogError, "Defaults:, Drivers globals set up.\n", machineType));
     
     // We want to start up safely, so we'll update the global driver config twice.
     // When we toggle enableOutputs like this P-ROC will reset the polarity:
@@ -398,6 +403,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         res = DriverUpdateGlobalConfig(&globals);
     else
         driverGlobalConfig = globals;
+
+    DEBUG(PRLog(kPRLogError, "Defaults:, Drivers globals programmed.\n", machineType));
     
     // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
     // with driver #32.  The following 6 groups are configured for coils/flashlamps.
@@ -419,7 +426,10 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             res = DriverUpdateGroupConfig(&group);
         else
             driverGroups[i] = group;
+        DEBUG(PRLog(kPRLogError, "Defaults: group %x programmed.\n", i));
     }
+
+    DEBUG(PRLog(kPRLogError, "Defaults: First groups programmed.\n", machineType));
     
     // The following 8 groups are configured for the feature lamp matrix.
     for (i = 10; i < 10 + numMatrixGroups; i++) {
@@ -437,7 +447,9 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             res = DriverUpdateGroupConfig(&group);
         else
             driverGroups[i] = group;
+        DEBUG(PRLog(kPRLogError, "Defaults: group %x programmed.\n", i));
     }
+    DEBUG(PRLog(kPRLogError, "Defaults: last groups programmed.\n", machineType));
     return res;
 }
 
@@ -798,6 +810,8 @@ PRResult PRDevice::Open()
 
         PRSwitchConfig switchConfig;
         switchConfig.clear = false;
+        switchConfig.use_column_9 = false;
+        switchConfig.use_column_8 = false;
         switchConfig.hostEventsEnable = false;
         switchConfig.directMatrixScanLoopTime = 2; // milliseconds
         switchConfig.pulsesBeforeCheckingRX = 10;

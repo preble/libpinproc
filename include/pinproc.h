@@ -294,6 +294,8 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 typedef struct PRSwitchConfig {
     bool_t clear; // Drive the clear output
     bool_t hostEventsEnable; // Drive the clear output
+    bool_t use_column_9; // Use switch matrix column 9
+    bool_t use_column_8; // Use switch matrix column 8
     uint8_t directMatrixScanLoopTime; // milliseconds
     uint8_t pulsesBeforeCheckingRX;
     uint8_t inactivePulsesAfterBurst;
