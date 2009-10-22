@@ -38,6 +38,8 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     // Configure switch controller registers (if the defaults aren't acceptable)
     PRSwitchConfig switchConfig;
     switchConfig.clear = false;
+    switchConfig.use_column_8 = machineType == kPRMachineWPC;
+    switchConfig.use_column_9 = machineType == kPRMachineWPC;
     switchConfig.hostEventsEnable = true;
     switchConfig.directMatrixScanLoopTime = 2; // milliseconds
     switchConfig.pulsesBeforeCheckingRX = 10;
