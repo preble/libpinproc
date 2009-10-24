@@ -875,8 +875,8 @@ PRResult PRDevice::VerifyChipID()
 
         if (wordsRead == 5) {
             //std::cout << rc << " words read.  \n"
-            DEBUG(PRLog(kPRLogInfo, "FPGA Chip ID: 0x%x\n", buffer[1]));
-            DEBUG(PRLog(kPRLogInfo, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
+            DEBUG(PRLog(kPRLogError, "FPGA Chip ID: 0x%x\n", buffer[1]));
+            DEBUG(PRLog(kPRLogError, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
 
@@ -885,7 +885,7 @@ PRResult PRDevice::VerifyChipID()
             rc = kPRSuccess;
         }
         else {
-            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Incorrect number of bytes received from read_data().\n"));
+            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Read %d words instead of 5.  The first 2 were: 0x%x and 0x%x.\n", wordsRead, buffer[0], buffer[1]));
             rc = kPRFailure;
         }
     }
