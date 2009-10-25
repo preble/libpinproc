@@ -85,6 +85,11 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 {
     int i;
     
+    // Initialize buffer pointers
+    collected_bytes_rd_addr = 0;
+    collected_bytes_wr_addr = 0;
+    num_collected_bytes = 0;
+
     // Make sure the data queues are empty.
     while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
     while (!requestedDataQueue.empty()) requestedDataQueue.pop();
