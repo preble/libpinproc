@@ -51,7 +51,7 @@ void PRLog(PRLogLevel level, const char *format, ...)
     if (logCallback)
         logCallback(level, line);
     else
-        fprintf(stderr, line);
+        fprintf(stderr, "%s", line);
 }
 
 void PRLogSetCallback(PRLogCallback callback)

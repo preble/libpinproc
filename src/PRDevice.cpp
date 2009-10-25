@@ -766,15 +766,18 @@ PRResult PRDevice::PRJTAGShiftTDOData(uint16_t numBits, bool_t dataBlockComplete
 
 PRResult PRDevice::PRJTAGReadTDIMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData)
 {
-    ReadDataRaw (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_TDI_MEMORY_BASE_ADDR + tableOffset, numWords, tdiData);
+    return ReadDataRaw (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_TDI_MEMORY_BASE_ADDR + tableOffset, numWords, tdiData);
 }
 
 PRResult PRDevice::PRJTAGGetStatus(PRJTAGStatus * status)
 {
     uint32_t rdBuffer[1];
-    ReadDataRaw (P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_STATUS_REG_BASE_ADDR, 1, rdBuffer);
+	PRResult res = ReadDataRaw(P_ROC_BUS_JTAG_SELECT, P_ROC_JTAG_STATUS_REG_BASE_ADDR, 1, rdBuffer);
+	if (res == kPRFailure)
+		return res;
     status->commandComplete = rdBuffer[0] >> P_ROC_JTAG_STATUS_DONE_SHIFT;
     status->tdi = rdBuffer[0] >> P_ROC_JTAG_STATUS_TDI_SHIFT;
+	return res;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1060,7 +1063,7 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
 PRResult PRDevice::FlushReadBuffer()
 {
     int32_t numBytes,rc,k;
-    uint32_t rd_buffer[3];
+    //uint32_t rd_buffer[3];
     numBytes = CollectReadData();
     k = 0;
     //std::cout << "Flushing rd buffer of " << num_words << "words\n";
