@@ -785,7 +785,7 @@ PRResult PRDevice::PRJTAGGetStatus(PRJTAGStatus * status)
 
 PRResult PRDevice::Open()
 {
-    uint32_t temp_word;
+    uint32_t temp_word,i;
     PRResult res = PRHardwareOpen();
     if (res == kPRSuccess)
     {
@@ -819,18 +819,20 @@ PRResult PRDevice::Open()
         SwitchUpdateConfig(&switchConfig);
 
         // Flush read data to ensure VerifyChipID starts with clean buffer.  
-        // Do it twice with a delay in between to ensure that any data in the P-ROC
-        // while the buffer is being flushed the first time is flushed the second time.
+        // It's possible the P-ROC has a lot of data stored up in internal buffers.  So if
+        // the verify still fails, do a bunch of flushes.
         res = FlushReadBuffer();
-        PRSleep(100);
-        res = FlushReadBuffer();
-        if (VerifyChipID() == kPRFailure) {
+        uint32_t verify_ctr = 0;
+        res = kPRSuccess;
+        while (VerifyChipID() == kPRFailure && verify_ctr++ < 50) {
             // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
             // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
             // before it allows access deeper into the chip.  This keeps garbage from getting
             // in and wreaking havoc before software is up and running.
+            DEBUG(PRLog(kPRLogError, "Verification of chip ID failed.  Flushing read buffer and re-verifying chip ID.\n"));
             DEBUG(PRLog(kPRLogInfo, "Initializing P-ROC...\n"));
             res = FlushReadBuffer();
+            PRSleep(100);
             temp_word = P_ROC_INIT_PATTERN_A;
             res = WriteData(&temp_word, 1);
             temp_word = P_ROC_INIT_PATTERN_B;
@@ -839,7 +841,6 @@ PRResult PRDevice::Open()
             if (res == kPRFailure)
                 DEBUG(PRLog(kPRLogWarning, "Unable to read Chip ID - P-ROC could not be initialized.\n"));
         }
-        else res = kPRSuccess;
     }
 
     return res;
@@ -863,7 +864,7 @@ PRResult PRDevice::VerifyChipID()
     const int bufferWords = 5;
     uint32_t buffer[bufferWords];
     //uint32_t temp_word;
-    uint32_t max_count;
+    uint32_t max_count, i;
 
     //std::cout << "Requesting FPGA Chip ID: ";
     rc = RequestData(P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 4);
@@ -882,6 +883,14 @@ PRResult PRDevice::VerifyChipID()
         int wordsRead = ReadData(buffer, bufferWords);
 
         if (wordsRead == 5) {
+            if (buffer[1] != P_ROC_CHIP_ID) 
+            {
+                DEBUG(PRLog(kPRLogError, "Error in VerifyID(): Dumping buffer\n"));
+                for (i = 0; i < wordsRead; i++) 
+                    DEBUG(PRLog(kPRLogError, "buffer[%d]: 0x%x\n", i, buffer[i]));
+                rc = kPRFailure;
+            }
+            else rc = kPRSuccess;
             //std::cout << rc << " words read.  \n"
             DEBUG(PRLog(kPRLogError, "FPGA Chip ID: 0x%x\n", buffer[1]));
             DEBUG(PRLog(kPRLogError, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
@@ -890,16 +899,15 @@ PRResult PRDevice::VerifyChipID()
 
             if (IsStern(buffer[4])) readMachineType = kPRMachineSternWhitestar; // Choose SAM or Whitestar, doesn't matter.
             else readMachineType = kPRMachineWPC; // Choose WPC or WPC95, doesn't matter.
-            rc = kPRSuccess;
         }
         else {
             DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Read %d words instead of 5.  The first 2 were: 0x%x and 0x%x.\n", wordsRead, buffer[0], buffer[1]));
-            rc = kPRFailure;
         }
     }
     else 
     {
         // Return failure without logging; calling function must log.
+        DEBUG(PRLog(kPRLogError, "Verify Chip ID took too long to receive data\n"));
         rc = kPRFailure;
     }
     return (rc);
@@ -1066,7 +1074,7 @@ PRResult PRDevice::FlushReadBuffer()
     //uint32_t rd_buffer[3];
     numBytes = CollectReadData();
     k = 0;
-    //std::cout << "Flushing rd buffer of " << num_words << "words\n";
+    DEBUG(PRLog(kPRLogError, "Flushing Read Buffer\n", rc));
     
     //while (k < numBytes) {
     //    rc = ReadData(rd_buffer, 1);
