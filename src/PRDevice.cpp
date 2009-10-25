@@ -823,8 +823,15 @@ PRResult PRDevice::Open()
         // the verify still fails, do a bunch of flushes.
         res = FlushReadBuffer();
         uint32_t verify_ctr = 0;
-        res = kPRSuccess;
-        while (VerifyChipID() == kPRFailure && verify_ctr++ < 50) {
+        res = VerifyChipID();
+        while (res == kPRFailure && verify_ctr++ < 50) {
+            // Only send init pattern once.
+            if (verify_ctr == 1) {
+                temp_word = P_ROC_INIT_PATTERN_A;
+                res = WriteData(&temp_word, 1);
+                temp_word = P_ROC_INIT_PATTERN_B;
+                res = WriteData(&temp_word, 1);
+            }
             // Since the FPGA didn't appear to be responding properly, send the FPGA's FTDI
             // initialization sequence.  This is a set of bytes the FPGA is waiting to receive
             // before it allows access deeper into the chip.  This keeps garbage from getting
@@ -833,10 +840,6 @@ PRResult PRDevice::Open()
             DEBUG(PRLog(kPRLogInfo, "Initializing P-ROC...\n"));
             res = FlushReadBuffer();
             PRSleep(100);
-            temp_word = P_ROC_INIT_PATTERN_A;
-            res = WriteData(&temp_word, 1);
-            temp_word = P_ROC_INIT_PATTERN_B;
-            res = WriteData(&temp_word, 1);
             res = VerifyChipID();
             if (res == kPRFailure)
                 DEBUG(PRLog(kPRLogWarning, "Unable to read Chip ID - P-ROC could not be initialized.\n"));
@@ -1074,7 +1077,7 @@ PRResult PRDevice::FlushReadBuffer()
     //uint32_t rd_buffer[3];
     numBytes = CollectReadData();
     k = 0;
-    DEBUG(PRLog(kPRLogError, "Flushing Read Buffer\n", rc));
+    DEBUG(PRLog(kPRLogError, "Flushing Read Buffer: %d bytes trashed\n", numBytes));
     
     //while (k < numBytes) {
     //    rc = ReadData(rd_buffer, 1);

@@ -42,7 +42,7 @@ const int32_t FTDI_FT245RL_PRODUCT_ID = 0x6001;
 const int32_t FTDI_BUFFER_SIZE = 2048;
 const uint32_t P_ROC_INIT_PATTERN_A         = 0x801F1122;
 const uint32_t P_ROC_INIT_PATTERN_B         = 0x345678AB;
-const uint32_t P_ROC_CHIP_ID                = 0xFEEDBEEF;
+const uint32_t P_ROC_CHIP_ID                = 0xfeedbeef;
 
 const uint32_t P_ROC_AUTO_STERN_DETECT_SHIFT     = 8;
 const uint32_t P_ROC_AUTO_STERN_DETECT_MASK      = 0x00000100;
