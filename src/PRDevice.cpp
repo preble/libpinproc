@@ -284,6 +284,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     
     const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 8, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupEnableIndex[] = {0, 0, 0, 0, 1, 0, 2, 3, 0, 0, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9};
+    const bool mappedWPCDriverGroupPolarity[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
+    const bool mappedSternDriverGroupPolarity[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     const int lastWPCCoilDriverGroup = 9;
     const int lastSternCoilDriverGroup = 7;
     const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -294,6 +296,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     const int watchdogResetTime = 1000; // milliseconds
     
     int mappedDriverGroupEnableIndex[kPRDriverGroupsMax];
+    bool mappedDriverGroupPolarity[kPRDriverGroupsMax];
     int mappedDriverGroupSlowTime[kPRDriverGroupsMax];
     int mappedDriverGroupActivateIndex[kPRDriverGroupsMax];
     int rowEnableIndex1;
@@ -315,6 +318,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         {
             memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, 
                    sizeof(mappedDriverGroupEnableIndex)); 
+            memcpy(mappedDriverGroupPolarity,mappedWPCDriverGroupPolarity, 
+                   sizeof(mappedDriverGroupPolarity)); 
             rowEnableIndex1 = 6; // Unused in WPC
             rowEnableIndex0 = 6;
             tickleSternWatchdog = false;
@@ -337,6 +342,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         {
             memcpy(mappedDriverGroupEnableIndex,mappedSternDriverGroupEnableIndex, 
                    sizeof(mappedDriverGroupEnableIndex)); 
+            memcpy(mappedDriverGroupPolarity,mappedSternDriverGroupPolarity, 
+                   sizeof(mappedDriverGroupPolarity)); 
             rowEnableIndex1 = 6; // Unused in Stern
             rowEnableIndex0 = 10;
             tickleSternWatchdog = true;
@@ -361,7 +368,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         PRDriverState *driver = &drivers[i];
         memset(driver, 0x00, sizeof(PRDriverState));
         driver->driverNum = i;
-        driver->polarity = globalPolarity;
+        driver->polarity = mappedDriverGroupPolarity[i/8];
+        DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Driver: %d is %x.", i,driver->polarity));
         if (resetFlags & kPRResetFlagUpdateDevice) 
             res = DriverUpdateState(driver);
     }
@@ -370,7 +378,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         PRDriverGroupConfig *group = &driverGroups[i];
         memset(group, 0x00, sizeof(PRDriverGroupConfig));
         group->groupNum = i;
-        group->polarity = globalPolarity;
+        group->polarity = mappedDriverGroupPolarity[i];
     }
     
     PRDriverGlobalConfig globals;
@@ -417,12 +425,14 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group.rowActivateIndex = 0;
         group.rowEnableSelect = 0;
         group.matrixed = false;
-        group.polarity = globalPolarity;
+        group.polarity = mappedDriverGroupPolarity[i];
         group.active = 1;
         group.disableStrobeAfter = false;
         
-        if (resetFlags & kPRResetFlagUpdateDevice)
+        if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
+            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
+        }
         else
             driverGroups[i] = group;
     }
@@ -436,15 +446,39 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group.rowActivateIndex = mappedDriverGroupActivateIndex[i];
         group.rowEnableSelect = rowEnableSelect;
         group.matrixed = 1;
-        group.polarity = globalPolarity;
+        group.polarity = mappedDriverGroupPolarity[i];
         group.active = 1;
         group.disableStrobeAfter = mappedDriverGroupSlowTime[i] != 0;
         
-        if (resetFlags & kPRResetFlagUpdateDevice)
+        if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
+            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
+        }
         else
             driverGroups[i] = group;
     }
+
+    // Special case for WPC machines.  Enable group 18 for the 8-driver board.
+    if (machineType == kPRMachineWPC) {
+        i = 18;
+        DriverGetGroupConfig(i, &group);
+        group.slowTime = 0;
+        group.enableIndex = mappedDriverGroupEnableIndex[i];
+        group.rowActivateIndex = 0;
+        group.rowEnableSelect = 0;
+        group.matrixed = false;
+        group.polarity = mappedDriverGroupPolarity[i];
+        group.active = 1;
+        group.disableStrobeAfter = false;
+        
+        if (resetFlags & kPRResetFlagUpdateDevice) {
+            res = DriverUpdateGroupConfig(&group);
+            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.\n", i,group.polarity));
+        }
+        else
+            driverGroups[i] = group;
+    }
+
     return res;
 }
 
