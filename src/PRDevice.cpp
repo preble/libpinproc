@@ -381,37 +381,6 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group->polarity = mappedDriverGroupPolarity[i];
     }
     
-    PRDriverGlobalConfig globals;
-    globals.enableOutputs = false;
-    globals.globalPolarity = globalPolarity;
-    globals.useClear = false;
-    globals.strobeStartSelect = false;
-    globals.startStrobeTime = driverLoopTime; // milliseconds per output loop
-    globals.matrixRowEnableIndex1 = rowEnableIndex1;
-    globals.matrixRowEnableIndex0 = rowEnableIndex0;
-    globals.activeLowMatrixRows = activeLowMatrixRows;
-    globals.tickleSternWatchdog = tickleSternWatchdog;
-    globals.encodeEnables = encodeEnables;
-    globals.watchdogExpired = false;
-    globals.watchdogEnable = true;
-    globals.watchdogResetTime = watchdogResetTime;
-    
-    // We want to start up safely, so we'll update the global driver config twice.
-    // When we toggle enableOutputs like this P-ROC will reset the polarity:
-    
-    // Enable now without the outputs enabled:
-    if (resetFlags & kPRResetFlagUpdateDevice)
-        res = DriverUpdateGlobalConfig(&globals);
-    else
-        driverGlobalConfig = globals;
-    
-    // Now enable the outputs to protect against the polarity being driven incorrectly:
-    globals.enableOutputs = true;
-    if (resetFlags & kPRResetFlagUpdateDevice)
-        res = DriverUpdateGlobalConfig(&globals);
-    else
-        driverGlobalConfig = globals;
-
     
     // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
     // with driver #32.  The following 6 groups are configured for coils/flashlamps.
@@ -478,6 +447,38 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         else
             driverGroups[i] = group;
     }
+
+    PRDriverGlobalConfig globals;
+    globals.enableOutputs = false;
+    globals.globalPolarity = globalPolarity;
+    globals.useClear = false;
+    globals.strobeStartSelect = false;
+    globals.startStrobeTime = driverLoopTime; // milliseconds per output loop
+    globals.matrixRowEnableIndex1 = rowEnableIndex1;
+    globals.matrixRowEnableIndex0 = rowEnableIndex0;
+    globals.activeLowMatrixRows = activeLowMatrixRows;
+    globals.tickleSternWatchdog = tickleSternWatchdog;
+    globals.encodeEnables = encodeEnables;
+    globals.watchdogExpired = false;
+    globals.watchdogEnable = true;
+    globals.watchdogResetTime = watchdogResetTime;
+    
+    // We want to start up safely, so we'll update the global driver config twice.
+    // When we toggle enableOutputs like this P-ROC will reset the polarity:
+    
+    // Enable now without the outputs enabled:
+    if (resetFlags & kPRResetFlagUpdateDevice)
+        res = DriverUpdateGlobalConfig(&globals);
+    else
+        driverGlobalConfig = globals;
+    
+    // Now enable the outputs to protect against the polarity being driven incorrectly:
+    globals.enableOutputs = true;
+    if (resetFlags & kPRResetFlagUpdateDevice)
+        res = DriverUpdateGlobalConfig(&globals);
+    else
+        driverGlobalConfig = globals;
+
 
     return res;
 }
