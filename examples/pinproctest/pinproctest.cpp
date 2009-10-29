@@ -53,16 +53,16 @@ PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
             parser.GetNextDocument(yamlDoc);
         }
     }
-    catch (YAML::ParserException& ex)
-    {
-        fprintf(stderr, "YAML parse error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
-        return kPRFailure;
-    }
-    catch (YAML::RepresentationException& ex)
-    {
-        fprintf(stderr, "YAML representation error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
-        return kPRFailure;
-    }
+//    catch (YAML::ParserException& ex)
+//    {
+//        fprintf(stderr, "YAML parse error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
+ //       return kPRFailure;
+//    }
+//    catch (YAML::RepresentationException& ex)
+//    {
+//        fprintf(stderr, "YAML representation error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
+//        return kPRFailure;
+//    }
     catch (...)
     {
         fprintf(stderr, "Unexpected exception while parsing YAML config.\n");
