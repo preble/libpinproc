@@ -51,10 +51,10 @@ Follow directions above for building yaml-cpp with the following exception:
  add '-G "MinGW Makefiles"' to the cmake command line.
 
 To build libpinproc:
- add the paths for ftd2xx.h (from the unzipped driver package) and the yaml-cpp/include/*.h files to the "include_directories" line in libpinproc/CMakeLists.txt
 
-Until an automatic build process/structure is worked out:
- change libpinproc/examples/pinproctest/pinproctest.h to look for yaml.h locally: "yaml.h"
+- add the paths for ftd2xx.h (from the unzipped driver package) and the yaml-cpp/include/*.h files to the "include_directories" line in libpinproc/CMakeLists.txt. 
+
+- either create the directory c:\usr\local\lib and copy libyaml-cpp*.a from the yaml-cpp build directory and ftd2xx.sys to it or add the location of those files to the "link_directories" line in libpinproc/CMakeLists.txt.
 
 Follow instructions above for building libpinproc with cmake with the following exceptions:
  add '-G "MinGW Makefiles' to the cmake command line,
