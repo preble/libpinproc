@@ -41,7 +41,7 @@ Note: On some systems, it may be necessary to build libpinproc with the '-fPIC' 
 
 #### Building in Windows with MinGW/CMake
 
-Download and install [ftd2xx for Windows](http://www.ftdichip.com/Drivers/D2XX.htm).  It's recommended to use the [setup executable](http://www.ftdichip.com/Drivers/CDM/CDM%202.04.16.exe) for the driver install and the [zip file](http://www.ftdichip.com/Drivers/CDM/CDM%202.04.16%20WHQL%20Certified.zip) for the build source/dlls.
+Download and unzip [ftd2xx for Windows zip file](http://www.ftdichip.com/Drivers/D2XX.htm).  Plug in a powered-up P-ROC and point the driver install wizard to the unzipped driver.  Note, this is a two-step process.  It will ask you to install a driver twice (once for USB and again for the FTDI specific stuff).
 
 Download and install [CMake](http://www.cmake.org/cmake/resources/software.html). 
 
@@ -51,18 +51,14 @@ Follow directions above for building yaml-cpp with the following exception:
  add '-G "MinGW Makefiles"' to the cmake command line.
 
 To build libpinproc:
- edit CMakeLists.txt:
-  add "ftd2xx" to the target_link_libraries lines,
-  remove "usb" and "ftdi" from the target_link_libraries lines
+ add the paths for ftd2xx.h (from the unzipped driver package) and the yaml-cpp/include/*.h files to the "include_directories" line in libpinproc/CMakeLists.txt
 
 Until an automatic build process/structure is worked out:
- copy ftd2xx.h to libpinproc/src,
- copy yaml header files to libpinproc/examples/pinproctest,
- change libpinproc/examples/pinproctest/pinproctest.h to look for yaml.h locally
+ change libpinproc/examples/pinproctest/pinproctest.h to look for yaml.h locally: "yaml.h"
 
 Follow instructions above for building libpinproc with cmake with the following exceptions:
  add '-G "MinGW Makefiles' to the cmake command line,
- use mingw-make instead of make
+ use mingw32-make instead of make
  
 ### License
 
