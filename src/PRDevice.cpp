@@ -908,23 +908,24 @@ PRResult PRDevice::VerifyChipID()
     rc = RequestData(P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 4);
 
     max_count = 0;
-    //std::cout << "Waiting for read data ";
-    while (num_collected_bytes < (bufferWords*4) && max_count < 10) {
-        PRSleep(10);
-        //std::cout << ". ";
-        rc = CollectReadData();
-        max_count++;
+    // Wait for data to return.  Give it 10 loops before giving up.
+    while (requestedDataQueue.size() < 5 && max_count++ < 10) 
+    {
+        PRSleep (10); // 10 milliseconds should be plenty of time.
+        SortReturningData();
     }
-    //std::cout << "\n";
 
-    if (max_count != 10) {
-        int wordsRead = ReadData(buffer, bufferWords);
+    if (max_count != 11) {
 
-        if (wordsRead == 5) {
+        if (requestedDataQueue.size() == 5) {
+            for (i = 0; i < bufferWords; i++) {
+                buffer[i] = requestedDataQueue.front();
+                requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
+            }
             if (buffer[1] != P_ROC_CHIP_ID) 
             {
                 DEBUG(PRLog(kPRLogError, "Error in VerifyID(): Dumping buffer\n"));
-                for (i = 0; i < wordsRead; i++) 
+                for (i = 0; i < bufferWords; i++) 
                     DEBUG(PRLog(kPRLogError, "buffer[%d]: 0x%x\n", i, buffer[i]));
                 rc = kPRFailure;
             }
@@ -939,7 +940,8 @@ PRResult PRDevice::VerifyChipID()
             else readMachineType = kPRMachineWPC; // Choose WPC or WPC95, doesn't matter.
         }
         else {
-            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Read %d words instead of 5.  The first 2 were: 0x%x and 0x%x.\n", wordsRead, buffer[0], buffer[1]));
+            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Read %d words instead of 5.  The first 2 were: 0x%x and 0x%x.\n", requestedDataQueue.size(), buffer[0], buffer[1]));
+            rc = kPRFailure;
         }
     }
     else 
