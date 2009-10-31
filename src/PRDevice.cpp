@@ -859,7 +859,7 @@ PRResult PRDevice::Open()
         res = FlushReadBuffer();
         uint32_t verify_ctr = 0;
         res = VerifyChipID();
-        while (res == kPRFailure && verify_ctr++ < 50) {
+        while (res == kPRFailure && verify_ctr++ < 5) {
             // Only send init pattern once.
             if (verify_ctr == 1) {
                 temp_word = P_ROC_INIT_PATTERN_A;
