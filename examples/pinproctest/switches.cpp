@@ -39,7 +39,7 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     PRSwitchConfig switchConfig;
     switchConfig.clear = false;
     switchConfig.use_column_8 = machineType == kPRMachineWPC;
-    switchConfig.use_column_9 = machineType == kPRMachineWPC;
+    switchConfig.use_column_9 = false; // No WPC machines actually use this.
     switchConfig.hostEventsEnable = true;
     switchConfig.directMatrixScanLoopTime = 2; // milliseconds
     switchConfig.pulsesBeforeCheckingRX = 10;
