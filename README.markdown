@@ -31,11 +31,11 @@ Note that libusb-1.0 must have been built and installed prior to this step.  Thi
 Download and install [CMake](http://www.cmake.org/cmake/resources/software.html).  Then:
 
     cd libpinproc
-    mkdir build; cd build
+    mkdir bin; cd bin
     cmake ..
     make
 
-The CMakeLists.txt file is presently designed to be run from a directory inside the libpinproc directory.  This will build both libpinproc and pinproctest.  Binaries will be placed in the directory that make was run from.
+The CMakeLists.txt file is presently designed to be run from a directory inside the libpinproc directory.  This will build both libpinproc and pinproctest.  Binaries will be placed in the directory that make was run from.  We recommend 'bin', as it is the path expected by pypinproc.
 
 Note: On some systems, it may be necessary to build libpinproc with the '-fPIC' option.  To do this with cmake, instead of running 'cmake ..', run 'cmake .. -DCMAKE_CXX_FLAGS="-fPIC"'.  Compiling without '-fPIC' may cause problems when building the python extensions on some 64-bit Linux machines.
 

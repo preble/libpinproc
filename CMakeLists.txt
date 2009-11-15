@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
-#set( CMAKE_OSX_ARCHITECTURES ppc;i386 ) # Uncomment for universal binary
-
-#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ../bin)
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin)
-#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ../bin)
+IF(APPLE)
+#  set( CMAKE_OSX_ARCHITECTURES ppc;i386 ) # Uncomment for universal binary
+ENDIF(APPLE)
 
 include_directories(/usr/local/include $ENV{EXTRA_INC})
 
