@@ -53,6 +53,11 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
     {
         switches[i].state = kPREventTypeInvalid;
         switches[i].lastEventTime = 0;
+
+        PRSwitchRule sw;
+        sw.notifyHost = true;
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
     }
 }
 
