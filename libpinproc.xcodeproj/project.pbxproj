@@ -19,6 +19,8 @@
 		668249EA0FC0A4280051560E /* libpinproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2AAC046055464E500DB518D /* libpinproc.a */; };
 		668249ED0FC0A4CD0051560E /* PRHardware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 668249EC0FC0A4CD0051560E /* PRHardware.cpp */; };
 		66824E7B0FCCBAFF0051560E /* PRCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 66824E7A0FCCBAFF0051560E /* PRCommon.h */; };
+		66C3CCBB111DDBA700FE329E /* lenval.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66C3CCB7111DDBA700FE329E /* lenval.cpp */; };
+		66C3CCBC111DDBA700FE329E /* pinprocfw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 66C3CCB9111DDBA700FE329E /* pinprocfw.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +29,13 @@
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libpinproc;
+		};
+		66C3CCD8111DDD6F00FE329E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D /* libpinproc */;
 			remoteInfo = libpinproc;
 		};
 /* End PBXContainerItemProxy section */
@@ -45,6 +54,11 @@
 		668249E20FC0A3960051560E /* pinproctest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pinproctest.cpp; path = examples/pinproctest/pinproctest.cpp; sourceTree = "<group>"; };
 		668249EC0FC0A4CD0051560E /* PRHardware.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PRHardware.cpp; path = src/PRHardware.cpp; sourceTree = "<group>"; };
 		66824E7A0FCCBAFF0051560E /* PRCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PRCommon.h; path = src/PRCommon.h; sourceTree = "<group>"; };
+		66C3CCB0111DDB8200FE329E /* pinprocfw */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pinprocfw; sourceTree = BUILT_PRODUCTS_DIR; };
+		66C3CCB7111DDBA700FE329E /* lenval.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lenval.cpp; path = utils/pinprocfw/lenval.cpp; sourceTree = "<group>"; };
+		66C3CCB8111DDBA700FE329E /* lenval.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lenval.h; path = utils/pinprocfw/lenval.h; sourceTree = "<group>"; };
+		66C3CCB9111DDBA700FE329E /* pinprocfw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pinprocfw.cpp; path = utils/pinprocfw/pinprocfw.cpp; sourceTree = "<group>"; };
+		66C3CCBA111DDBA700FE329E /* pinprocfw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pinprocfw.h; path = utils/pinprocfw/pinprocfw.h; sourceTree = "<group>"; };
 		D2AAC046055464E500DB518D /* libpinproc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpinproc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -54,6 +68,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				668249EA0FC0A4280051560E /* libpinproc.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		66C3CCAE111DDB8200FE329E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +101,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				66C3CCB5111DDB9000FE329E /* pinprocfw */,
 				668249D30FC0A2C10051560E /* pinproctest */,
 				668249D20FC0A29E0051560E /* libpinproc */,
 			);
@@ -91,6 +113,7 @@
 			children = (
 				D2AAC046055464E500DB518D /* libpinproc.a */,
 				668249D90FC0A30A0051560E /* pinproctest */,
+				66C3CCB0111DDB8200FE329E /* pinprocfw */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,6 +142,17 @@
 				66640E5D0FD1CFB6003135D8 /* switches.cpp */,
 			);
 			name = pinproctest;
+			sourceTree = "<group>";
+		};
+		66C3CCB5111DDB9000FE329E /* pinprocfw */ = {
+			isa = PBXGroup;
+			children = (
+				66C3CCB7111DDBA700FE329E /* lenval.cpp */,
+				66C3CCB8111DDBA700FE329E /* lenval.h */,
+				66C3CCB9111DDBA700FE329E /* pinprocfw.cpp */,
+				66C3CCBA111DDBA700FE329E /* pinprocfw.h */,
+			);
+			name = pinprocfw;
 			sourceTree = "<group>";
 		};
 		C6A0FF2B0290797F04C91782 /* Documentation */ = {
@@ -162,6 +196,23 @@
 			productReference = 668249D90FC0A30A0051560E /* pinproctest */;
 			productType = "com.apple.product-type.tool";
 		};
+		66C3CCAF111DDB8200FE329E /* pinprocfw */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 66C3CCB6111DDB9000FE329E /* Build configuration list for PBXNativeTarget "pinprocfw" */;
+			buildPhases = (
+				66C3CCAD111DDB8200FE329E /* Sources */,
+				66C3CCAE111DDB8200FE329E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				66C3CCD9111DDD6F00FE329E /* PBXTargetDependency */,
+			);
+			name = pinprocfw;
+			productName = pinprocfw;
+			productReference = 66C3CCB0111DDB8200FE329E /* pinprocfw */;
+			productType = "com.apple.product-type.tool";
+		};
 		D2AAC045055464E500DB518D /* libpinproc */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "libpinproc" */;
@@ -193,6 +244,7 @@
 			targets = (
 				D2AAC045055464E500DB518D /* libpinproc */,
 				668249D80FC0A30A0051560E /* pinproctest */,
+				66C3CCAF111DDB8200FE329E /* pinprocfw */,
 			);
 		};
 /* End PBXProject section */
@@ -206,6 +258,15 @@
 				66640E5E0FD1CFB6003135D8 /* dmd.cpp in Sources */,
 				66640E5F0FD1CFB6003135D8 /* drivers.cpp in Sources */,
 				66640E600FD1CFB6003135D8 /* switches.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		66C3CCAD111DDB8200FE329E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66C3CCBB111DDBA700FE329E /* lenval.cpp in Sources */,
+				66C3CCBC111DDBA700FE329E /* pinprocfw.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,6 +287,11 @@
 			isa = PBXTargetDependency;
 			target = D2AAC045055464E500DB518D /* libpinproc */;
 			targetProxy = 668249E40FC0A3C40051560E /* PBXContainerItemProxy */;
+		};
+		66C3CCD9111DDD6F00FE329E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2AAC045055464E500DB518D /* libpinproc */;
+			targetProxy = 66C3CCD8111DDD6F00FE329E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -331,6 +397,54 @@
 			};
 			name = Release;
 		};
+		66C3CCB2111DDB8400FE329E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = bin;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				INSTALL_PATH = /usr/local/bin;
+				OBJROOT = "$(PROJECT_DIR)/build";
+				OTHER_LDFLAGS = (
+					"-Lbin",
+					"-lftdi",
+					"-lpinproc",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = pinprocfw;
+				SYMROOT = bin;
+			};
+			name = Debug;
+		};
+		66C3CCB3111DDB8400FE329E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CONFIGURATION_BUILD_DIR = bin;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				INSTALL_PATH = /usr/local/bin;
+				OBJROOT = "$(PROJECT_DIR)/build";
+				OTHER_LDFLAGS = (
+					"-Lbin",
+					"-lftdi",
+					"-lpinproc",
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = pinprocfw;
+				SYMROOT = bin;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -357,6 +471,15 @@
 			buildConfigurations = (
 				668249DB0FC0A30A0051560E /* Debug */,
 				668249DC0FC0A30A0051560E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		66C3CCB6111DDB9000FE329E /* Build configuration list for PBXNativeTarget "pinprocfw" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				66C3CCB2111DDB8400FE329E /* Debug */,
+				66C3CCB3111DDB8400FE329E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
