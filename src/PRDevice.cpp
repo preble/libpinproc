@@ -166,7 +166,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
                 if (open)
                     events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
                 else
-                    events[i].type = debounced ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchOpenNondebounced;
+                    events[i].type = debounced ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchClosedNondebounced;
                 break; 
             }
 
