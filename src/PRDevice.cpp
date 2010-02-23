@@ -544,10 +544,14 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     
     // Because we're redefining the rule chain, we need to remove all previously existing links and return the indexes to the free list.
     PRSwitchRuleInternal *oldRule = GetSwitchRuleByIndex(newRuleIndex);
+    
+    uint16_t oldLinkIndex;
     while (oldRule->linkActive)
     {
+	// Save old link index so it can freed after the linked rule is retrieved.
+	oldLinkIndex = oldRule->linkIndex;	
         oldRule = GetSwitchRuleByIndex(oldRule->linkIndex);
-        freeSwitchRuleIndexes.push(oldRule->linkIndex);
+        freeSwitchRuleIndexes.push(oldLinkIndex);
 		
         if (freeSwitchRuleIndexes.size() > 128) // Detect a corrupted link-related values before it eats up all of the memory.
         {
