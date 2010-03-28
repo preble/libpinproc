@@ -145,7 +145,8 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 
 int PRDevice::GetEvents(PREvent *events, int maxEvents)
 {
-    SortReturningData();
+    if (SortReturningData() != kPRSuccess)
+		return -1;
 
     // The unrequestedDataQueue only has unrequested switch event data.  Pop
     // events out 1 at a time, interpret them, and populate the outgoing list with them.
@@ -657,7 +658,8 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     while (requestedDataQueue.size() < numWords && i++ < 10) 
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
-        SortReturningData();
+		if (SortReturningData() != kPRSuccess)
+			return kPRFailure;
     }
 
     // Make sure all of the requested words are available before processing them.
@@ -916,7 +918,8 @@ PRResult PRDevice::VerifyChipID()
     while (requestedDataQueue.size() < 5 && max_count++ < 10) 
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
-        SortReturningData();
+		if (SortReturningData() != kPRSuccess)
+			return kPRFailure;
     }
 
     if (max_count != 11) {
@@ -1061,7 +1064,8 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
     while (requestedDataQueue.size() < (numReadWords + 1) && i++ < 10) 
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
-        SortReturningData();
+		if (SortReturningData() != kPRSuccess)
+			return kPRFailure;
     }
 
     // Make sure all of the requested words are available before processing them.
@@ -1134,6 +1138,8 @@ int32_t PRDevice::CollectReadData()
 {
     int32_t rc,i;
     rc = PRHardwareRead(collect_buffer, FTDI_BUFFER_SIZE-num_collected_bytes);
+    if (rc < 0)
+        return rc;
     for (i=0; i<rc; i++) {
         collected_bytes_fifo[collected_bytes_wr_addr] = collect_buffer[i];
         if (collected_bytes_wr_addr == (FTDI_BUFFER_SIZE-1))
@@ -1151,10 +1157,15 @@ int32_t PRDevice::CollectReadData()
 
 PRResult PRDevice::SortReturningData()
 {
-    uint32_t num_bytes, num_words, rc;
+    int32_t num_bytes, num_words, rc;
     uint32_t rd_buffer[512];
 
     num_bytes = CollectReadData();
+    if (num_bytes < 0)
+    {
+        PRSetLastErrorText("Error in CollectReadData: %d", num_bytes);
+        return kPRFailure;
+    }
     num_words = num_collected_bytes/4;
 
     while (num_words >= 2) {

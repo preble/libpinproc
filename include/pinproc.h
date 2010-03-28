@@ -280,7 +280,9 @@ typedef struct PREvent {
     uint32_t time;     /**< Time (in milliseconds) that this event occurred. */
 } PREvent;
 
-/** Get all of the available events that have been received. */
+/** Get all of the available events that have been received. 
+ * \return Number of events returned; -1 if an error occurred.
+ */
 PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 
 
