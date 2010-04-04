@@ -136,6 +136,10 @@ PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t s
 #define kPRDriverGroupsMax (26)   /**< Number of available driver groups. */
 #define kPRDriverCount (256)          /**< Total number of drivers */
 
+#define kPRDriverAuxCmdOutput (2)   
+#define kPRDriverAuxCmdDelay  (1)   
+#define kPRDriverAuxCmdJump   (0)   
+
 typedef struct PRDriverGlobalConfig {
     bool_t enableOutputs; // Formerly enable_direct_outputs
     bool_t globalPolarity;
@@ -175,6 +179,18 @@ typedef struct PRDriverState {
     uint8_t patterOffTime;
     bool_t patterEnable;
 } PRDriverState;
+
+typedef struct PRDriverAuxCommand {
+    bool_t active;
+    bool_t useExtraData;
+    bool_t muxEnables;
+    uint8_t command;
+    uint8_t enables;
+    uint8_t extraData;
+    uint8_t data;
+    uint16_t delayTime;
+    uint8_t jumpAddr;
+} PRDriverAuxCommand;
 
 /** Update registers for the global driver configuration. */
 PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig);
@@ -218,6 +234,32 @@ PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_
  * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
  */
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+/** 
+ * Assigns a pitter-patter schedule (repeating on/off) to the given driver for the given duration. 
+ * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
+ */
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+/** 
+ * Prepares an Aux Command to drive the Aux bus.
+ * This function is provided for convenience.  
+ */
+PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, bool_t useExtraData, uint8_t enables, bool_t muxEnables);
+/** 
+ * Prepares an Aux Command to delay the Aux logic.
+ * This function is provided for convenience.  
+ */
+PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t delayTime);
+/** 
+ * Prepares an Aux Command to have the Aux memory pointer jump to a new address.
+ * This function is provided for convenience.  
+ */
+PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t jumpAddr);
+/** 
+ * Prepares a disabled Aux Command.
+ * This function is provided for convenience.  
+ */
+PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand);
+
 /** Tickle the watchdog timer. */
 PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle);
 
@@ -246,6 +288,19 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedu
  * Use originalOnTime to pulse the driver for a number of milliseconds before the pitter-patter schedule begins.
  */
 PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+
+/** 
+ * @brief Changes the given #PRDriverState to reflect a pitter-patter schedule state.
+ * Just like the regular Patter above, but PulsePatter only drives the patter
+ * scheduled for the given number of milliseconds before disabling the driver.
+ */
+PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t patterTime);
+
+/** 
+ * Write Aux Port commands into the Aux Port command memory.
+ */
+
+PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr);
 
 /**
  * @brief Converts a coil, lamp, switch, or GI string into a P-ROC driver number.

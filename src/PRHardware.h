@@ -133,7 +133,7 @@ const uint32_t P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT          = 9;
 const uint32_t P_ROC_DRIVER_CTRL_DECODE_SHIFT     = 10;
 const uint32_t P_ROC_DRIVER_CTRL_REG_DECODE       = 0;
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DECODE   = 1;
-const uint32_t P_ROC_DRIVER_STATE_TABLE_DECODE    = 2;
+const uint32_t P_ROC_DRIVER_AUX_MEM_DECODE        = 2;
 const uint32_t P_ROC_DRIVER_CATCHALL_DECODE       = 3;
 
 const uint32_t P_ROC_DRIVER_GLOBAL_ENABLE_DIRECT_OUTPUTS_SHIFT       = 31;
@@ -159,17 +159,37 @@ const uint32_t P_ROC_DRIVER_GROUP_MATRIXED_SHIFT                     = 2;
 const uint32_t P_ROC_DRIVER_GROUP_POLARITY_SHIFT                     = 1;
 const uint32_t P_ROC_DRIVER_GROUP_ACTIVE_SHIFT                       = 0;
 
-const uint32_t P_ROC_DRIVER_CONFIG_OUTPUT_DRIVE_TIME_SHIFT = 0;
-const uint32_t P_ROC_DRIVER_CONFIG_POLARITY_SHIFT          = 8;
-const uint32_t P_ROC_DRIVER_CONFIG_STATE_SHIFT             = 9;
-const uint32_t P_ROC_DRIVER_CONFIG_UPDATE_SHIFT            = 10;
-const uint32_t P_ROC_DRIVER_CONFIG_WAIT_4_1ST_SLOT_SHIFT   = 11;
-const uint32_t P_ROC_DRIVER_CONFIG_TIMESLOT_SHIFT          = 16;
-const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ON_TIME_SHIFT    = 16;
-const uint32_t P_ROC_DRIVER_CONFIG_PATTER_OFF_TIME_SHIFT   = 23;
-const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT     = 30;
+const uint32_t P_ROC_DRIVER_CONFIG_OUTPUT_DRIVE_TIME_SHIFT           = 0;
+const uint32_t P_ROC_DRIVER_CONFIG_POLARITY_SHIFT                    = 8;
+const uint32_t P_ROC_DRIVER_CONFIG_STATE_SHIFT                       = 9;
+const uint32_t P_ROC_DRIVER_CONFIG_UPDATE_SHIFT                      = 10;
+const uint32_t P_ROC_DRIVER_CONFIG_WAIT_4_1ST_SLOT_SHIFT             = 11;
+const uint32_t P_ROC_DRIVER_CONFIG_TIMESLOT_SHIFT                    = 16;
+const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ON_TIME_SHIFT              = 16;
+const uint32_t P_ROC_DRIVER_CONFIG_PATTER_OFF_TIME_SHIFT             = 23;
+const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT               = 30;
 
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DRIVER_NUM_SHIFT = 1;
+
+const uint32_t P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT                   = 31;
+const uint32_t P_ROC_DRIVER_AUX_USE_EXTRA_DATA_SHIFT                 = 20;
+const uint32_t P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT                    = 19;
+const uint32_t P_ROC_DRIVER_AUX_COMMAND_SHIFT                        = 16;
+const uint32_t P_ROC_DRIVER_AUX_COMMAND_MASK                         = 0x67;
+const uint32_t P_ROC_DRIVER_AUX_ENABLES_SHIFT                        = 12;
+const uint32_t P_ROC_DRIVER_AUX_ENABLES_MASK                         = 0xF;
+const uint32_t P_ROC_DRIVER_AUX_EXTRA_DATA_SHIFT                     = 8;
+const uint32_t P_ROC_DRIVER_AUX_EXTRA_DATA_MASK                      = 0xF;
+const uint32_t P_ROC_DRIVER_AUX_DATA_SHIFT                           = 0;
+const uint32_t P_ROC_DRIVER_AUX_DATA_MASK                            = 0xFF;
+const uint32_t P_ROC_DRIVER_AUX_DELAY_TIME_SHIFT                     = 0;
+const uint32_t P_ROC_DRIVER_AUX_DELAY_TIME_MASK                      = 0x3FFF;
+const uint32_t P_ROC_DRIVER_AUX_JUMP_ADDR_SHIFT                      = 0;
+const uint32_t P_ROC_DRIVER_AUX_JUMP_ADDR_MASK                       = 0xFF;
+
+const uint32_t P_ROC_DRIVER_AUX_CMD_OUTPUT                           = 2;
+const uint32_t P_ROC_DRIVER_AUX_CMD_DELAY                            = 1;
+const uint32_t P_ROC_DRIVER_AUX_CMD_JUMP                             = 0;
 
 const uint32_t P_ROC_SWITCH_CONFIG_CLEAR_SHIFT                       = 31;
 const uint32_t P_ROC_SWITCH_CONFIG_USE_COLUMN_9                      = 30;
@@ -225,11 +245,15 @@ uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals);
 int32_t CreateDriverUpdateGroupConfigBurst ( uint32_t * burst, PRDriverGroupConfig *driver_group);
 int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);
-int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig);
-int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
+uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command);
+
 int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
                                    bool_t watchdogEnable, uint16_t watchdogResetTime);
+
 int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
+
+int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig);
+int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
 
 void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *eventType);
 int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType);
@@ -238,7 +262,6 @@ int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
 int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
 int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
 int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t dataBlockComplete);
-
 
 PRResult PRHardwareOpen();
 void PRHardwareClose();

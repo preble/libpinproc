@@ -90,6 +90,11 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     collected_bytes_wr_addr = 0;
     num_collected_bytes = 0;
 
+    // Initialize Ver/Rev
+    version = 0;
+    revision = 0;
+    combinedVersionRevision = 0;
+
     // Make sure the data queues are empty.
     while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
     while (!requestedDataQueue.empty()) requestedDataQueue.pop();
@@ -480,8 +485,28 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     else
         driverGlobalConfig = globals;
 
-
     return res;
+}
+
+PRResult PRDevice::DriverAuxSendCommands(PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
+{
+    int32_t k;
+    uint32_t commandBuffer[513];
+    uint32_t convertedCommand;
+    uint32_t addr;
+
+    addr = (P_ROC_DRIVER_AUX_MEM_DECODE << P_ROC_DRIVER_CTRL_DECODE_SHIFT) |
+           startingAddr;
+
+    commandBuffer[0] = CreateBurstCommand(P_ROC_BUS_DRIVER_CTRL_SELECT, 
+                                          addr, numCommands);
+    for (k=0; k<numCommands; k++) {
+        convertedCommand = CreateDriverAuxCommand(commands[k]);
+        commandBuffer[k+1] = convertedCommand;
+    }
+
+    return PrepareWriteData(commandBuffer, numCommands+1);
+
 }
 
 PRResult PRDevice::DriverWatchdogTickle()
@@ -939,7 +964,9 @@ PRResult PRDevice::VerifyChipID()
             else rc = kPRSuccess;
             //std::cout << rc << " words read.  \n"
             DEBUG(PRLog(kPRLogError, "FPGA Chip ID: 0x%x\n", buffer[1]));
-            DEBUG(PRLog(kPRLogError, "FPGA Chip Version/Rev: %d.%d\n", buffer[2] >> 16, buffer[2] & 0xffff));
+            revision = buffer[2] & 0xffff;
+            version = buffer[2] >> 16;
+            DEBUG(PRLog(kPRLogError, "FPGA Chip Version/Rev: %d.%d\n", version, revision));
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));
 
@@ -1197,4 +1224,16 @@ PRResult PRDevice::SortReturningData()
         num_words = num_collected_bytes/4;
     }
     return kPRSuccess;
+}
+
+int PRDevice::CalcCombinedVerRevision()
+{
+    combinedVersionRevision = (version * 0x10000) + revision;
+}
+
+int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr)
+{
+    *verPtr = version;
+    *revPtr = revision;
+    *combinedPtr = combinedVersionRevision;
 }

@@ -186,6 +186,41 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
     PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
     return handleAsDevice->DriverUpdateState(&driver);
 }
+PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
+{
+    return handleAsDevice->DriverAuxSendCommands(commands, numCommands, startingAddr);
+}
+
+PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, bool_t useExtraData, uint8_t enables, bool_t muxEnables)
+{
+    auxCommand->active = true;
+    auxCommand->data = data;
+    auxCommand->extraData = extraData;
+    auxCommand->enables = enables;
+    auxCommand->muxEnables = muxEnables;
+    auxCommand->useExtraData = useExtraData;
+    auxCommand->command = kPRDriverAuxCmdOutput;
+}
+
+PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t delayTime)
+{
+    auxCommand->active = true;
+    auxCommand->delayTime = delayTime;
+    auxCommand->command = kPRDriverAuxCmdDelay;
+}
+
+PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t jumpAddr)
+{
+    auxCommand->active = true;
+    auxCommand->jumpAddr = jumpAddr;
+    auxCommand->command = kPRDriverAuxCmdJump;
+}
+
+PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand)
+{
+    auxCommand->active = false;
+}
+
 PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)
 {
     return handleAsDevice->DriverWatchdogTickle();
@@ -223,10 +258,21 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, u
 }
 PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
 {
-    driver->state = originalOnTime != 0;
+    driver->state = true;
     driver->timeslots = 0;
     driver->waitForFirstTimeSlot = false;
     driver->outputDriveTime = originalOnTime;
+    driver->patterOnTime = millisecondsOn;
+    driver->patterOffTime = millisecondsOff;
+    driver->patterEnable = true;
+}
+
+PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driver, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t patterTime)
+{
+    driver->state = false;
+    driver->timeslots = 0;
+    driver->waitForFirstTimeSlot = false;
+    driver->outputDriveTime = patterTime;
     driver->patterOnTime = millisecondsOn;
     driver->patterOffTime = millisecondsOff;
     driver->patterEnable = true;

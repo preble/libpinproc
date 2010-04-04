@@ -133,6 +133,44 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver) {
     return kPRSuccess;
 }
 
+uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command) {
+    switch (command.command) {
+        case (kPRDriverAuxCmdOutput) : {
+            return (command.active << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
+                   (command.useExtraData << P_ROC_DRIVER_AUX_USE_EXTRA_DATA_SHIFT) |
+                   (command.muxEnables << P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT) |
+                   ((command.command & P_ROC_DRIVER_AUX_COMMAND_MASK) <<
+                                       P_ROC_DRIVER_AUX_COMMAND_SHIFT) |
+                   ((command.enables & P_ROC_DRIVER_AUX_ENABLES_MASK) <<
+                                       P_ROC_DRIVER_AUX_ENABLES_SHIFT) |
+                   ((command.extraData & P_ROC_DRIVER_AUX_EXTRA_DATA_MASK) <<
+                                         P_ROC_DRIVER_AUX_EXTRA_DATA_SHIFT) |
+                   ((command.data & P_ROC_DRIVER_AUX_DATA_MASK) <<
+                                    P_ROC_DRIVER_AUX_DATA_SHIFT);
+        }
+        break;
+        case (kPRDriverAuxCmdDelay) : {
+            return (command.active << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
+                   ((command.command & P_ROC_DRIVER_AUX_COMMAND_MASK) <<
+                                       P_ROC_DRIVER_AUX_COMMAND_SHIFT) |
+                   ((command.delayTime & P_ROC_DRIVER_AUX_DELAY_TIME_MASK) <<
+                                        P_ROC_DRIVER_AUX_DELAY_TIME_SHIFT);
+        }
+        break;
+        case (kPRDriverAuxCmdJump) : {
+            return (command.active << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
+                   ((command.command & P_ROC_DRIVER_AUX_COMMAND_MASK) <<
+                                       P_ROC_DRIVER_AUX_COMMAND_SHIFT) |
+                   ((command.jumpAddr & P_ROC_DRIVER_AUX_JUMP_ADDR_MASK) <<
+                                        P_ROC_DRIVER_AUX_JUMP_ADDR_SHIFT);
+        }
+        break;
+        default : {
+            return (false << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT); 
+        }
+    }
+}
+
 int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
                                    bool_t watchdogEnable, uint16_t watchdogResetTime) {
     uint32_t addr;

@@ -216,7 +216,32 @@ int main(int argc, const char **argv)
     //PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
     // Pitter-patter a feature lamp for testing purposes.
     //PRDriverPatter(proc, 84, 127, 127, 0);
+
+
+/*
+    PRDriverAuxCommand auxCommands[256];
+
+    // Disable the first entry so the Aux logic won't begin immediately.
+    PRDriverAuxPrepareDisable(&auxCommands[0]);
+    // Set up a sequence of outputs.
+    for (i=0; i<16; i++) {
+      PRDriverAuxPrepareOutput(&(auxCommands[i+1]), i, 0, false, 8, false);
+    }
+    // Disable the last command so the sequence stops.
+    // PRDriverAuxPrepareDisable(&auxCommands[17]);
+    // Jump from addr 17 to 1 to repeat.
+    PRDriverAuxPrepareDelay(&auxCommands[17],1000);
+    PRDriverAuxPrepareJump(&auxCommands[18],1);
+
+    // Send the commands.
+    PRDriverAuxSendCommands(proc, auxCommands, 19, 0);
+
+    // Jump from addr 0 to 1 to begin.
+    PRDriverAuxPrepareJump(&auxCommands[0],1);
+    PRDriverAuxSendCommands(proc, auxCommands, 1, 0);
+
     PRFlushWriteData(proc);
+*/
 
     printf("Running.  Hit Ctrl-C to exit.\n");
     
@@ -231,6 +256,5 @@ int main(int argc, const char **argv)
     // Destroy the P-ROC device handle:
     PRDelete(proc);
     proc = kPRHandleInvalid;
-
     return 0;
 }

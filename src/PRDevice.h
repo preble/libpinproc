@@ -63,12 +63,12 @@ public:
     PRResult DriverGetState(uint8_t driverNum, PRDriverState *driverState);
     PRResult DriverUpdateState(PRDriverState *driverState);
     PRResult DriverLoadMachineTypeDefaults(PRMachineType machineType, uint32_t resetFlags = kPRResetFlagDefault);
+    PRResult DriverAuxSendCommands( PRDriverAuxCommand *commands, uint8_t numCommands, uint8_t startingAddr);
+    PRResult DriverWatchdogTickle();
 
     PRResult SwitchUpdateConfig(PRSwitchConfig *switchConfig);
     PRResult SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
     PRResult SwitchGetStates(PREventType * switchStates, uint16_t numSwitches);
-
-    PRResult DriverWatchdogTickle();
 
     PRResult DMDUpdateConfig(PRDMDConfig *dmdConfig);
     PRResult DMDDraw(uint8_t * dots);
@@ -78,6 +78,9 @@ public:
     PRResult PRJTAGShiftTDOData(uint16_t numBits, bool_t dataBlockComplete);
     PRResult PRJTAGReadTDIMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData);
     PRResult PRJTAGGetStatus(PRJTAGStatus * status);
+
+
+    int GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr);
 
 protected:
 
@@ -127,6 +130,14 @@ protected:
 
     queue<uint32_t> unrequestedDataQueue; /**< Queue of words received from the device that were not requested via RequestData().  Usually switch events. */
     queue<uint32_t> requestedDataQueue; /**< Queue of words received from the device as the result of a call to RequestData(). */
+
+    uint16_t version;
+    uint16_t revision;
+    uint16_t combinedVersionRevision;
+    /**
+     * Calculated combined Version/Revision number.
+     */
+    int CalcCombinedVerRevision();
 
     uint32_t preparedWriteWords[maxWriteWords];
     int32_t numPreparedWriteWords;
