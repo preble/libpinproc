@@ -95,10 +95,11 @@ PR_EXPORT const char *PRGetLastErrorText();
 typedef enum PRMachineType {
     kPRMachineInvalid = 0,
     kPRMachineCustom = 1,
-    kPRMachineWPC = 2,
-    kPRMachineWPC95 = 3,
-    kPRMachineSternWhitestar = 4,
-    kPRMachineSternSAM = 5,
+    kPRMachineWPCAlphanumeric = 2,
+    kPRMachineWPC = 3,
+    kPRMachineWPC95 = 4,
+    kPRMachineSternWhitestar = 5,
+    kPRMachineSternSAM = 6,
 } PRMachineType;
 
 // PRHandle Creation and Deletion
@@ -127,6 +128,19 @@ PR_EXPORT PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t 
 
 /** Read data from the P-ROC. */
 PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
+
+// Manager
+/** @defgroup Manager
+ * @{
+ */
+
+typedef struct PRManagerConfig {
+    bool_t reuse_dmd_data_for_aux;
+    bool_t invert_dipswitch_1;
+} PRManagerConfig;
+
+/** Update Manager configuration */
+PR_EXPORT PRResult PRManagerUpdateConfig(PRHandle handle, PRManagerConfig *managerConfig);
 
 // Drivers
 /** @defgroup drivers Driver Manipulation

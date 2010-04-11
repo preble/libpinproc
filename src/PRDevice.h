@@ -57,6 +57,8 @@ public:
     PRResult WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * buffer);
     PRResult ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
 
+    PRResult ManagerUpdateConfig(PRManagerConfig *managerConfig);
+
     PRResult DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig);
     PRResult DriverGetGroupConfig(uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig);
     PRResult DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfig);
@@ -154,6 +156,7 @@ protected:
 
     // Local Device State
     PRMachineType machineType;
+    PRManagerConfig managerConfig;
     PRDriverGlobalConfig driverGlobalConfig;
     PRDriverGroupConfig driverGroups[maxDriverGroups];
     PRDriverState drivers[maxDrivers];

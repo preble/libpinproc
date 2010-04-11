@@ -88,6 +88,8 @@ const uint32_t P_ROC_REG_DIPSWITCH_ADDR           = 3;
 const uint32_t P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT        = 30;
 const uint32_t P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT         = 14;
 const uint32_t P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT     = 0;
+const uint32_t P_ROC_MANAGER_REUSE_DMD_DATA_FOR_AUX_SHIFT  = 10;
+const uint32_t P_ROC_MANAGER_INVERT_DIPSWITCH_1_SHIFT      = 9;
 
 const uint32_t P_ROC_JTAG_SHIFT_EXIT_SHIFT                 = 16;
 const uint32_t P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT             = 0;
@@ -241,6 +243,7 @@ typedef struct PRSwitchRuleInternal {
 bool_t IsStern (uint32_t hardware_data); 
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words);
 uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words);
+int32_t CreateManagerUpdateConfigBurst ( uint32_t * burst, PRManagerConfig *manager_config);
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals);
 int32_t CreateDriverUpdateGroupConfigBurst ( uint32_t * burst, PRDriverGroupConfig *driver_group);
 int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver);

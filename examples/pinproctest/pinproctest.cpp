@@ -181,6 +181,10 @@ int main(int argc, const char **argv)
     yamlDoc["PRGame"]["machineType"] >> machineTypeString;
     if (machineTypeString == "wpc")
         machineType = kPRMachineWPC;
+    else if (machineTypeString == "wpc95")
+        machineType = kPRMachineWPC95;
+    else if (machineTypeString == "wpcAlphanumeric")
+        machineType = kPRMachineWPCAlphanumeric;
     else if(machineTypeString == "sternWhitestar")
         machineType = kPRMachineSternWhitestar;
     else if(machineTypeString == "sternSAM")

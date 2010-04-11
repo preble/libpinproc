@@ -54,6 +54,19 @@ uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words
             (addr << P_ROC_ADDR_SHIFT) );
 }
 
+int32_t CreateManagerUpdateConfigBurst ( uint32_t * burst, PRManagerConfig *manager_config) {
+    uint32_t addr;
+
+    addr = P_ROC_REG_DIPSWITCH_ADDR;
+    burst[0] = CreateBurstCommand (P_ROC_MANAGER_SELECT, addr, 1 );
+    burst[1] = ( (manager_config->reuse_dmd_data_for_aux << 
+                        P_ROC_MANAGER_REUSE_DMD_DATA_FOR_AUX_SHIFT) |
+                 (manager_config->invert_dipswitch_1 << 
+                        P_ROC_MANAGER_INVERT_DIPSWITCH_1_SHIFT) );
+    
+    return kPRSuccess;
+}
+
 int32_t CreateDriverUpdateGlobalConfigBurst ( uint32_t * burst, PRDriverGlobalConfig *driver_globals) {
     uint32_t addr;
 

@@ -65,11 +65,16 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
     if (machineType != kPRMachineCustom &&
 
 	// Don't accept if requested type is WPC/WPC95 but read machine is not.
-        ( ((machineType == kPRMachineWPC) || (machineType == kPRMachineWPC95)) && 
+        ( (((machineType == kPRMachineWPC) || 
+            (machineType == kPRMachineWPC95) ||
+            (machineType == kPRMachineWPCAlphanumeric)) && 
            (readMachineType != kPRMachineWPC && 
-            readMachineType !=  kPRMachineWPC95) ||
+            readMachineType != kPRMachineWPC95 &&
+            readMachineType != kPRMachineWPCAlphanumeric)) ||
 	  // Also don't accept if the requested is not WPC/WPC95 but the P-ROC is.
-          (machineType != kPRMachineWPC && machineType != kPRMachineWPC95 && 
+          (machineType != kPRMachineWPC && 
+           machineType != kPRMachineWPC95 && 
+           machineType != kPRMachineWPCAlphanumeric &&
            readMachineType == kPRMachineWPC) ) )
     {
         dev->Close();
@@ -189,6 +194,17 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
     return i;
 }
 
+PRResult PRDevice::ManagerUpdateConfig(PRManagerConfig *managerConfig)
+{
+    const int burstWords = 2;
+    uint32_t burst[burstWords];
+    int32_t rc;
+    DEBUG(PRLog(kPRLogInfo, "Setting Manager Config Register\n"));
+    this->managerConfig = *managerConfig;
+    rc = CreateManagerUpdateConfigBurst(burst, managerConfig);
+    return PrepareWriteData(burst, burstWords);
+}
+
 PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalConfig)
 {
     const int burstWords = 4;
@@ -245,7 +261,8 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
     switch (readMachineType) {
         kPRMachineWPC: 
-        kPRMachineWPC95: {
+        kPRMachineWPC95: 
+        kPRMachineWPCAlphanumeric:{
             if ((driverState->driverNum >= 40 && driverState->driverNum <= 47) ||
                 (driverState->driverNum == 32) ||
                 (driverState->driverNum == 34) ||
@@ -321,6 +338,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     {
         case kPRMachineWPC: 
         case kPRMachineWPC95: 
+        case kPRMachineWPCAlphanumeric: 
         {
             memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, 
                    sizeof(mappedDriverGroupEnableIndex)); 
@@ -484,6 +502,13 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         res = DriverUpdateGlobalConfig(&globals);
     else
         driverGlobalConfig = globals;
+
+    // If WPCAlphanumeric, select Aux functionality for the dual-purpose Aux/DMD
+    // pins.
+     
+    managerConfig.reuse_dmd_data_for_aux = (machineType == kPRMachineWPCAlphanumeric);
+    managerConfig.invert_dipswitch_1 = false;
+    ManagerUpdateConfig(&managerConfig);
 
     return res;
 }

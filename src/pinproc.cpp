@@ -131,6 +131,12 @@ PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
     return handleAsDevice->GetEvents(eventsOut, maxEvents);
 }
 
+// Manager
+PR_EXPORT PRResult PRManagerUpdateConfig(PRHandle handle, PRManagerConfig *managerConfig)
+{
+    return handleAsDevice->ManagerUpdateConfig(managerConfig);
+}
+
 // Drivers
 PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
 {
@@ -302,7 +308,9 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
         x = (str[2]-'0') * 10 + (str[3]-'0');
     else return atoi(str);
     
-    if ((machineType == kPRMachineWPC) || (machineType == kPRMachineWPC95))
+    if ((machineType == kPRMachineWPC) || 
+        (machineType == kPRMachineWPC95) ||
+        (machineType == kPRMachineWPCAlphanumeric))
     {
         switch (str[0])
         {
