@@ -191,14 +191,13 @@ PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand *
     return handleAsDevice->DriverAuxSendCommands(commands, numCommands, startingAddr);
 }
 
-PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, bool_t useExtraData, uint8_t enables, bool_t muxEnables)
+PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables)
 {
     auxCommand->active = true;
     auxCommand->data = data;
     auxCommand->extraData = extraData;
     auxCommand->enables = enables;
     auxCommand->muxEnables = muxEnables;
-    auxCommand->useExtraData = useExtraData;
     auxCommand->command = kPRDriverAuxCmdOutput;
 }
 
@@ -207,6 +206,10 @@ PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t 
     auxCommand->active = true;
     auxCommand->delayTime = delayTime;
     auxCommand->command = kPRDriverAuxCmdDelay;
+    auxCommand->data = 0;
+    auxCommand->extraData = 0;
+    auxCommand->enables = 0;
+    auxCommand->muxEnables = false;
 }
 
 PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t jumpAddr)
@@ -214,11 +217,19 @@ PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t ju
     auxCommand->active = true;
     auxCommand->jumpAddr = jumpAddr;
     auxCommand->command = kPRDriverAuxCmdJump;
+    auxCommand->data = 0;
+    auxCommand->extraData = 0;
+    auxCommand->enables = 0;
+    auxCommand->muxEnables = false;
 }
 
 PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand)
 {
     auxCommand->active = false;
+    auxCommand->data = 0;
+    auxCommand->extraData = 0;
+    auxCommand->enables = 0;
+    auxCommand->muxEnables = false;
 }
 
 PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)

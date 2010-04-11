@@ -172,7 +172,6 @@ const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT               = 30;
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DRIVER_NUM_SHIFT = 1;
 
 const uint32_t P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT                   = 31;
-const uint32_t P_ROC_DRIVER_AUX_USE_EXTRA_DATA_SHIFT                 = 20;
 const uint32_t P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT                    = 19;
 const uint32_t P_ROC_DRIVER_AUX_COMMAND_SHIFT                        = 16;
 const uint32_t P_ROC_DRIVER_AUX_COMMAND_MASK                         = 0x67;

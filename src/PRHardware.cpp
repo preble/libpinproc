@@ -136,9 +136,8 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver) {
 uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command) {
     switch (command.command) {
         case (kPRDriverAuxCmdOutput) : {
-            return (command.active << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
-                   (command.useExtraData << P_ROC_DRIVER_AUX_USE_EXTRA_DATA_SHIFT) |
-                   (command.muxEnables << P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT) |
+            return ((command.active & 1) << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
+                   ((command.muxEnables & 1) << P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT) |
                    ((command.command & P_ROC_DRIVER_AUX_COMMAND_MASK) <<
                                        P_ROC_DRIVER_AUX_COMMAND_SHIFT) |
                    ((command.enables & P_ROC_DRIVER_AUX_ENABLES_MASK) <<
