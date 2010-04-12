@@ -248,6 +248,11 @@ PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_
  */
 PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
 /** 
+ * Assigns a pitter-patter schedule (repeating on/off) to the given driver on for the given duration. 
+ * This function is provided for convenience.  See PRDriverStatePulsedPatter() for a full description.
+ */
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+/** 
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver for the given duration. 
  * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
  */

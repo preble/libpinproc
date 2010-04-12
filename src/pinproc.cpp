@@ -192,6 +192,13 @@ PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t 
     PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
     return handleAsDevice->DriverUpdateState(&driver);
 }
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t duration)
+{
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStatePulsedPatter(&driver, millisecondsOn, millisecondsOff, duration);
+    return handleAsDevice->DriverUpdateState(&driver);
+}
 PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
 {
     return handleAsDevice->DriverAuxSendCommands(commands, numCommands, startingAddr);

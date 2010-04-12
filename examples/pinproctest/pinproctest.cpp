@@ -216,10 +216,15 @@ int main(int argc, const char **argv)
     for (i=0; i<8; i++) {
       PRDriverSchedule(proc, 80+i, 0xFF00FF00, 0, 0);
     }
+
     //PRDriverSchedule(proc, 80, 0xFF00FF00, 0, 0);
     //PRDriverSchedule(proc, 0, 0xFF00AAAA, 1, 1);
-    // Pitter-patter a feature lamp for testing purposes.
+    
+    // Pitter-patter lamp 84: on 127ms, off 127ms, forever.
     //PRDriverPatter(proc, 84, 127, 127, 0);
+    
+    //Pulsed Patter for coil 48: on 5ms, off 10ms, repeat for 45ms.
+    //PRDriverPulsedPatter(proc, 48, 5, 10, 45); // Coil 48: on 5ms, off 10ms, repeat for 45ms.
 
 
 /*
