@@ -617,6 +617,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     if (newRule->eventType != eventType)
         DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
     newRule->notifyHost = rule->notifyHost;
+    newRule->reloadActive = rule->reloadActive;
     newRule->changeOutput = false;
     newRule->linkActive = false;
     
