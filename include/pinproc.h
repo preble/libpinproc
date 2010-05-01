@@ -379,6 +379,7 @@ typedef struct PRSwitchConfig {
 } PRSwitchConfig;
 
 typedef struct PRSwitchRule {
+    bool_t reloadActive; /**< If true, any associated driver changes resulting from this rule will only happen at most once every 256ms. */
     bool_t notifyHost; /**< If true this switch change event will provided to the user via PRGetEvents(). */
 } PRSwitchRule;
 
