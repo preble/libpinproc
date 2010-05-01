@@ -268,7 +268,8 @@ int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *r
     (rule_record->driver.driverNum << P_ROC_SWITCH_RULE_DRIVER_NUM_SHIFT) |
     (rule_record->linkActive << P_ROC_SWITCH_RULE_LINK_ACTIVE_SHIFT) |
     (rule_record->linkIndex << P_ROC_SWITCH_RULE_LINK_ADDRESS_SHIFT) |
-    (rule_record->notifyHost << P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT);
+    (rule_record->notifyHost << P_ROC_SWITCH_RULE_NOTIFY_HOST_SHIFT) |
+    (rule_record->reloadActive << P_ROC_SWITCH_RULE_RELOAD_ACTIVE_SHIFT);
     return kPRSuccess;
 
 }
