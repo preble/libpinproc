@@ -226,7 +226,6 @@ int main(int argc, const char **argv)
     //Pulsed Patter for coil 48: on 5ms, off 10ms, repeat for 45ms.
     //PRDriverPulsedPatter(proc, 48, 5, 10, 45); // Coil 48: on 5ms, off 10ms, repeat for 45ms.
 
-
 /*
     PRDriverAuxCommand auxCommands[256];
 
@@ -234,7 +233,7 @@ int main(int argc, const char **argv)
     PRDriverAuxPrepareDisable(&auxCommands[0]);
     // Set up a sequence of outputs.
     for (i=0; i<16; i++) {
-      PRDriverAuxPrepareOutput(&(auxCommands[i+1]), i, 0, false, 8, false);
+      PRDriverAuxPrepareOutput(&(auxCommands[i+1]), i, 0, 8, false);
     }
     // Disable the last command so the sequence stops.
     // PRDriverAuxPrepareDisable(&auxCommands[17]);
@@ -248,9 +247,9 @@ int main(int argc, const char **argv)
     // Jump from addr 0 to 1 to begin.
     PRDriverAuxPrepareJump(&auxCommands[0],1);
     PRDriverAuxSendCommands(proc, auxCommands, 1, 0);
-
-    PRFlushWriteData(proc);
 */
+    PRFlushWriteData(proc);
+
 
     printf("Running.  Hit Ctrl-C to exit.\n");
     
