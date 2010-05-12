@@ -31,6 +31,9 @@
 #include "../include/pinproc.h"
 #include "PRDevice.h"
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_TEXT (1024)
 

@@ -29,6 +29,9 @@
  */
 
 #include "PRDevice.h"
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
