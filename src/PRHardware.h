@@ -33,7 +33,7 @@
     #include <windows.h>
     #define PRSleep(milliseconds) Sleep(milliseconds)
 #else
-    #define PRSleep(milliseconds) sleep(milliseconds/1000)
+    #define PRSleep(milliseconds) usleep(milliseconds*1000)
 #endif
 
 const int32_t FTDI_VENDOR_ID = 0x0403;

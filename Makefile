@@ -3,8 +3,8 @@ AR = ar
 ARFLAGS = rc
 RANLIB = ranlib
 RM = rm -f
-CFLAGS=$(ARCH) -c -Wall -Iinclude
-LDFLAGS=$(ARCH)
+CFLAGS=$(ARCH) $(OTHER_CFLAGS) -c -Wall -Iinclude
+LDFLAGS=$(ARCH) $(OTHER_LDFLAGS)
 
 LIBPINPROC = bin/libpinproc.a
 SRCS = src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp

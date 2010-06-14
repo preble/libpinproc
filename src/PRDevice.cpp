@@ -566,7 +566,7 @@ PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
     this->switchConfig = *switchConfig;
     CreateSwitchUpdateConfigBurst(burst, switchConfig);
 
-    DEBUG(PRLog(kPRLogInfo, "Configuring Switch Logic"));
+    DEBUG(PRLog(kPRLogInfo, "Configuring Switch Logic\n"));
     DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n",burst[0],burst[1]));
 
     rc = PrepareWriteData(burst, burstWords);
@@ -760,7 +760,7 @@ int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
     this->dmdConfig = *dmdConfig;
     CreateDMDUpdateConfigBurst(burst, dmdConfig);
 
-    DEBUG(PRLog(kPRLogInfo, "Configuring DMD"));
+    DEBUG(PRLog(kPRLogInfo, "Configuring DMD\n"));
     DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x %x %x %x %x\n",burst[0],burst[1],burst[2],burst[3],
                 burst[4],burst[5],burst[6]));
 
@@ -963,20 +963,21 @@ PRResult PRDevice::VerifyChipID()
     uint32_t buffer[bufferWords];
     //uint32_t temp_word;
     uint32_t max_count, i;
+    const uint32_t max_count_limit = 10;
 
     //std::cout << "Requesting FPGA Chip ID: ";
     rc = RequestData(P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 4);
 
     max_count = 0;
     // Wait for data to return.  Give it 10 loops before giving up.
-    while (requestedDataQueue.size() < 5 && max_count++ < 10) 
+    while (requestedDataQueue.size() < 5 && max_count++ < max_count_limit) 
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
 			return kPRFailure;
     }
 
-    if (max_count != 11) {
+    if (max_count != max_count_limit+1) {
 
         if (requestedDataQueue.size() == 5) {
             for (i = 0; i < bufferWords; i++) {
