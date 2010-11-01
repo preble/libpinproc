@@ -3,24 +3,27 @@ AR = ar
 ARFLAGS = rc
 RANLIB = ranlib
 RM = rm -f
-CFLAGS=$(ARCH) $(OTHER_CFLAGS) -c -Wall -Iinclude
-LDFLAGS=$(ARCH) $(OTHER_LDFLAGS)
+LIBPINPROC_CFLAGS=-c -Wall -Iinclude
 
 LIBPINPROC = bin/libpinproc.a
+LIBPINPROC_DYLIB = bin/libpinproc.dylib
 SRCS = src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp
 OBJS := $(SRCS:.cpp=.o)
 INCLUDES = include/pinproc.h src/PRCommon.h src/PRDevice.h src/PRHardware.h
 LIBS = usb ftdi
 
 .PHONY: libpinproc
-libpinproc: $(LIBPINPROC)
+libpinproc: $(LIBPINPROC) $(LIBPINPROC_DYLIB)
 
 $(LIBPINPROC): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
 	$(RANLIB) $@
 
+$(LIBPINPROC_DYLIB): $(OBJS)
+	g++ -dynamiclib -o $@ /usr/local/lib/libftdi.dylib $(LDFLAGS) $(OBJS)
+
 .cpp.o:
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(LIBPINPROC_CFLAGS) $(CFLAGS) -o $@ $<
 
 clean:
 	$(RM) $(OBJS)
