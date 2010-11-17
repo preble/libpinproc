@@ -225,6 +225,13 @@ PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverSta
  */
 PR_EXPORT PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineType machineType);
 
+// Driver Group Helper functions:
+
+/** 
+ * Disables (turns off) the given driver group. 
+ * This function is provided for convenience.  See PRDriverGroupDisable() for a full description.
+ */
+PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum);
 // Driver Helper functions:
 
 /** 
@@ -281,6 +288,11 @@ PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand);
 /** Tickle the watchdog timer. */
 PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle);
 
+/** 
+ * Changes the given #PRDriverGroupConfig to reflect a disabled group.
+ * @note The driver group config structure must be applied using PRDriverUpdateGroupConfig() to have any effect.
+ */
+PR_EXPORT void PRDriverGroupStateDisable(PRDriverGroupConfig *driverGroup);
 /** 
  * Changes the given #PRDriverState to reflect a disabled state.
  * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.

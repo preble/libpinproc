@@ -166,6 +166,14 @@ PR_EXPORT PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineTyp
     return handleAsDevice->DriverLoadMachineTypeDefaults(machineType);
 }
 
+// Driver Group Helper functions:
+PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum)
+{
+    PRDriverGroupConfig driverGroup;
+    handleAsDevice->DriverGetGroupConfig(groupNum, &driverGroup);
+    PRDriverGroupStateDisable(&driverGroup);
+    return handleAsDevice->DriverUpdateGroupConfig(&driverGroup);
+}
 // Driver Helper functions:
 PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
 {
@@ -253,6 +261,10 @@ PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)
     return handleAsDevice->DriverWatchdogTickle();
 }
 
+PR_EXPORT void PRDriverGroupStateDisable(PRDriverGroupConfig *driverGroup)
+{
+    driverGroup->active = false;
+}
 PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
 {
     driver->state = 0;
