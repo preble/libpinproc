@@ -91,12 +91,14 @@ void RunLoop(PRHandle proc)
 
     uint32_t rdBuffer[1];
 
-    // Send 3 frames
-    for (i=0; i<3; i++)
-    {
-      // Create a dot pattern to test the DMD
-      UpdateDots(dots,dotOffset++);
-      PRDMDDraw(proc,dots);
+    if (machineType != kPRMachineWPCAlphanumeric) {
+      // Send 3 frames
+      for (i=0; i<3; i++)
+      {
+        // Create a dot pattern to test the DMD
+        UpdateDots(dots,dotOffset++);
+        PRDMDDraw(proc,dots);
+      }
     }
 
     while (runLoopRun)
@@ -134,8 +136,13 @@ void RunLoop(PRHandle proc)
                 }
                 case kPREventTypeDMDFrameDisplayed:
                 {
-                    UpdateDots(dots,dotOffset++);
-                    PRDMDDraw(proc,dots);
+                    if (machineType == kPRMachineWPCAlphanumeric) {
+                        //UpdateAlphaDisplay(proc, dotOffset++);
+                    }
+                    else {
+                        UpdateDots(dots,dotOffset++);
+                        PRDMDDraw(proc,dots);
+                    }
                     break;
                 }
             }
@@ -206,9 +213,13 @@ int main(int argc, const char **argv)
     PRLogSetLevel (kPRLogInfo);
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     
+    // Even if WPCAlphanumeric, configure the DMD at least to get frame events for
+    // timing purposes.
     ConfigureDMD(proc); 
     ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
     ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
+
+    if (machineType == kPRMachineWPCAlphanumeric) UpdateAlphaDisplay(proc, 0);
 
     // Pulse a coil for testing purposes.
     PRDriverPulse(proc, 47, 30);

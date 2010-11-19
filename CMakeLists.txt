@@ -17,7 +17,7 @@ else(WIN32)
   set(libraries usb ftdi)
 endif(WIN32)
 
-add_executable(pinproctest examples/pinproctest/pinproctest.cpp examples/pinproctest/drivers.cpp examples/pinproctest/dmd.cpp examples/pinproctest/switches.cpp)
+add_executable(pinproctest examples/pinproctest/pinproctest.cpp examples/pinproctest/drivers.cpp examples/pinproctest/dmd.cpp examples/pinproctest/switches.cpp examples/pinproctest/alphanumeric.cpp)
 add_executable(pinprocfw utils/pinprocfw/pinprocfw.cpp utils/pinprocfw/lenval.cpp)
 target_link_libraries(pinproctest pinproc ${libraries} yaml-cpp)
 target_link_libraries(pinprocfw pinproc ${libraries})
