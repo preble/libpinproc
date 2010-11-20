@@ -80,7 +80,7 @@ void display(PRHandle proc, char * string_1, char * string_2)
                                  0x003f,  // 'O'
                                  0x0873,  // 'P'
                                  0x103f,  // 'Q'
-                                 0x1073,  // 'R'
+                                 0x1873,  // 'R'
                                  0x086d,  // 'S'
                                  0x2201,  // 'T'
                                  0x003e,  // 'U'
