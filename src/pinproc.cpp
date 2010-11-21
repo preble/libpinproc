@@ -401,7 +401,8 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
                 else if (x <= 44)
                 {
                     if (machineType == kPRMachineWPC95)
-                        return x + 7;
+                        //return x + 7;
+                        return x + 31;
                     else 
                         return x + 107; // WPC 37-44 use 8-driver board (mapped to drivers 144-151)
                 }
