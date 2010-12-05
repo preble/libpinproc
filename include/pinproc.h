@@ -268,7 +268,7 @@ PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uin
  * Prepares an Aux Command to drive the Aux bus.
  * This function is provided for convenience.  
  */
-PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables);
+PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables, uint16_t delayTime);
 /** 
  * Prepares an Aux Command to delay the Aux logic.
  * This function is provided for convenience.  

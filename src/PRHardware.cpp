@@ -150,6 +150,8 @@ uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command) {
     switch (command.command) {
         case (kPRDriverAuxCmdOutput) : {
             return ((command.active & 1) << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT) |
+                   ((command.delayTime & P_ROC_DRIVER_AUX_OUTPUT_DELAY_MASK) <<
+                                       P_ROC_DRIVER_AUX_OUTPUT_DELAY_SHIFT) |
                    ((command.muxEnables & 1) << P_ROC_DRIVER_AUX_MUX_ENABLES_SHIFT) |
                    ((command.command & P_ROC_DRIVER_AUX_COMMAND_MASK) <<
                                        P_ROC_DRIVER_AUX_COMMAND_SHIFT) |

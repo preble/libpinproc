@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
@@ -531,6 +532,7 @@ PRResult PRDevice::DriverAuxSendCommands(PRDriverAuxCommand * commands, uint8_t 
     for (k=0; k<numCommands; k++) {
         convertedCommand = CreateDriverAuxCommand(commands[k]);
         commandBuffer[k+1] = convertedCommand;
+        printf("\nAux command: %d is %x", k,convertedCommand);
     }
 
     return PrepareWriteData(commandBuffer, numCommands+1);

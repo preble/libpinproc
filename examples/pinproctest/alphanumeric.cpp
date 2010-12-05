@@ -108,7 +108,7 @@ void display(PRHandle proc, char * string_1, char * string_2)
 
     for (i=0; i<16; i++) {
         // Assert the STB line
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), i, 0, DIS_STB, false);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), i, 0, DIS_STB, false, 0);
 
         char_a = string_1[i]; 
         char_b = string_2[i]; 
@@ -120,17 +120,17 @@ void display(PRHandle proc, char * string_1, char * string_2)
         printf("\nchar_a: %x, segs_a: %x", char_a, segs_a);
         printf("\nchar_b: %x, segs_b: %x", char_b, segs_b);
 
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), segs_a & 0xff, 0, STB_1, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), (segs_a >> 8) & 0xff, 0, STB_2, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), segs_b & 0xff, 0, STB_3, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), (segs_b >> 8) & 0xff, 0, STB_4, false);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), segs_a & 0xff, 0, STB_1, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), (segs_a >> 8) & 0xff, 0, STB_2, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), segs_b & 0xff, 0, STB_3, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), (segs_b >> 8) & 0xff, 0, STB_4, false, 0);
 
         PRDriverAuxPrepareDelay(&auxCommands[cmd_index++],350);
 
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_1, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_2, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_3, false);
-        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_4, false);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_1, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_2, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_3, false, 0);
+        PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), 0, 0, STB_4, false, 0);
 
         PRDriverAuxPrepareDelay(&auxCommands[cmd_index++],40);
     }
@@ -163,8 +163,8 @@ void display(PRHandle proc, char * string_1, char * string_2)
 void UpdateAlphaDisplay(PRHandle proc, int counter)
 {
 
-    char string_1a[] = "P-ROC CAN DRIVE ";
-    char string_1b[] = "ALPHANUMERICS   ";
+    char string_1a[] = "     P-ROC      ";
+    char string_1b[] = "    V1.17 D3    ";
 
     display(proc, string_1a, string_1b);
 }

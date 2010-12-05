@@ -215,7 +215,7 @@ PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand *
     return handleAsDevice->DriverAuxSendCommands(commands, numCommands, startingAddr);
 }
 
-PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables)
+PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables, uint16_t delayTime)
 {
     auxCommand->active = true;
     auxCommand->data = data;
@@ -223,6 +223,7 @@ PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t 
     auxCommand->enables = enables;
     auxCommand->muxEnables = muxEnables;
     auxCommand->command = kPRDriverAuxCmdOutput;
+    auxCommand->delayTime = delayTime;
 }
 
 PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t delayTime)
