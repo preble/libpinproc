@@ -10,7 +10,7 @@ IF(APPLE)
 #  set( CMAKE_OSX_ARCHITECTURES ppc;i386 ) # Uncomment for universal binary
 ENDIF(APPLE)
 
-include_directories(${LIBPINPROC_SOURCE_DIR} /usr/local/include $ENV{EXTRA_INC})
+include_directories(${LIBPINPROC_SOURCE_DIR}/include /usr/local/include $ENV{EXTRA_INC})
 
 link_directories(/usr/local/lib $ENV{EXTRA_LINK})
 

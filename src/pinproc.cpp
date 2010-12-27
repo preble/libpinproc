@@ -28,12 +28,12 @@
  *  libpinproc
  */
 
-#include "../include/pinproc.h"
-#include "PRDevice.h"
+#include <pinproc.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "PRDevice.h"
 
 #define MAX_TEXT (1024)
 
