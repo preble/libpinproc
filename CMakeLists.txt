@@ -2,8 +2,14 @@ cmake_minimum_required(VERSION 2.6)
 
 project (LIBPINPROC)
 
+# User can redefine to "SHARED" on command line with:
+# cmake -DLIB_TYPE=SHARED ...
+IF(NOT DEFINED LIB_TYPE)
+set(LIB_TYPE STATIC)
+ENDIF(NOT DEFINED LIB_TYPE)
+
 set(PINPROC_VERSION_MAJOR "0")
-set(PINPROC_VERSION_MINOR "0")
+set(PINPROC_VERSION_MINOR "9")
 set(PINPROC_VERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}")
 
 IF(APPLE)
@@ -11,12 +17,12 @@ IF(APPLE)
 ENDIF(APPLE)
 
 include_directories(${LIBPINPROC_SOURCE_DIR}/include /usr/local/include $ENV{EXTRA_INC})
-
 link_directories(/usr/local/lib $ENV{EXTRA_LINK})
 
 set(FILES src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp)
-add_library(pinproc ${FILES}
+add_library(pinproc 
 	${LIB_TYPE}
+	${FILES}
 	${public_headers}
 	${private_headers}
 	${sources}
@@ -39,10 +45,13 @@ add_executable(pinprocfw utils/pinprocfw/pinprocfw.cpp utils/pinprocfw/lenval.cp
 target_link_libraries(pinproctest pinproc ${libraries} yaml-cpp)
 target_link_libraries(pinprocfw pinproc ${libraries})
 
+###############################################################
+# The remainder of the file is used for "make install" stuff
+###############################################################
+
 set(INCLUDE_INSTALL_DIR include)
 set(LIB_INSTALL_DIR ${_library_dir}${LIB_SUFFIX})
 
-#
 set(_INSTALL_DESTINATIONS
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
@@ -65,8 +74,3 @@ if(UNIX)
 	install(FILES ${PC_FILE} DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
 endif(UNIX)
 
-
-#install(TARGETS pinproc 
-#        ARCHIVE DESTINATION lib)
-#set (HEADERS include/pinproc.h)
-#install(FILES ${HEADERS} DESTINATION include)
