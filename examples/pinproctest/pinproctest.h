@@ -34,11 +34,7 @@
 #include <cmath>
 #include "../../include/pinproc.h" // Include libpinproc's header.
 #include <fstream>
-#if defined(__WIN32__)
-    #include "yaml.h"
-#else
-    #include <yaml-cpp/yaml.h>
-#endif
+#include <yaml-cpp/yaml.h>
 #include <sys/time.h>
 
 #define kFlippersSection "PRFlippers"
