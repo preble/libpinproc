@@ -49,7 +49,7 @@ target_link_libraries(pinprocfw pinproc ${libraries})
 # The remainder of the file is used for "make install" stuff
 ###############################################################
 
-set(INCLUDE_INSTALL_DIR include)
+set(INCLUDE_INSTALL_DIR include/p-roc)
 set(LIB_INSTALL_DIR ${_library_dir}${LIB_SUFFIX})
 
 set(_INSTALL_DESTINATIONS
