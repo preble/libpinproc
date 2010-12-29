@@ -175,35 +175,35 @@ PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum)
     return handleAsDevice->DriverUpdateGroupConfig(&driverGroup);
 }
 // Driver Helper functions:
-PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum)
+PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint8_t driverNum)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStateDisable(&driver);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, uint8_t milliseconds)
+PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStatePulse(&driver, milliseconds);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
+PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStateSchedule(&driver, schedule, cycleSeconds, now);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
+PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t duration)
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t duration)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
@@ -296,7 +296,7 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, u
     driver->patterOffTime = 0;
     driver->patterEnable = false;
 }
-PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime)
+PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
 {
     driver->state = true;
     driver->timeslots = 0;
@@ -307,7 +307,7 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint16_t millisecondsO
     driver->patterEnable = true;
 }
 
-PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driver, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t patterTime)
+PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime)
 {
     driver->state = false;
     driver->timeslots = 0;

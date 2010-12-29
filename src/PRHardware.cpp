@@ -553,11 +553,11 @@ int PRHardwareRead(uint8_t *buffer, int maxBytes)
     ftStatus = FT_GetQueueStatus(ftHandle,&bytesToRead);
     if (ftStatus != FT_OK) return 0;
    
-    if (maxBytes < bytesToRead) bytesToRead = maxBytes;
+    if ((DWORD)maxBytes < bytesToRead) bytesToRead = maxBytes;
     ftStatus = FT_Read(ftHandle, buffer, bytesToRead, &bytesRead);
     if (ftStatus == FT_OK) {
         DEBUG(PRLog(kPRLogVerbose,"Read %d bytes:\n",bytesRead));
-        for (i=0; i<bytesRead; i++) {
+        for (i=0; (DWORD)i<bytesRead; i++) {
             DEBUG(PRLog(kPRLogVerbose,"Read byte: %x\n",buffer[i]));
         }
         return (int)bytesRead;
@@ -578,7 +578,7 @@ int PRHardwareWrite(uint8_t *buffer, int bytes)
         DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes:\n",bytesWritten));
         if (bytesWritten != bytes) DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes, should have written %d bytes",bytesWritten,bytes));
         else {
-            for (i=0; i<bytesWritten; i++) {
+            for (i=0; (DWORD)i<bytesWritten; i++) {
                 DEBUG(PRLog(kPRLogVerbose,"Wrote byte: %x\n",buffer[i]));
             }
         }
