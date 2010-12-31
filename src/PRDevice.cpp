@@ -265,6 +265,9 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     // Don't allow Constant Pulse (non-schedule with time = 0) for known high current drivers.
     // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.  
     // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
+
+// Removing protection code for now.  It's too restrictive.
+if (0) {
     switch (readMachineType) {
         case kPRMachineWPC: 
         case kPRMachineWPC95: 
@@ -286,6 +289,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
             break;
         }
     }
+}
 
     DEBUG(PRLog(kPRLogInfo, "Updating driver #%d\n", driverState->driverNum));
 
