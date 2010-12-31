@@ -30,16 +30,23 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
-#include <unistd.h>
+
+#ifndef _VC_
+  #include <unistd.h>
+#endif
+
 #include <cmath>
 #include "../../include/pinproc.h" // Include libpinproc's header.
 #include <fstream>
-#if defined(__WIN32__)
-    #include "yaml.h"
+#include <yaml-cpp/yaml.h>
+
+#ifdef _VC_
+  #include <time.h>
+  #include <sys/timeb.h>
+  #include <windows.h>
 #else
-    #include <yaml-cpp/yaml.h>
+  #include <sys/time.h>
 #endif
-#include <sys/time.h>
 
 #define kFlippersSection "PRFlippers"
 #define kBumpersSection "PRBumpers"

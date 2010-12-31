@@ -32,7 +32,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
+#ifndef __WIND32__
+  #include <stdio.h>
+#endif
 
 PRDevice::PRDevice(PRMachineType machineType) : machineType(machineType)
 {
@@ -264,9 +266,9 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.  
     // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
     switch (readMachineType) {
-        kPRMachineWPC: 
-        kPRMachineWPC95: 
-        kPRMachineWPCAlphanumeric:{
+        case kPRMachineWPC: 
+        case kPRMachineWPC95: 
+        case kPRMachineWPCAlphanumeric:{
             if ((driverState->driverNum >= 40 && driverState->driverNum <= 47) ||
                 (driverState->driverNum == 32) ||
                 (driverState->driverNum == 34) ||
@@ -276,8 +278,8 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
             }
             break;
         }
-        kPRMachineSternWhitestar:
-        kPRMachineSternSAM: {
+        case kPRMachineSternWhitestar:
+        case kPRMachineSternSAM: {
             if (driverState->driverNum >= 32 && driverState->driverNum <= 47) {
                 if (driverState->timeslots == 0 && driverState->outputDriveTime == 0) return kPRFailure;
             }
@@ -588,7 +590,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
 
     // If more the base rule will link to others, ensure free indexes exists for 
     // the links.
-    if (numDrivers > 0 && freeSwitchRuleIndexes.size() < numDrivers-1) // -1 because the first switch rule holds the first driver.
+    if (numDrivers > 0 && freeSwitchRuleIndexes.size() < (uint32_t)(numDrivers-1)) // -1 because the first switch rule holds the first driver.
     {
         PRSetLastErrorText("Not enough free switch rule indexes: %d available, need %d", freeSwitchRuleIndexes.size(), numDrivers);
         return kPRFailure;
@@ -881,7 +883,7 @@ PRResult PRDevice::PRJTAGGetStatus(PRJTAGStatus * status)
 
 PRResult PRDevice::Open()
 {
-    uint32_t temp_word,i;
+    uint32_t temp_word;
     PRResult res = PRHardwareOpen();
     if (res == kPRSuccess)
     {
@@ -961,7 +963,7 @@ PRResult PRDevice::VerifyChipID()
 {
     PRResult rc;
     const int bufferWords = 5;
-    uint32_t buffer[bufferWords];
+    uint32_t buffer[bufferWords] = {0};
     //uint32_t temp_word;
     uint32_t max_count, i;
     const uint32_t max_count_limit = 10;
@@ -1119,7 +1121,7 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
 
     // Wait for data to return.  Give it 10 loops before giving up.
     // Expect numReadWords + 1 word with the address.
-    while (requestedDataQueue.size() < (numReadWords + 1) && i++ < 10) 
+    while (requestedDataQueue.size() < (uint32_t)((numReadWords + 1)) && i++ < 10) 
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
@@ -1129,7 +1131,7 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
     // Make sure all of the requested words are available before processing them.
     // Too many words is just as bad as not enough words.  
     // If too many come back, can they be trusted?
-    if (requestedDataQueue.size() == numReadWords + 1)
+    if (requestedDataQueue.size() == (uint32_t)(numReadWords + 1))
     {
         requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
         for (i = 0; i < numReadWords; i++)
@@ -1176,7 +1178,7 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
 
 PRResult PRDevice::FlushReadBuffer()
 {
-    int32_t numBytes,rc,k;
+    int32_t numBytes,rc=0,k;
     //uint32_t rd_buffer[3];
     numBytes = CollectReadData();
     k = 0;
@@ -1260,6 +1262,7 @@ PRResult PRDevice::SortReturningData()
 int PRDevice::CalcCombinedVerRevision()
 {
     combinedVersionRevision = (version * 0x10000) + revision;
+    return 0;
 }
 
 int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr)
@@ -1267,4 +1270,5 @@ int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combi
     *verPtr = version;
     *revPtr = revision;
     *combinedPtr = combinedVersionRevision;
+    return 0;
 }

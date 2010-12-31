@@ -238,32 +238,32 @@ PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum);
  * Disables (turns off) the given driver. 
  * This function is provided for convenience.  See PRDriverStateDisable() for a full description.
  */
-PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint16_t driverNum);
+PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint8_t driverNum);
 /** 
  * Pulses the given driver for a number of milliseconds. 
  * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
  */
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint16_t driverNum, uint8_t milliseconds);
+PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds);
 /** 
  * Assigns a repeating schedule to the given driver. 
  * This function is provided for convenience.  See PRDriverStateSchedule() for a full description.
  */
-PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint16_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
+PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now);
 /** 
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver. 
  * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
  */
-PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
 /** 
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver on for the given duration. 
  * This function is provided for convenience.  See PRDriverStatePulsedPatter() for a full description.
  */
-PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
 /** 
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver for the given duration. 
  * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
  */
-PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint16_t driverNum, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
 /** 
  * Prepares an Aux Command to drive the Aux bus.
  * This function is provided for convenience.  
@@ -317,14 +317,14 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driverState, uint32_t schedu
  * 
  * Use originalOnTime to pulse the driver for a number of milliseconds before the pitter-patter schedule begins.
  */
-PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t originalOnTime);
+PR_EXPORT void PRDriverStatePatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
 
 /** 
  * @brief Changes the given #PRDriverState to reflect a pitter-patter schedule state.
  * Just like the regular Patter above, but PulsePatter only drives the patter
  * scheduled for the given number of milliseconds before disabling the driver.
  */
-PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driverState, uint16_t millisecondsOn, uint16_t millisecondsOff, uint16_t patterTime);
+PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime);
 
 /** 
  * Write Aux Port commands into the Aux Port command memory.

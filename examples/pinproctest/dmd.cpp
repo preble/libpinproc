@@ -64,14 +64,14 @@ void UpdateDots( unsigned char * dots, unsigned int dotOffset )
     const int rate_reduction_divisor = 1;
     
     loopCtr = dotOffset/rate_reduction_divisor;
-    color = pow(2,kDMDSubFrames) - 1;
+    color = (1 << kDMDSubFrames) - 1;
     byte_shifter = 0x80;
     
     // Slow it down just a tad
     if (dotOffset%rate_reduction_divisor == 0)
     {
         // Set up byte_shifter to rotate pattern to the right.
-        byte_shifter = pow(2,(loopCtr%8));
+        byte_shifter = 1 << (loopCtr%8);
         
         // Clear the DMD dots every time the rotation occurs
         memset(dots,0,((kDMDColumns*kDMDRows)/8)*kDMDSubFrames);
@@ -91,13 +91,13 @@ void UpdateDots( unsigned char * dots, unsigned int dotOffset )
                 {
                     // Turn on the byte in each sub-frame that's enabled 
                     // active for the color code.
-                    if ((mappedColor >> subFrame) & 1 == 1) 
+                    if (((mappedColor >> subFrame) & 1) == 1) 
                         dots[subFrame*(kDMDColumns*kDMDRows/8)+((row%kDMDRows)*(kDMDColumns / 8))+col] = byte_shifter;
                 }
             }
             // Determine where to change the color in order to progress from row 0 = color 0
             // to the last row being the last color.
-            if (row % (int)((kDMDRows/pow(2,kDMDSubFrames))) == 0) color--;
+            if (row % (int)((kDMDRows/(1 << kDMDSubFrames))) == 0) color--;
             if (byte_shifter == 1) byte_shifter = 0x80;
             else byte_shifter = byte_shifter >> 1;
         }

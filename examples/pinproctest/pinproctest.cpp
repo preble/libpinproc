@@ -89,8 +89,6 @@ void RunLoop(PRHandle proc)
     // Retrieve and store initial switch states. 
     LoadSwitchStates(proc);
 
-    uint32_t rdBuffer[1];
-
     if (machineType != kPRMachineWPCAlphanumeric) {
       // Send 3 frames
       for (i=0; i<3; i++)
@@ -105,9 +103,6 @@ void RunLoop(PRHandle proc)
     {
         PRDriverWatchdogTickle(proc);
          
-        //PRReadData(proc, 5, 0, 1, rdBuffer);
-        //printf("dmd config: %x\n",rdBuffer[0]); 
-
         int numEvents = PRGetEvents(proc, events, maxEvents);
         for (int i = 0; i < numEvents; i++)
         {
@@ -120,8 +115,13 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchOpenNondebounced: stateText = "open(ndb)"; break;
                 case kPREventTypeSwitchClosedNondebounced: stateText = "closed(ndb)"; break;
             }
+#ifdef _VC_
+            struct _timeb tv;
+            _ftime(&tv);
+#else
             struct timeval tv;
             gettimeofday(&tv, NULL);
+#endif
             
             switch (event->type)
             {
@@ -130,7 +130,11 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchOpenNondebounced:
                 case kPREventTypeSwitchClosedNondebounced:
                 {
-                    printf("%d.%03d switch % 3d: %s\n", tv.tv_sec-startTime, tv.tv_usec/1000, event->value, stateText);
+#ifdef _VC_
+                    printf("%d.%03d switch % 3d: %s\n", tv.time-startTime, tv.millitm, event->value, stateText);
+#else
+                    printf("%d.%03d switch % 3d: %s\n", (int)(tv.tv_sec-startTime), (int)tv.tv_usec/1000, event->value, stateText);
+#endif
                     UpdateSwitchState( event );
                     break;
                 }
@@ -148,7 +152,11 @@ void RunLoop(PRHandle proc)
             }
         }
         PRFlushWriteData(proc);
+#ifdef _VC_
+        Sleep(10);
+#else
         usleep(10*1000); // Sleep for 10ms so we aren't pegging the CPU.
+#endif
     }
 }
 
