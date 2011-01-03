@@ -29,14 +29,15 @@
     #include <stdlib.h>
     #include <string.h>
     #include <time.h>
-    #include <unistd.h>
 #endif  /* DEBUG_MODE */
 
 #include "pinprocfw.h"
 #include "lenval.h"
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 
-#include "../../include/pinproc.h" // Include libpinproc's header.
+#include "pinproc.h" // Include libpinproc's header.
 PRMachineType machineType = kPRMachineCustom;  // Should work with all machines.
 
 /*============================================================================

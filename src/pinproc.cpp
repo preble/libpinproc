@@ -35,6 +35,10 @@
 #include <string.h>
 #include "PRDevice.h"
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#define vsnprintf _vsnprintf
+#endif
+
 #define MAX_TEXT (1024)
 
 typedef void (*PRLogCallback)(PRLogLevel level, const char *text);

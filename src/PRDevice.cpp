@@ -31,7 +31,9 @@
 #include "PRDevice.h"
 #include <stdlib.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #ifndef __WIND32__
   #include <stdio.h>
 #endif
@@ -173,13 +175,13 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
         unrequestedDataQueue.pop();
 
         events[i].value = event_data & P_ROC_EVENT_SWITCH_NUM_MASK;
-        bool open = (event_data & P_ROC_EVENT_SWITCH_STATE_MASK) >> P_ROC_EVENT_SWITCH_STATE_SHIFT;
+        int open = (event_data & P_ROC_EVENT_SWITCH_STATE_MASK) >> P_ROC_EVENT_SWITCH_STATE_SHIFT;
         
         switch ((event_data & P_ROC_EVENT_TYPE_MASK) >> P_ROC_EVENT_TYPE_SHIFT)
         {
             case P_ROC_EVENT_TYPE_SWITCH:
             {
-                bool debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
+                int debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
                 if (open)
                     events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
                 else
@@ -624,8 +626,9 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     // Now let's setup the first actual rule:
     uint16_t firstRuleIndex = newRuleIndex;
     PRSwitchRuleInternal *newRule = GetSwitchRuleByIndex(newRuleIndex);
-    if (newRule->eventType != eventType)
+    if (newRule->eventType != eventType) {
         DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
+    }
     newRule->notifyHost = rule->notifyHost;
     newRule->reloadActive = rule->reloadActive;
     newRule->changeOutput = false;
@@ -943,8 +946,9 @@ PRResult PRDevice::Open()
             res = FlushReadBuffer();
             PRSleep(100);
             res = VerifyChipID();
-            if (res == kPRFailure)
+            if (res == kPRFailure) {
                 DEBUG(PRLog(kPRLogWarning, "Unable to read Chip ID - P-ROC could not be initialized.\n"));
+            }
         }
     }
 

@@ -347,7 +347,7 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
  * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.
  */
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(_WIN32)
     #define USE_D2XX 1
 #endif
 
@@ -576,7 +576,7 @@ int PRHardwareWrite(uint8_t *buffer, int bytes)
     if (ftStatus == FT_OK) 
     {
         DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes:\n",bytesWritten));
-        if (bytesWritten != bytes) DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes, should have written %d bytes",bytesWritten,bytes));
+        if (bytesWritten != DWORD(bytes)) DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes, should have written %d bytes",bytesWritten,bytes));
         else {
             for (i=0; (DWORD)i<bytesWritten; i++) {
                 DEBUG(PRLog(kPRLogVerbose,"Wrote byte: %x\n",buffer[i]));

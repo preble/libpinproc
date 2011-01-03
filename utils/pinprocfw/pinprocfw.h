@@ -13,7 +13,7 @@
 #ifndef PINPROCFW_H
 #define PINPROCFW_H
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(_WIN32)
     #include <windows.h>
     #define PRSleep(milliseconds) Sleep(milliseconds)
 #else

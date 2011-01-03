@@ -31,16 +31,16 @@
 #include <stdio.h>
 #include <signal.h>
 
-#ifndef _VC_
-  #include <unistd.h>
+#ifndef _MSC_VER
+#include <unistd.h>
 #endif
 
 #include <cmath>
-#include "../../include/pinproc.h" // Include libpinproc's header.
+#include "pinproc.h" // Include libpinproc's header.
 #include <fstream>
 #include <yaml-cpp/yaml.h>
 
-#ifdef _VC_
+#ifdef _MSC_VER
   #include <time.h>
   #include <sys/timeb.h>
   #include <windows.h>

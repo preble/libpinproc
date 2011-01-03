@@ -31,10 +31,16 @@
 #ifndef _PINPROC_H_
 #define _PINPROC_H_
 
+/*
+ * 3rd party "stdint.h" replacement available for Visual C++ before version 2010.
+ * http://en.wikipedia.org/wiki/Stdint.h#External_links
+ * -> http://msinttypes.googlecode.com/svn/trunk/stdint.h
+ * Place inside the major include dir (e.g. %ProgramFiles%\Microsoft Visual Studio\VC98\INCLUDE)
+ */
 #include <stdint.h>
 
 /** @cond */
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(_WIN32)
     #undef PR_EXPORT
     #if defined(PR_BUILDING_PR)
         #define PR_EXPORT __declspec(dllexport) extern

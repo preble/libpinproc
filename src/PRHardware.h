@@ -27,9 +27,9 @@
 #define _PROC_HARDWARE_H_
 
 #include <stdint.h>
-#include "../include/pinproc.h"
+#include "pinproc.h"
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(_WIN32)
     #include <windows.h>
     #define PRSleep(milliseconds) Sleep(milliseconds)
 #else

@@ -115,7 +115,7 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchOpenNondebounced: stateText = "open(ndb)"; break;
                 case kPREventTypeSwitchClosedNondebounced: stateText = "closed(ndb)"; break;
             }
-#ifdef _VC_
+#ifdef _MSC_VER
             struct _timeb tv;
             _ftime(&tv);
 #else
@@ -130,7 +130,7 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchOpenNondebounced:
                 case kPREventTypeSwitchClosedNondebounced:
                 {
-#ifdef _VC_
+#ifdef _MSC_VER
                     printf("%d.%03d switch % 3d: %s\n", tv.time-startTime, tv.millitm, event->value, stateText);
 #else
                     printf("%d.%03d switch % 3d: %s\n", (int)(tv.tv_sec-startTime), (int)tv.tv_usec/1000, event->value, stateText);
@@ -152,7 +152,7 @@ void RunLoop(PRHandle proc)
             }
         }
         PRFlushWriteData(proc);
-#ifdef _VC_
+#ifdef _MSC_VER
         Sleep(10);
 #else
         usleep(10*1000); // Sleep for 10ms so we aren't pegging the CPU.

@@ -28,7 +28,7 @@
  *  libpinproc
  */
 
-#include "../include/pinproc.h"
+#include "pinproc.h"
 #include "PRCommon.h"
 #include "PRHardware.h"
 #include <queue>
