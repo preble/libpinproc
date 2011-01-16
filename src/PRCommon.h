@@ -22,8 +22,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _PRCOMMON_H_
-#define _PRCOMMON_H_
+#ifndef PINPROC_PRCOMMON_H
+#define PINPROC_PRCOMMON_H
+#if !defined(__GNUC__) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)	// GCC supports "pragma once" correctly since 3.4
+#pragma once
+#endif
 
 #ifdef NDEBUG
 #  define DEBUG(block)
@@ -34,4 +37,4 @@
 void PRLog(PRLogLevel level, const char *format, ...);
 void PRSetLastErrorText(const char *format, ...);
 
-#endif // _PRCOMMON_H_
+#endif /* PINPROC_PRCOMMON_H */

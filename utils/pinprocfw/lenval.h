@@ -3,9 +3,11 @@
 /* abstract:  This file contains a description of the  */
 /*            data structure "lenval".                 */
 /*******************************************************/
-
-#ifndef lenval_dot_h
-#define lenval_dot_h
+#ifndef PINPROCFW_LENVAL_H
+#define PINPROCFW_LENVAL_H
+#if !defined(__GNUC__) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)	// GCC supports "pragma once" correctly since 3.4
+#pragma once
+#endif
 
 /* the lenVal structure is a byte oriented type used to store an */
 /* arbitrary length binary value. As an example, the hex value   */
@@ -90,5 +92,4 @@ extern void SetBit(lenVal *lv, int byte, int bit, short val);
 /* read from XSVF numBytes bytes of data into x */
 extern void  readVal(lenVal *x, short numBytes);
 
-#endif
-
+#endif	/* PINPROCFW_LENVAL_H */

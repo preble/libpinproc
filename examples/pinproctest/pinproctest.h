@@ -27,6 +27,12 @@
  *  pinproctest.cpp
  *  libpinproc
  */
+#ifndef PINPROCTEST_PINPROCTEST_H
+#define PINPROCTEST_PINPROCTEST_H
+#if !defined(__GNUC__) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)	// GCC supports "pragma once" correctly since 3.4
+#pragma once
+#endif
+
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
@@ -75,3 +81,5 @@ void ConfigureDMD(PRHandle proc);
 void UpdateDots(unsigned char * dots, unsigned int dotOffset);
 
 void UpdateAlphaDisplay(PRHandle, int);
+
+#endif	/* PINPROCTEST_PINPROCTEST_H */

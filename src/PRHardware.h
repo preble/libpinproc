@@ -23,8 +23,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef _PROC_HARDWARE_H_
-#define _PROC_HARDWARE_H_
+#ifndef PINPROC_PRHARDWARE_H
+#define PINPROC_PRHARDWARE_H
+#if !defined(__GNUC__) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)	// GCC supports "pragma once" correctly since 3.4
+#pragma once
+#endif
 
 #include <stdint.h>
 #include "pinproc.h"
@@ -244,7 +247,7 @@ typedef struct PRSwitchRuleInternal {
 } PRSwitchRuleInternal;
 
 
-bool_t IsStern (uint32_t hardware_data); 
+bool_t IsStern (uint32_t hardware_data);
 uint32_t CreateRegRequestWord( uint32_t select, uint32_t addr, uint32_t num_words);
 uint32_t CreateBurstCommand ( uint32_t select, uint32_t addr, uint32_t num_words);
 int32_t CreateManagerUpdateConfigBurst ( uint32_t * burst, PRManagerConfig *manager_config);
@@ -274,4 +277,4 @@ void PRHardwareClose();
 int PRHardwareRead(uint8_t *buffer, int maxBytes);
 int PRHardwareWrite(uint8_t *buffer, int bytes);
 
-#endif // _PROC_HARDWARE_H_
+#endif /* PINPROC_PRHARDWARE_H */

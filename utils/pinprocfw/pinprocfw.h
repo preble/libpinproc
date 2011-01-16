@@ -10,8 +10,11 @@
 *               in the readByte() function.
 *               FINALLY - Call xsvfExecute().
 *****************************************************************************/
-#ifndef PINPROCFW_H
-#define PINPROCFW_H
+#ifndef PINPROCFW_PINPROCFW_H
+#define PINPROCFW_PINPROCFW_H
+#if !defined(__GNUC__) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || (__GNUC__ >= 4)	// GCC supports "pragma once" correctly since 3.4
+#pragma once
+#endif
 
 #if defined(__WIN32__) || defined(_WIN32)
     #include <windows.h>
@@ -67,5 +70,4 @@ void readByte(unsigned char *data);
 void waitTime(long microsec);
 
 
-#endif  /* PINPROCFW_H */
-
+#endif  /* PINPROCFW_PINPROCFW_H */
