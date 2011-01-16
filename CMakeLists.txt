@@ -1,5 +1,5 @@
 ###
-### CMake policy settings
+### CMake settings
 ###
 # see http://www.cmake.org/Wiki/CMake_Policies
 cmake_minimum_required(VERSION 2.6)
@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 2.6)
 if(POLICY CMP0015)
 	cmake_policy(SET CMP0015 NEW)
 endif()
+#
+INCLUDE(CMakeDependentOption)
 
 
 ###
@@ -29,48 +31,115 @@ option(PINPROC_BUILD_TOOLS "Enable testing and firmware tools" ON)
 # see http://www.cmake.org/cmake/help/cmake2.6docs.html#variable:BUILD_SHARED_LIBS
 #     http://www.cmake.org/cmake/help/cmake2.6docs.html#command:add_library
 option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
-# see http://msdn.microsoft.com/en-us/library/aa278396(v=vs.60).aspx
-#     http://msdn.microsoft.com/en-us/library/2kzt1wy3%28v=VS.71%29.aspx
+# see http://msdn.microsoft.com/en-us/library/aa278396(v=VS.60).aspx
+#     http://msdn.microsoft.com/en-us/library/2kzt1wy3(v=VS.71).aspx
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
-option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
+CMAKE_DEPENDENT_OPTION(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF
+	"NOT MSVC_SHARED_RT" OFF)
 
 
 ###
-### Source
+### Sources, headers, directories and libs
 ###
 # !!! file(GLOB) didn't work on Ubuntu 10.04 with cmake 2.8 !!!
 #file(GLOB sources src/[a-z]*.cpp)
 #file(GLOB public_headers include/[a-z]*.h)
 #file(GLOB private_headers src/[a-z]*.h)
+#message(STATUS "sources: ${sources}")
+#message(STATUS "public_headers: ${public_headers}")
+#message(STATUS "private_headers: ${private_headers}")
 set(sources "src/pinproc.cpp;src/PRDevice.cpp;src/PRHardware.cpp")
 set(public_headers "include/pinproc.h")
 set(private_headers "src/PRCommon.h;src/PRDevice.h;src/PRHardware.h")
-message(STATUS "sources is ${sources}")
-message(STATUS "public_headers is ${public_headers}")
-message(STATUS "private_headers is ${private_headers}")
 
-include_directories(${PINPROC_SOURCE_DIR}/include $ENV{EXTRA_INC} /usr/local/include)
-link_directories($ENV{EXTRA_LINK} /usr/local/lib)
+# use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
+include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
+link_directories(${EXTRA_LINK} /usr/local/lib)
+
+set(YAML_CPP_LIB "yaml-cpp")
+set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
 
 
 ###
 ### General compilation settings
 ###
+if(BUILD_SHARED_LIBS)
+	set(LABEL_SUFFIX "shared")
+else()
+	set(LABEL_SUFFIX "static")
+endif()
+
 if(APPLE)
 #	set(CMAKE_OSX_ARCHITECTURES ppc;i386)	# Uncomment for universal binary
 endif()
 
 if(WIN32)
-	set(libraries ftd2xx)
+	set(lib_ftdi_usb ftd2xx)
 	if(BUILD_SHARED_LIBS)
-		add_definitions(-DPINPROC_DLL)	# use or build Windows DLL
+		add_definitions(-D${PROJECT_NAME}_DLL)	# use or build Windows DLL
 	endif()
 else()
-	set(libraries usb ftdi)
+	set(lib_ftdi_usb usb ftdi)
 endif()
 
-set(YAML_CPP_LIB "yaml-cpp")
-set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
+# GCC / MINGW specialities
+if(CMAKE_COMPILER_IS_GNUCC)
+	if(WIN32)
+		set(CMAKE_SHARED_LIBRARY_PREFIX "")	# DLLs do not have a "lib" prefix
+		set(CMAKE_IMPORT_LIBRARY_PREFIX "")	# same for DLL import libs
+	endif()
+endif()
+
+# Microsoft VisualC++ specialities
+if(MSVC)
+	### General stuff
+	# a) Change MSVC runtime library settings (/MD[d], /MT[d], /ML[d] (single-threaded until VS 2003))
+	#    plus set lib suffix for later use and project label accordingly
+	# see http://msdn.microsoft.com/en-us/library/aa278396(v=VS.60).aspx
+	#     http://msdn.microsoft.com/en-us/library/2kzt1wy3(v=VS.71).aspx
+	set(LIB_RT_SUFFIX "md")	# CMake defaults to /MD for MSVC
+	set(LIB_RT_OPTION "/MD")
+	#
+	if(NOT MSVC_SHARED_RT)	# User wants to have static runtime libraries (/MT, /ML)
+		if(MSVC_STHREADED_RT)	# User wants to have old single-threaded static runtime libraries
+			set(LIB_RT_SUFFIX "ml")
+			set(LIB_RT_OPTION "/ML")
+			if(NOT MSVC_VERSION LESS 1400)
+				message(FATAL_ERROR "Single-threaded static runtime libraries (/ML) only available until VS .NET 2003 (7.1).")
+			endif()
+		else()
+			set(LIB_RT_SUFFIX "mt")
+			set(LIB_RT_OPTION "/MT")
+		endif()
+
+		# correct linker options
+		foreach(flag_var  CMAKE_C_FLAGS  CMAKE_CXX_FLAGS)
+			foreach(config_name  ""  DEBUG  RELEASE  MINSIZEREL  RELWITHDEBINFO)
+				set(var_name "${flag_var}")
+				if(config_name)
+					set(var_name "${var_name}_${config_name}")
+				endif()
+				string(REPLACE "/MD" "${LIB_RT_OPTION}" ${var_name} "${${var_name}}")
+			endforeach()
+		endforeach()
+	endif()
+	#
+	set(LABEL_SUFFIX "${LABEL_SUFFIX} ${LIB_RT_OPTION}")
+
+	# b) Change prefix for static libraries
+	set(CMAKE_STATIC_LIBRARY_PREFIX "lib")	# to distinguish static libraries from DLL import libs
+
+	# c) Correct suffixes for static libraries
+	if(NOT BUILD_SHARED_LIBS)
+		### General stuff
+		set(LIB_TARGET_SUFFIX "${LIB_SUFFIX}${LIB_RT_SUFFIX}")
+
+		### Project stuff
+		# correct external library names
+		set(YAML_CPP_LIB "${CMAKE_STATIC_LIBRARY_PREFIX}${YAML_CPP_LIB}${LIB_RT_SUFFIX}")
+		set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
+	endif()
+endif()
 
 
 ###
@@ -83,12 +152,12 @@ else()
 endif()
 
 set(INCLUDE_INSTALL_DIR include/p-roc)
-set(LIB_INSTALL_DIR ${_library_dir}${LIB_SUFFIX})
+set(LIB_INSTALL_DIR "${_library_dir}${LIB_SUFFIX}")
 
 set(_INSTALL_DESTINATIONS
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-	ARCHIVE DESTINATION lib${LIB_SUFFIX}
+	ARCHIVE DESTINATION "lib${LIB_SUFFIX}"
 )
 
 
@@ -100,49 +169,27 @@ add_library(pinproc
 	${public_headers}
 	${private_headers}
 )
+
 set_target_properties(pinproc PROPERTIES
 	VERSION "${PINPROC_VERSION}"
 	SOVERSION "${PINPROC_VERSION_MAJOR}.${PINPROC_VERSION_MINOR}"
+	PROJECT_LABEL "pinproc ${LABEL_SUFFIX}"
 )
 
-# Correct MSVC for static libraries (/MD[d], /MT[d], /ML[d] (single-threaded until VS 2003))
-# see http://msdn.microsoft.com/en-us/library/aa278396(v=vs.60).aspx
-#     http://msdn.microsoft.com/en-us/library/2kzt1wy3%28v=VS.71%29.aspx
-if((MSVC) AND (NOT BUILD_SHARED_LIBS))
-	set(TMP_SUFFIX "md")	# CMake defaults to /MD for MSVC
+target_link_libraries(pinproc
+	${lib_ftdi_usb}
+)
 
-	if (NOT MSVC_SHARED_RT)	# User wants to have static runtime libraries (/MT, /ML)
-		if (MSVC_STHREADED_RT)	# User wants to have old single-threade runtime libraries
-			set(TMP_SUFFIX "ml")
-			set(TMP_OPTION "/ML")
-			if(NOT MSVC_VERSION LESS 1400)
-				message(FATAL_ERROR "Single-threaded runtime libraries (/ML) only availbe until VS .NET 2003 (7.1).")
-			endif()
-		else()
-			set(TMP_SUFFIX "mt")
-			set(TMP_OPTION "/MT")
-		endif()
-
-		# correct linker options
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_C_FLAGS_MINSIZEREL ${CMAKE_C_FLAGS_MINSIZEREL})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
-		string(REPLACE "/MD" "${TMP_OPTION}" CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_C_FLAGS_RELWITHDEBINFO})
+if(MSVC)
+	if(NOT BUILD_SHARED_LIBS)
+		# correct library names
+		set_target_properties(pinproc PROPERTIES
+			DEBUG_POSTFIX "${LIB_TARGET_SUFFIX}d"
+			RELEASE_POSTFIX "${LIB_TARGET_SUFFIX}"
+			MINSIZEREL_POSTFIX "${LIB_TARGET_SUFFIX}"
+			RELWITHDEBINFO_POSTFIX "${LIB_TARGET_SUFFIX}"
+		)
 	endif()
-
-	# correct library names
-	set_target_properties(pinproc PROPERTIES PREFIX "lib")
-	set_target_properties(pinproc PROPERTIES DEBUG_POSTFIX "${TMP_SUFFIX}d")
-	set_target_properties(pinproc PROPERTIES RELEASE_POSTFIX "${TMP_SUFFIX}")
-	set_target_properties(pinproc PROPERTIES MINSIZEREL_POSTFIX "${TMP_SUFFIX}")
-	set_target_properties(pinproc PROPERTIES RELWITHDEBINFO_POSTFIX "${TMP_SUFFIX}")
-	# correct external library names
-	set(YAML_CPP_LIB "lib${YAML_CPP_LIB}${TMP_SUFFIX}")
-	set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
 endif()
 
 install(TARGETS pinproc ${_INSTALL_DESTINATIONS})
@@ -161,9 +208,9 @@ endif()
 ###
 ### Extras
 ###
-#TODO: use add_subdirectory() and separate CMakeLists.txt
 if(PINPROC_BUILD_TOOLS)
-# Create a target for the test tool (see yaml-cpp)
+# Create a target for the test tool
+#TODO: use add_subdirectory() and separate CMakeLists.txt (see yaml-cpp)
 add_executable(pinproctest
 	examples/pinproctest/pinproctest.cpp
 	examples/pinproctest/drivers.cpp
@@ -173,19 +220,17 @@ add_executable(pinproctest
 )
 target_link_libraries(pinproctest
 	pinproc
-	${libraries}
 	optimized ${YAML_CPP_LIB}
 	debug ${YAML_CPP_LIB_DBG}
 )
 
-# Create a target for the firmware tool (see yaml-cpp)
-#TODO: use add_subdirectory() and separate CMakeLists.txt
+# Create a target for the firmware tool
+#TODO: use add_subdirectory() and separate CMakeLists.txt (see yaml-cpp)
 add_executable(pinprocfw
 	utils/pinprocfw/pinprocfw.cpp
 	utils/pinprocfw/lenval.cpp
 )
 target_link_libraries(pinprocfw
 	pinproc
-	${libraries}
 )
 endif()
