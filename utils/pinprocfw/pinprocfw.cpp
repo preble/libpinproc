@@ -308,61 +308,61 @@ TXsvfDoCmdFuncPtr   xsvf_pfDoCmd[]  =
 #ifdef  DEBUG_MODE
     char* xsvf_pzCommandName[]  =
     {
-        "XCOMPLETE",
-        "XTDOMASK",
-        "XSIR",
-        "XSDR",
-        "XRUNTEST",
-        "Reserved5",
-        "Reserved6",
-        "XREPEAT",
-        "XSDRSIZE",
-        "XSDRTDO",
-        "XSETSDRMASKS",
-        "XSDRINC",
-        "XSDRB",
-        "XSDRC",
-        "XSDRE",
-        "XSDRTDOB",
-        "XSDRTDOC",
-        "XSDRTDOE",
-        "XSTATE",
-        "XENDIR",
-        "XENDDR",
-        "XSIR2",
-        "XCOMMENT",
-        "XWAIT"
+        (char *)"XCOMPLETE",
+        (char *)"XTDOMASK",
+        (char *)"XSIR",
+        (char *)"XSDR",
+        (char *)"XRUNTEST",
+        (char *)"Reserved5",
+        (char *)"Reserved6",
+        (char *)"XREPEAT",
+        (char *)"XSDRSIZE",
+        (char *)"XSDRTDO",
+        (char *)"XSETSDRMASKS",
+        (char *)"XSDRINC",
+        (char *)"XSDRB",
+        (char *)"XSDRC",
+        (char *)"XSDRE",
+        (char *)"XSDRTDOB",
+        (char *)"XSDRTDOC",
+        (char *)"XSDRTDOE",
+        (char *)"XSTATE",
+        (char *)"XENDIR",
+        (char *)"XENDDR",
+        (char *)"XSIR2",
+        (char *)"XCOMMENT",
+        (char *)"XWAIT"
     };
 
     char*   xsvf_pzErrorName[]  =
     {
-        "No error",
-        "ERROR:  Unknown",
-        "ERROR:  TDO mismatch",
-        "ERROR:  TDO mismatch and exceeded max retries",
-        "ERROR:  Unsupported XSVF command",
-        "ERROR:  Illegal state specification",
-        "ERROR:  Data overflows allocated MAX_LEN buffer size"
+        (char *)"No error",
+        (char *)"ERROR:  Unknown",
+        (char *)"ERROR:  TDO mismatch",
+        (char *)"ERROR:  TDO mismatch and exceeded max retries",
+        (char *)"ERROR:  Unsupported XSVF command",
+        (char *)"ERROR:  Illegal state specification",
+        (char *)"ERROR:  Data overflows allocated MAX_LEN buffer size"
     };
 
     char*   xsvf_pzTapState[] =
     {
-        "RESET",        /* 0x00 */
-        "RUNTEST/IDLE", /* 0x01 */
-        "DRSELECT",     /* 0x02 */
-        "DRCAPTURE",    /* 0x03 */
-        "DRSHIFT",      /* 0x04 */
-        "DREXIT1",      /* 0x05 */
-        "DRPAUSE",      /* 0x06 */
-        "DREXIT2",      /* 0x07 */
-        "DRUPDATE",     /* 0x08 */
-        "IRSELECT",     /* 0x09 */
-        "IRCAPTURE",    /* 0x0A */
-        "IRSHIFT",      /* 0x0B */
-        "IREXIT1",      /* 0x0C */
-        "IRPAUSE",      /* 0x0D */
-        "IREXIT2",      /* 0x0E */
-        "IRUPDATE"      /* 0x0F */
+        (char *)"RESET",        /* 0x00 */
+        (char *)"RUNTEST/IDLE", /* 0x01 */
+        (char *)"DRSELECT",     /* 0x02 */
+        (char *)"DRCAPTURE",    /* 0x03 */
+        (char *)"DRSHIFT",      /* 0x04 */
+        (char *)"DREXIT1",      /* 0x05 */
+        (char *)"DRPAUSE",      /* 0x06 */
+        (char *)"DREXIT2",      /* 0x07 */
+        (char *)"DRUPDATE",     /* 0x08 */
+        (char *)"IRSELECT",     /* 0x09 */
+        (char *)"IRCAPTURE",    /* 0x0A */
+        (char *)"IRSHIFT",      /* 0x0B */
+        (char *)"IREXIT1",      /* 0x0C */
+        (char *)"IRPAUSE",      /* 0x0D */
+        (char *)"IREXIT2",      /* 0x0E */
+        (char *)"IRUPDATE"      /* 0x0F */
     };
 #endif  /* DEBUG_MODE */
 
@@ -1271,7 +1271,7 @@ int xsvfDoXSIR2( SXsvfInfo* pXsvfInfo )
     readVal( &(pXsvfInfo->lvTdi), 2 );
     lShiftIrBits    = value( &(pXsvfInfo->lvTdi) );
     sShiftIrBytes   = xsvfGetAsNumBytes( lShiftIrBits );
-    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %d\n", lShiftIrBits);
+    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %ld\n", lShiftIrBits);
 
     if ( sShiftIrBytes > MAX_LEN )
     {

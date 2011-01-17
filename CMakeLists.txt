@@ -1,14 +1,17 @@
 ###
 ### CMake settings
 ###
+## Due to Mac OSX we need to keep compatibility with CMake 2.6
 # see http://www.cmake.org/Wiki/CMake_Policies
 cmake_minimum_required(VERSION 2.6)
+# see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0012
+if(POLICY CMP0012)
+	cmake_policy(SET CMP0012 OLD)
+endif()
 # see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0015
 if(POLICY CMP0015)
-	cmake_policy(SET CMP0015 NEW)
+	cmake_policy(SET CMP0015 OLD)
 endif()
-#
-INCLUDE(CMakeDependentOption)
 
 
 ###
@@ -24,33 +27,46 @@ set(PINPROC_VERSION "${PINPROC_VERSION_MAJOR}.${PINPROC_VERSION_MINOR}")
 ###
 ### Project options
 ###
-# General stuff
+## Project stuff
 option(PINPROC_BUILD_TOOLS "Enable testing and firmware tools" ON)
 
-# Compilation options
+## Build options
+# --> General
 # see http://www.cmake.org/cmake/help/cmake2.6docs.html#variable:BUILD_SHARED_LIBS
 #     http://www.cmake.org/cmake/help/cmake2.6docs.html#command:add_library
 option(BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
+
+# --> Apple
+option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
+
+# --> Microsoft Visual C++
 # see http://msdn.microsoft.com/en-us/library/aa278396(v=VS.60).aspx
 #     http://msdn.microsoft.com/en-us/library/2kzt1wy3(v=VS.71).aspx
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
-CMAKE_DEPENDENT_OPTION(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF
-	"NOT MSVC_SHARED_RT" OFF)
+option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
 
 
 ###
 ### Sources, headers, directories and libs
 ###
-# !!! file(GLOB) didn't work on Ubuntu 10.04 with cmake 2.8 !!!
-#file(GLOB sources src/[a-z]*.cpp)
-#file(GLOB public_headers include/[a-z]*.h)
-#file(GLOB private_headers src/[a-z]*.h)
-#message(STATUS "sources: ${sources}")
-#message(STATUS "public_headers: ${public_headers}")
-#message(STATUS "private_headers: ${private_headers}")
-set(sources "src/pinproc.cpp;src/PRDevice.cpp;src/PRHardware.cpp")
-set(public_headers "include/pinproc.h")
-set(private_headers "src/PRCommon.h;src/PRDevice.h;src/PRHardware.h")
+file(GLOB sources "src/[a-zA-Z]*.cpp")
+file(GLOB public_headers "include/[a-zA-Z]*.h")
+file(GLOB private_headers "src/[a-zA-Z]*.h")
+
+if(WIN32)
+	if(BUILD_SHARED_LIBS)
+		set(defs
+			src/pinproc.def
+		)
+	endif()
+endif()
+
+if(VERBOSE)
+	message(STATUS "sources: ${sources}")
+	message(STATUS "public_headers: ${public_headers}")
+	message(STATUS "private_headers: ${private_headers}")
+	message(STATUS "defs: ${defs}")
+endif()
 
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
@@ -70,7 +86,9 @@ else()
 endif()
 
 if(APPLE)
-#	set(CMAKE_OSX_ARCHITECTURES ppc;i386)	# Uncomment for universal binary
+	if(APPLE_UNIVERSAL_BIN)
+		set(CMAKE_OSX_ARCHITECTURES ppc;i386)
+	endif()
 endif()
 
 if(WIN32)
@@ -78,15 +96,19 @@ if(WIN32)
 	if(BUILD_SHARED_LIBS)
 		add_definitions(-D${PROJECT_NAME}_DLL)	# use or build Windows DLL
 	endif()
+	if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+		set(CMAKE_INSTALL_PREFIX "C:/")
+	endif()
 else()
 	set(lib_ftdi_usb usb ftdi)
 endif()
 
-# GCC / MINGW specialities
+# GCC specialities
 if(CMAKE_COMPILER_IS_GNUCC)
 	if(WIN32)
 		set(CMAKE_SHARED_LIBRARY_PREFIX "")	# DLLs do not have a "lib" prefix
 		set(CMAKE_IMPORT_LIBRARY_PREFIX "")	# same for DLL import libs
+		set(CMAKE_LINK_DEF_FILE_FLAG "")	# CMake workaround (2.8.3)
 	endif()
 endif()
 
@@ -104,7 +126,7 @@ if(MSVC)
 		if(MSVC_STHREADED_RT)	# User wants to have old single-threaded static runtime libraries
 			set(LIB_RT_SUFFIX "ml")
 			set(LIB_RT_OPTION "/ML")
-			if(NOT MSVC_VERSION LESS 1400)
+			if(NOT ${MSVC_VERSION} LESS 1400)
 				message(FATAL_ERROR "Single-threaded static runtime libraries (/ML) only available until VS .NET 2003 (7.1).")
 			endif()
 		else()
@@ -116,7 +138,7 @@ if(MSVC)
 		foreach(flag_var  CMAKE_C_FLAGS  CMAKE_CXX_FLAGS)
 			foreach(config_name  ""  DEBUG  RELEASE  MINSIZEREL  RELWITHDEBINFO)
 				set(var_name "${flag_var}")
-				if(config_name)
+				if(NOT "${config_name}" STREQUAL "")
 					set(var_name "${var_name}_${config_name}")
 				endif()
 				string(REPLACE "/MD" "${LIB_RT_OPTION}" ${var_name} "${${var_name}}")
@@ -168,6 +190,7 @@ add_library(pinproc
 	${sources}
 	${public_headers}
 	${private_headers}
+	${defs}
 )
 
 set_target_properties(pinproc PROPERTIES
@@ -210,7 +233,8 @@ endif()
 ###
 if(PINPROC_BUILD_TOOLS)
 # Create a target for the test tool
-#TODO: use add_subdirectory() and separate CMakeLists.txt (see yaml-cpp)
+#TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)
+#      see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#command:add_subdirectory
 add_executable(pinproctest
 	examples/pinproctest/pinproctest.cpp
 	examples/pinproctest/drivers.cpp
@@ -225,7 +249,8 @@ target_link_libraries(pinproctest
 )
 
 # Create a target for the firmware tool
-#TODO: use add_subdirectory() and separate CMakeLists.txt (see yaml-cpp)
+#TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)
+#      see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#command:add_subdirectory
 add_executable(pinprocfw
 	utils/pinprocfw/pinprocfw.cpp
 	utils/pinprocfw/lenval.cpp
