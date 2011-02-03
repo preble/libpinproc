@@ -1271,7 +1271,7 @@ int xsvfDoXSIR2( SXsvfInfo* pXsvfInfo )
     readVal( &(pXsvfInfo->lvTdi), 2 );
     lShiftIrBits    = value( &(pXsvfInfo->lvTdi) );
     sShiftIrBytes   = xsvfGetAsNumBytes( lShiftIrBits );
-    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %d\n", (int)lShiftIrBits);
+    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %ld\n", lShiftIrBits);
 
     if ( sShiftIrBytes > MAX_LEN )
     {

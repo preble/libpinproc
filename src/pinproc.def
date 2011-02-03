@@ -1,0 +1,52 @@
+LIBRARY "pinproc.dll"
+
+DESCRIPTION "PinPROC library. See http://www.pinballcontrollers.com/"
+
+EXPORTS
+; since API/SO version 0.9
+	PRCreate                         @1
+	PRDMDDraw                        @2
+	PRDMDUpdateConfig                @3
+	PRDecode                         @4
+	PRDelete                         @5
+	PRDriverAuxPrepareDelay          @6
+	PRDriverAuxPrepareDisable        @7
+	PRDriverAuxPrepareJump           @8
+	PRDriverAuxPrepareOutput         @9
+	PRDriverAuxSendCommands          @10
+	PRDriverDisable                  @11
+	PRDriverGetGroupConfig           @12
+	PRDriverGetState                 @13
+	PRDriverGroupDisable             @14
+	PRDriverGroupStateDisable        @15
+	PRDriverLoadMachineTypeDefaults  @16
+	PRDriverPatter                   @17
+	PRDriverPulse                    @18
+	PRDriverPulsedPatter             @19
+	PRDriverSchedule                 @20
+	PRDriverStateDisable             @21
+	PRDriverStatePatter              @22
+	PRDriverStatePulse               @23
+	PRDriverStatePulsedPatter        @24
+	PRDriverStateSchedule            @25
+	PRDriverUpdateGlobalConfig       @26
+	PRDriverUpdateGroupConfig        @27
+	PRDriverUpdateState              @28
+	PRDriverWatchdogTickle           @29
+	PRFlushWriteData                 @30
+	PRGetEvents                      @31
+	PRGetLastErrorText               @32
+	PRJTAGDriveOutputs               @33
+	PRJTAGGetStatus                  @34
+	PRJTAGReadTDIMemory              @35
+	PRJTAGShiftTDOData               @36
+	PRJTAGWriteTDOMemory             @37
+	PRLogSetCallback                 @38
+	PRLogSetLevel                    @39
+	PRManagerUpdateConfig            @40
+	PRReadData                       @41
+	PRReset                          @42
+	PRSwitchGetStates                @43
+	PRSwitchUpdateConfig             @44
+	PRSwitchUpdateRule               @45
+	PRWriteData                      @46

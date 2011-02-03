@@ -81,7 +81,7 @@ void PRSetLastErrorText(const char *format, ...)
     PRLog(kPRLogError, "%s\n", lastErrorText);
 }
 
-PR_EXPORT const char *PRGetLastErrorText()
+const char *PRGetLastErrorText()
 {
     return lastErrorText;
 }
@@ -89,7 +89,7 @@ PR_EXPORT const char *PRGetLastErrorText()
 #define handleAsDevice ((PRDevice*)handle)
 
 /** Create a new P-ROC device handle.  Only one handle per device may be created. This handle must be destroyed with PRDelete() when it is no longer needed. */
-PR_EXPORT PRHandle PRCreate(PRMachineType machineType)
+PRHandle PRCreate(PRMachineType machineType)
 {
     PRDevice *device = PRDevice::Create(machineType);
     if (device == NULL)
@@ -98,14 +98,14 @@ PR_EXPORT PRHandle PRCreate(PRMachineType machineType)
         return device;
 }
 /** Destroys an existing P-ROC device handle. */
-PR_EXPORT void PRDelete(PRHandle handle)
+void PRDelete(PRHandle handle)
 {
     if (handle != kPRHandleInvalid)
         delete (PRDevice*)handle;
 }
 
 /** Resets internally maintained driver and switch rule structures and optionally writes those to the P-ROC device. */
-PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
+PRResult PRReset(PRHandle handle, uint32_t resetFlags)
 {
     return handleAsDevice->Reset(resetFlags);
 }
@@ -113,19 +113,19 @@ PR_EXPORT PRResult PRReset(PRHandle handle, uint32_t resetFlags)
 // I/O
 
 /** Flush all pending write data out to the P-ROC */
-PR_EXPORT PRResult PRFlushWriteData(PRHandle handle)
+PRResult PRFlushWriteData(PRHandle handle)
 {
     return handleAsDevice->FlushWriteData();
 }
 
 /** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData */
-PR_EXPORT PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
 {
     return handleAsDevice->WriteDataRaw(moduleSelect, startingAddr, numWriteWords, writeBuffer);
 }
 
 /** Read data from the P-ROC. */
-PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
+PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
 {
     return handleAsDevice->ReadDataRaw(moduleSelect, startingAddr, numReadWords, readBuffer);
 }
@@ -133,45 +133,45 @@ PR_EXPORT PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t s
 // Events
 
 /** Get all of the available events that have been received. */
-PR_EXPORT int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
+int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents)
 {
     return handleAsDevice->GetEvents(eventsOut, maxEvents);
 }
 
 // Manager
-PR_EXPORT PRResult PRManagerUpdateConfig(PRHandle handle, PRManagerConfig *managerConfig)
+PRResult PRManagerUpdateConfig(PRHandle handle, PRManagerConfig *managerConfig)
 {
     return handleAsDevice->ManagerUpdateConfig(managerConfig);
 }
 
 // Drivers
-PR_EXPORT PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
+PRResult PRDriverUpdateGlobalConfig(PRHandle handle, PRDriverGlobalConfig *driverGlobalConfig)
 {
     return handleAsDevice->DriverUpdateGlobalConfig(driverGlobalConfig);
 }
-PR_EXPORT PRResult PRDriverGetGroupConfig(PRHandle handle, uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig)
+PRResult PRDriverGetGroupConfig(PRHandle handle, uint8_t groupNum, PRDriverGroupConfig *driverGroupConfig)
 {
     return handleAsDevice->DriverGetGroupConfig(groupNum, driverGroupConfig);
 }
-PR_EXPORT PRResult PRDriverUpdateGroupConfig(PRHandle handle, PRDriverGroupConfig *driverGroupConfig)
+PRResult PRDriverUpdateGroupConfig(PRHandle handle, PRDriverGroupConfig *driverGroupConfig)
 {
     return handleAsDevice->DriverUpdateGroupConfig(driverGroupConfig);
 }
-PR_EXPORT PRResult PRDriverGetState(PRHandle handle, uint8_t driverNum, PRDriverState *driverState)
+PRResult PRDriverGetState(PRHandle handle, uint8_t driverNum, PRDriverState *driverState)
 {
     return handleAsDevice->DriverGetState(driverNum, driverState);
 }
-PR_EXPORT PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverState)
+PRResult PRDriverUpdateState(PRHandle handle, PRDriverState *driverState)
 {
     return handleAsDevice->DriverUpdateState(driverState);
 }
-PR_EXPORT PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineType machineType)
+PRResult PRDriverLoadMachineTypeDefaults(PRHandle handle, PRMachineType machineType)
 {
     return handleAsDevice->DriverLoadMachineTypeDefaults(machineType);
 }
 
 // Driver Group Helper functions:
-PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum)
+PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum)
 {
     PRDriverGroupConfig driverGroup;
     handleAsDevice->DriverGetGroupConfig(groupNum, &driverGroup);
@@ -179,47 +179,47 @@ PR_EXPORT PRResult PRDriverGroupDisable(PRHandle handle, uint8_t groupNum)
     return handleAsDevice->DriverUpdateGroupConfig(&driverGroup);
 }
 // Driver Helper functions:
-PR_EXPORT PRResult PRDriverDisable(PRHandle handle, uint8_t driverNum)
+PRResult PRDriverDisable(PRHandle handle, uint8_t driverNum)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStateDisable(&driver);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds)
+PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStatePulse(&driver, milliseconds);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
+PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStateSchedule(&driver, schedule, cycleSeconds, now);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
+PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t duration)
+PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t duration)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
     PRDriverStatePulsedPatter(&driver, millisecondsOn, millisecondsOff, duration);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PR_EXPORT PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
+PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
 {
     return handleAsDevice->DriverAuxSendCommands(commands, numCommands, startingAddr);
 }
 
-PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables, uint16_t delayTime)
+void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t data, uint8_t extraData, uint8_t enables, bool_t muxEnables, uint16_t delayTime)
 {
     auxCommand->active = true;
     auxCommand->data = data;
@@ -230,7 +230,7 @@ PR_EXPORT void PRDriverAuxPrepareOutput(PRDriverAuxCommand *auxCommand, uint8_t 
     auxCommand->delayTime = delayTime;
 }
 
-PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t delayTime)
+void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t delayTime)
 {
     auxCommand->active = true;
     auxCommand->delayTime = delayTime;
@@ -241,7 +241,7 @@ PR_EXPORT void PRDriverAuxPrepareDelay(PRDriverAuxCommand *auxCommand, uint16_t 
     auxCommand->muxEnables = false;
 }
 
-PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t jumpAddr)
+void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t jumpAddr)
 {
     auxCommand->active = true;
     auxCommand->jumpAddr = jumpAddr;
@@ -252,7 +252,7 @@ PR_EXPORT void PRDriverAuxPrepareJump(PRDriverAuxCommand *auxCommand, uint8_t ju
     auxCommand->muxEnables = false;
 }
 
-PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand)
+void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand)
 {
     auxCommand->active = false;
     auxCommand->data = 0;
@@ -261,16 +261,16 @@ PR_EXPORT void PRDriverAuxPrepareDisable(PRDriverAuxCommand *auxCommand)
     auxCommand->muxEnables = false;
 }
 
-PR_EXPORT PRResult PRDriverWatchdogTickle(PRHandle handle)
+PRResult PRDriverWatchdogTickle(PRHandle handle)
 {
     return handleAsDevice->DriverWatchdogTickle();
 }
 
-PR_EXPORT void PRDriverGroupStateDisable(PRDriverGroupConfig *driverGroup)
+void PRDriverGroupStateDisable(PRDriverGroupConfig *driverGroup)
 {
     driverGroup->active = false;
 }
-PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
+void PRDriverStateDisable(PRDriverState *driver)
 {
     driver->state = 0;
     driver->timeslots = 0;
@@ -280,7 +280,7 @@ PR_EXPORT void PRDriverStateDisable(PRDriverState *driver)
     driver->patterOffTime = 0;
     driver->patterEnable = false;
 }
-PR_EXPORT void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
+void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
 {
     driver->state = 1;
     driver->timeslots = 0;
@@ -290,7 +290,7 @@ PR_EXPORT void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
     driver->patterOffTime = 0;
     driver->patterEnable = false;
 }
-PR_EXPORT void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
+void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
     driver->state = 1;
     driver->timeslots = schedule;
@@ -300,7 +300,7 @@ PR_EXPORT void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, u
     driver->patterOffTime = 0;
     driver->patterEnable = false;
 }
-PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
+void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
 {
     driver->state = true;
     driver->timeslots = 0;
@@ -311,7 +311,7 @@ PR_EXPORT void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn
     driver->patterEnable = true;
 }
 
-PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime)
+void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime)
 {
     driver->state = false;
     driver->timeslots = 0;
@@ -322,7 +322,7 @@ PR_EXPORT void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisec
     driver->patterEnable = true;
 }
 
-PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
+uint16_t PRDecode(PRMachineType machineType, const char *str)
 {
     uint16_t x;
 
@@ -492,55 +492,55 @@ PR_EXPORT uint16_t PRDecode(PRMachineType machineType, const char *str)
 
 // Switches
 
-PR_EXPORT PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig)
+PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig)
 {
     return handleAsDevice->SwitchUpdateConfig(switchConfig);
 }
 
-PR_EXPORT PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
 {
     return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
 }
 
-PR_EXPORT PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches)
+PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches)
 {
     return handleAsDevice->SwitchGetStates(switchStates, numSwitches);
 }
 
 // DMD
 
-PR_EXPORT int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)
+int32_t PRDMDUpdateConfig(PRHandle handle, PRDMDConfig *dmdConfig)
 {
     return handleAsDevice->DMDUpdateConfig(dmdConfig);
 }
-PR_EXPORT PRResult PRDMDDraw(PRHandle handle, uint8_t * dots)
+PRResult PRDMDDraw(PRHandle handle, uint8_t * dots)
 {
     return handleAsDevice->DMDDraw(dots);
 }
 
 // JTAG
 
-PR_EXPORT PRResult PRJTAGDriveOutputs(PRHandle handle, PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
+PRResult PRJTAGDriveOutputs(PRHandle handle, PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
 {
     return handleAsDevice->PRJTAGDriveOutputs(jtagOutputs, toggleClk);
 }
 
-PR_EXPORT PRResult PRJTAGWriteTDOMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData)
+PRResult PRJTAGWriteTDOMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdoData)
 {
     return handleAsDevice->PRJTAGWriteTDOMemory(tableOffset, numWords, tdoData);
 }
 
-PR_EXPORT PRResult PRJTAGShiftTDOData(PRHandle handle, uint16_t numBits, bool_t dataBlockComplete)
+PRResult PRJTAGShiftTDOData(PRHandle handle, uint16_t numBits, bool_t dataBlockComplete)
 {
     return handleAsDevice->PRJTAGShiftTDOData(numBits, dataBlockComplete);
 }
 
-PR_EXPORT PRResult PRJTAGReadTDIMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData)
+PRResult PRJTAGReadTDIMemory(PRHandle handle, uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData)
 {
     return handleAsDevice->PRJTAGReadTDIMemory(tableOffset, numWords, tdiData);
 }
 
-PR_EXPORT PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status)
+PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status)
 {
     return handleAsDevice->PRJTAGGetStatus(status);
 }
