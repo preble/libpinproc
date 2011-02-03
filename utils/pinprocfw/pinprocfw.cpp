@@ -306,7 +306,7 @@ TXsvfDoCmdFuncPtr   xsvf_pfDoCmd[]  =
 };
 
 #ifdef  DEBUG_MODE
-    char* xsvf_pzCommandName[]  =
+    const char* xsvf_pzCommandName[]  =
     {
         "XCOMPLETE",
         "XTDOMASK",
@@ -334,7 +334,7 @@ TXsvfDoCmdFuncPtr   xsvf_pfDoCmd[]  =
         "XWAIT"
     };
 
-    char*   xsvf_pzErrorName[]  =
+    const char*   xsvf_pzErrorName[]  =
     {
         "No error",
         "ERROR:  Unknown",
@@ -345,7 +345,7 @@ TXsvfDoCmdFuncPtr   xsvf_pfDoCmd[]  =
         "ERROR:  Data overflows allocated MAX_LEN buffer size"
     };
 
-    char*   xsvf_pzTapState[] =
+    const char*   xsvf_pzTapState[] =
     {
         "RESET",        /* 0x00 */
         "RUNTEST/IDLE", /* 0x01 */
@@ -411,7 +411,7 @@ void xsvfPrintLenVal( lenVal *plv )
 int xsvfInfoInit( SXsvfInfo* pXsvfInfo )
 {
     XSVFDBG_PRINTF1( 4, "    sizeof( SXsvfInfo ) = %d bytes\n",
-                     sizeof( SXsvfInfo ) );
+                     (int)sizeof( SXsvfInfo ) );
 
     pXsvfInfo->ucComplete       = 0;
     pXsvfInfo->ucCommand        = XCOMPLETE;
@@ -489,7 +489,7 @@ void setPort(short p,short val)
     if (p==TCK) {
         g_iTCK = val;
     }
-    uint32_t buffer[1];
+    //unused: uint32_t buffer[1];
     
     // Set up the data and mask bits depending on which bit is being changed.
     jtagOutputs.tckMask = p==TCK;
@@ -812,11 +812,11 @@ void xsvfShiftOnly( long    lNumBits,
 {
     unsigned char*  pucTdi;
     unsigned char*  pucTdo;
-    unsigned char   ucTdiByte;
-    unsigned char   ucTdoByte;
-    unsigned char   ucTdoBit;
+    //unused: unsigned char   ucTdiByte;
+    //unused: unsigned char   ucTdoByte;
+    //unused: unsigned char   ucTdoBit;
     int             i;
-    int             byteCtr;
+    //unused: int             byteCtr;
     uint32_t        dataBuffer[512];
     uint32_t        tempWord1 = 0, tempWord2 = 0; 
     int             numBytes, numWords;
@@ -1271,7 +1271,7 @@ int xsvfDoXSIR2( SXsvfInfo* pXsvfInfo )
     readVal( &(pXsvfInfo->lvTdi), 2 );
     lShiftIrBits    = value( &(pXsvfInfo->lvTdi) );
     sShiftIrBytes   = xsvfGetAsNumBytes( lShiftIrBits );
-    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %d\n", lShiftIrBits);
+    XSVFDBG_PRINTF1( 3, "   XSIR2 length = %d\n", (int)lShiftIrBits);
 
     if ( sShiftIrBytes > MAX_LEN )
     {
