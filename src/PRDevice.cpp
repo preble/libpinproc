@@ -671,11 +671,11 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 newRule->notifyHost = rule->notifyHost;
                 newRule->reloadActive = rule->reloadActive;
                 newRule->changeOutput = true;
+                newRule->driver = linkedDrivers[0];
                 if (totalNumDrivers > 1)
                 {
                     newRule->linkActive = true;
                     newRule->linkIndex = savedRuleIndex;
-                    newRule->driver = linkedDrivers[0];
                 }
                 else newRule->linkActive = false;
                 CreateSwitchUpdateRulesBurst(burst, newRule, drive_outputs_now);
