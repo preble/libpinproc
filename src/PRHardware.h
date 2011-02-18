@@ -206,6 +206,7 @@ const uint32_t P_ROC_SWITCH_CONFIG_INACTIVE_PULSES_AFTER_BURST_SHIFT = 12;
 const uint32_t P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT            = 6;
 const uint32_t P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT    = 0;
 
+const uint32_t P_ROC_SWITCH_RULE_DRIVE_OUTPUTS_NOW    = 13;
 const uint32_t P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT   = 9;
 const uint32_t P_ROC_SWITCH_RULE_NUM_STATE_SHIFT      = 8;
 const uint32_t P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT = 0;
@@ -262,11 +263,11 @@ int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
 int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config);
 
 int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switchConfig);
-int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record);
+int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record, bool_t drive_outputs_now);
 
 void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *eventType);
 int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType);
-int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType);
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType, bool_t drive_outputs_now);
 
 int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
 int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);

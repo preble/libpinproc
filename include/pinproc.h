@@ -461,7 +461,7 @@ PINPROC_API PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switc
  * @param linkedDrivers An array of #PRDriverState structures describing the driver state changes to be made when this switch rule is triggered.  May be NULL if numDrivers is 0.
  * @param numDrivers Number of elements in the linkedDrivers array.  May be zero or more.
  */
-PINPROC_API PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers);
+PINPROC_API PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers, bool_t drive_outputs_now);
 
 /** Returns a list of PREventTypes describing the states of the requested number of switches  */
 PINPROC_API PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches);

@@ -237,10 +237,11 @@ int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType)
     return index;
 }
 
-int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType) 
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType, bool_t drive_outputs_now) 
 {
     uint16_t number = CreateSwitchRuleIndex( switchNum, eventType );
-    uint32_t addr = number << P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT;
+    uint32_t addr = (number << P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT) |
+                    (drive_outputs_now << P_ROC_SWITCH_RULE_DRIVE_OUTPUTS_NOW);
     return addr;
 }
 
@@ -256,8 +257,8 @@ void ParseSwitchRuleIndex(uint16_t index, uint8_t *switchNum, PREventType *event
         *eventType = debounce ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchClosedNondebounced;
 }
 
-int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record) {
-    uint32_t addr = CreateSwitchRuleAddr(rule_record->switchNum, rule_record->eventType);
+int32_t CreateSwitchUpdateRulesBurst ( uint32_t * burst, PRSwitchRuleInternal *rule_record, bool_t drive_outputs_now) {
+    uint32_t addr = CreateSwitchRuleAddr(rule_record->switchNum, rule_record->eventType, drive_outputs_now);
     uint32_t driver_command[3];
 
     CreateDriverUpdateBurst ( driver_command, &(rule_record->driver));

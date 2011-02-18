@@ -367,9 +367,11 @@ TXsvfDoCmdFuncPtr   xsvf_pfDoCmd[]  =
 #endif  /* DEBUG_MODE */
 
 #ifdef DEBUG_MODE
-    FILE* in;   /* Legacy DEBUG_MODE file pointer */
     int xsvf_iDebugLevel;
 #endif /* DEBUG_MODE */
+FILE* in; 
+long int numBytesTotal;
+long int numBytesCurrent;
 PRHandle proc;
 static int  g_iTCK = 0; /* For xapp058_example .exe */
 static int  g_iTMS = 0; /* For xapp058_example .exe */
@@ -520,8 +522,23 @@ void pulseClock()
 
 void readByte(unsigned char *data)
 {
+    if (numBytesCurrent == 0) {
+        printf("\nProgress:\n0%%  ");
+        fflush(stdout);
+    }
     // read in a byte of data from the xsvf file
     *data   = (unsigned char)fgetc( in );
+    long int bytesPerTenth = numBytesTotal / 10;
+    long int bytesPer200th = numBytesTotal / 200;
+    numBytesCurrent++;
+    if (numBytesCurrent % bytesPerTenth == 0) {
+        printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
+        fflush(stdout);
+    }
+    else if (numBytesCurrent % bytesPer200th == 0) {
+        printf(".");
+        fflush(stdout);
+    }
 }
 
 unsigned char readTDOBit()
@@ -1927,6 +1944,12 @@ int main( int argc, char** argv )
         }
         else
         {
+
+            fseek(in, 0L, SEEK_END);
+            numBytesTotal = ftell(in);
+            fseek(in, 0L, SEEK_SET);
+            numBytesCurrent = 0;
+
             // Instantiate the P-ROC device:
             XSVFDBG_PRINTF( 1, "Opening P-ROC.\n");
             proc = PRCreate(machineType);

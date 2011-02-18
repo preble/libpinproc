@@ -497,9 +497,9 @@ PRResult PRSwitchUpdateConfig(PRHandle handle, PRSwitchConfig *switchConfig)
     return handleAsDevice->SwitchUpdateConfig(switchConfig);
 }
 
-PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRSwitchUpdateRule(PRHandle handle, uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers, bool_t drive_outputs_now)
 {
-    return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers);
+    return handleAsDevice->SwitchUpdateRule(switchNum, eventType, rule, linkedDrivers, numDrivers, drive_outputs_now);
 }
 
 PRResult PRSwitchGetStates(PRHandle handle, PREventType * switchStates, uint16_t numSwitches)

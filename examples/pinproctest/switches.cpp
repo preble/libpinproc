@@ -57,8 +57,8 @@ void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
         PRSwitchRule sw;
         sw.notifyHost = true;
         sw.reloadActive = false;
-        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
-        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
+        PRSwitchUpdateRule(proc, i, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0, false);
     }
 }
 
@@ -75,10 +75,10 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverStatePulse(&drivers[1],0);  // Turn on indefintely (set pulse for 0ms)
     sw.notifyHost = false;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules, true);
     sw.notifyHost = true;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
     
     // Flipper off rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
@@ -87,10 +87,10 @@ void ConfigureWPCFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, i
     PRDriverStateDisable(&drivers[1]); // Disable hold coil
     sw.notifyHost = false;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules, true);
     sw.notifyHost = true;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0, false);
 }
 
 void ConfigureSternFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum, int pulseTime, int patterOnTime, int patterOffTime)
@@ -105,20 +105,20 @@ void ConfigureSternFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum,
     PRDriverStatePatter(&drivers[0],patterOnTime,patterOffTime,pulseTime); // Pulse coil for 34ms.
     sw.notifyHost = false;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules, true);
     sw.notifyHost = true;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
     
     // Flipper off rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
     PRDriverStateDisable(&drivers[0]); // Disable main coil
     sw.notifyHost = false;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenNondebounced, &sw, drivers, numDriverRules, true);
     sw.notifyHost = true;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchOpenDebounced, &sw, NULL, 0, false);
 }
 
 void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
@@ -131,10 +131,10 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     PRDriverStatePulse(&drivers[0],pulseTime); // Pulse coil for 34ms.
     sw.reloadActive = true;
     sw.notifyHost = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules, true);
     sw.notifyHost = true;
     sw.reloadActive = false;
-    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0);
+    PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
 }
 
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)

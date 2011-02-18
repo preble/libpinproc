@@ -149,10 +149,10 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
         // Send blank rule for each event type to Device if necessary
         if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) 
         {
-            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0);
-            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0);
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0, false);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0, false);
+            SwitchUpdateRule(i, kPREventTypeSwitchOpenNondebounced, &emptySwitchRule, NULL, 0, false);
+            SwitchUpdateRule(i, kPREventTypeSwitchClosedNondebounced, &emptySwitchRule, NULL, 0, false);
         }
     }
 
@@ -580,7 +580,7 @@ PRResult PRDevice::SwitchUpdateConfig(PRSwitchConfig *switchConfig)
     return rc;
 }
 
-PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers)
+PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PRSwitchRule *rule, PRDriverState *linkedDrivers, int numDrivers, bool_t drive_outputs_now )
 {
     // Updates a single rule with the associated linked driver state changes.
     const int burstSize = 4;
@@ -621,52 +621,76 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
         }
     }
     
-    // Now let's setup the first actual rule:
-    uint16_t firstRuleIndex = newRuleIndex;
-    PRSwitchRuleInternal *newRule = GetSwitchRuleByIndex(newRuleIndex);
-    if (newRule->eventType != eventType) {
-        DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
-    }
-    newRule->notifyHost = rule->notifyHost;
-    newRule->reloadActive = rule->reloadActive;
-    newRule->changeOutput = false;
-    newRule->linkActive = false;
+    // Create a pointer for new rules.
+    PRSwitchRuleInternal *newRule;
     
     // Process each driver who's state should change in response to the switch event.
     if (numDrivers > 0) 
     {
+        uint32_t ruleIndex, savedRuleIndex;
+
+        // Need to program the main rule last just in case drive_outputs_now is true.
+        // Otherwise, the hardware could try to access the linked rules before they're
+        // programmed.  So, program the rules in reverse order.
+       
+        // Move to last driver
+        linkedDrivers += (numDrivers - 1); 
+        int totalNumDrivers = numDrivers;
+         
         while (numDrivers > 0)
         {
-            newRule->changeOutput = true;
-            newRule->driver = linkedDrivers[0];
-            
             if (numDrivers > 1)
             {
-                newRule->linkActive = true;
-                newRule->linkIndex = freeSwitchRuleIndexes.front(); 
+                ruleIndex = freeSwitchRuleIndexes.front(); 
                 freeSwitchRuleIndexes.pop();
-                
-                CreateSwitchUpdateRulesBurst(burst, newRule);
-                
-                // Prepare for the next rule:
-                newRule = GetSwitchRuleByIndex(newRule->linkIndex);
+                newRule = GetSwitchRuleByIndex(ruleIndex);
+                newRule->driver = linkedDrivers[0];
+                newRule->changeOutput = true;
+
+                if (totalNumDrivers == numDrivers) newRule->linkActive = false;
+                else
+                {
+                    newRule->linkActive = true;
+                    newRule->linkIndex = savedRuleIndex;
+                }
+
+                savedRuleIndex = ruleIndex;
+                // Set the 3rd param (drive_outputs_now) to false to keep the hardware
+                // from evaluating the state of the rule index and possibly activating the
+                // driver.  The evaluation will happen later when the primary rule is
+                // written.
+                CreateSwitchUpdateRulesBurst(burst, newRule, false);
             }
             else
             {
-                newRule->linkActive = false;
-                CreateSwitchUpdateRulesBurst(burst, newRule);
+                // This is the primary rule.
+                newRule = GetSwitchRuleByIndex(newRuleIndex);
+                if (newRule->eventType != eventType) {
+                    DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
+                }
+                newRule->notifyHost = rule->notifyHost;
+                newRule->reloadActive = rule->reloadActive;
+                newRule->changeOutput = true;
+                if (totalNumDrivers > 1)
+                {
+                    newRule->linkActive = true;
+                    newRule->linkIndex = savedRuleIndex;
+                    newRule->driver = linkedDrivers[0];
+                }
+                else newRule->linkActive = false;
+                CreateSwitchUpdateRulesBurst(burst, newRule, drive_outputs_now);
             }
-            
+
             DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
             // Write the rule:
             res = PrepareWriteData(burst, burstSize);
             if (res != kPRSuccess)
             {
                 DEBUG(PRLog(kPRLogError, "Error while writing switch update, attempting to revert switch rule to a safe state..."));
-                newRule = GetSwitchRuleByIndex(firstRuleIndex);
+                newRule = GetSwitchRuleByIndex(newRuleIndex);
                 newRule->changeOutput = false;
                 newRule->linkActive = false;
-                CreateSwitchUpdateRulesBurst(burst, newRule);
+                CreateSwitchUpdateRulesBurst(burst, newRule, false);
                 if (PrepareWriteData(burst, burstSize) == kPRSuccess)
                     DEBUG(PRLog(kPRLogError, "Disabled successfully.\n"));
                 else
@@ -674,13 +698,21 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                 return res;
             }
             
-            linkedDrivers++;
+            linkedDrivers--;
             numDrivers--;
         }
     }
-    else 
-    {
-        CreateSwitchUpdateRulesBurst(burst, newRule);
+    else {
+        newRule = GetSwitchRuleByIndex(newRuleIndex);
+        if (newRule->eventType != eventType) {
+            DEBUG(PRLog(kPRLogWarning, "Unexpected state: switch rule at 0x%x has event type 0x%x (expected 0x%x).\n", newRuleIndex, newRule->eventType, eventType));
+        }
+        newRule->notifyHost = rule->notifyHost;
+        newRule->reloadActive = rule->reloadActive;
+        newRule->changeOutput = false;
+        newRule->linkActive = false;
+
+        CreateSwitchUpdateRulesBurst(burst, newRule, false);
         DEBUG(PRLog(kPRLogVerbose, "Rule Words: %x %x %x %x\n", burst[0],burst[1],burst[2],burst[3]));
 
         // Write the rule:
