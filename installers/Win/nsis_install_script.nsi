@@ -73,7 +73,9 @@ Section "MainSection" SEC01
   SetOutPath "$INSTDIR\bin"
   SetOverwrite ifnewer
   File "C:\P-ROC\libpinproc\bin\pinprocfw.exe"
-  File "C:\P-ROC\libpinproc\bin\ftd2xx.dll"
+  File "C:\P-ROC\Install\FTDI_2.08.12\i386\ftd2xx.dll"
+  File "C:\MinGW\bin\libgcc_s_dw2-1.dll"
+  File "C:\MinGW\bin\libstdc++-6.dll"
   SetOutPath "$INSTDIR\ext\python"
   SetOverwrite ifnewer
   File "C:\P-ROC\pypinproc\dist\pinproc-0.91.win32-py2.6.exe"
