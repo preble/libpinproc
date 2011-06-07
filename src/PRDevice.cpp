@@ -101,11 +101,6 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     collected_bytes_wr_addr = 0;
     num_collected_bytes = 0;
 
-    // Initialize Ver/Rev
-    version = 0;
-    revision = 0;
-    combinedVersionRevision = 0;
-
     // Make sure the data queues are empty.
     while (!unrequestedDataQueue.empty()) unrequestedDataQueue.pop();
     while (!requestedDataQueue.empty()) requestedDataQueue.pop();
@@ -343,6 +338,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     bool encodeEnables;
     int rowEnableSelect;
     int lastCoilDriverGroup;
+
     
     switch (machineType) 
     {
@@ -394,6 +390,13 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             lastCoilDriverGroup = lastSternCoilDriverGroup;
             break;
         }
+
+        default:
+            // Don't do anything for non-specific machine types.  Enabling
+            // drivers and/or groups could be dangerous, especially if polarities
+            // are wrong.
+            return kPRSuccess;
+
     }
     
     memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
@@ -738,8 +741,15 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     {
         rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
                          P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
-        rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
-                         P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+
+        if (combinedVersionRevision < P_ROC_VER_REV_FIXED_SWITCH_STATE_READS) {
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                             P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
+        }
+        else {
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                             P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+        }
     }
 
     // Expect 4 words for each 32 switches.  The state and debounce words, 
@@ -1037,6 +1047,7 @@ PRResult PRDevice::VerifyChipID()
             DEBUG(PRLog(kPRLogError, "FPGA Chip ID: 0x%x\n", buffer[1]));
             revision = buffer[2] & 0xffff;
             version = buffer[2] >> 16;
+            CalcCombinedVerRevision();
             DEBUG(PRLog(kPRLogError, "FPGA Chip Version/Rev: %d.%d\n", version, revision));
             DEBUG(PRLog(kPRLogInfo, "Watchdog Settings: 0x%x\n", buffer[3]));
             DEBUG(PRLog(kPRLogInfo, "Switches: 0x%x\n", buffer[4]));

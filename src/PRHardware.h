@@ -47,6 +47,8 @@ const uint32_t P_ROC_INIT_PATTERN_A         = 0x801F1122;
 const uint32_t P_ROC_INIT_PATTERN_B         = 0x345678AB;
 const uint32_t P_ROC_CHIP_ID                = 0xfeedbeef;
 
+const uint32_t P_ROC_VER_REV_FIXED_SWITCH_STATE_READS = 0x10013; // 1.19
+
 const uint32_t P_ROC_AUTO_STERN_DETECT_SHIFT     = 8;
 const uint32_t P_ROC_AUTO_STERN_DETECT_MASK      = 0x00000100;
 const uint32_t P_ROC_AUTO_STERN_DETECT_VALUE     = 0x1;
@@ -122,7 +124,8 @@ const uint32_t P_ROC_JTAG_TDO_MEMORY_BASE_ADDR             = 0x400;
 const uint32_t P_ROC_JTAG_TDI_MEMORY_BASE_ADDR             = 0x800;
 
 const uint32_t P_ROC_SWITCH_CTRL_STATE_BASE_ADDR           = 4;
-const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 11;
+const uint32_t P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR    = 11;
+const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 12;
 
 const uint32_t P_ROC_EVENT_TYPE_SWITCH                     = 0;
 const uint32_t P_ROC_EVENT_TYPE_DMD                        = 1;
