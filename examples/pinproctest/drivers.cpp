@@ -63,23 +63,28 @@
 // Address 2 : Sink-16
 // Address 3 : Source-sink-8
 // Address 4 : Source-sink-8
-    
-void ConfigureDrivers(PRHandle proc)
+
+
+    // First create individual driver records for each driver, and reset them to
+    // zero except for the polarity, which is set according to driverPolarity from
+    // above.  
+void InitializeDrivers(PRHandle proc, bool driverPolarity)
+{
+    int i;
+    for (i = 0; i < kPRDriverCount; i++)
+    {
+        PRDriverState driver;
+        memset(&driver, 0x00, sizeof(PRDriverState));
+        driver.driverNum = i;
+        driver.polarity = driverPolarity;
+        PRDriverUpdateState(proc, &driver);
+    }
+}
+
+void ConfigureDriverGroups(PRHandle proc, bool driverPolarity)
 {
     int i;
 
-
-    // First set up a bunch of constants to use later:
-
-    // The driverPolarity determines when the drivers go high or low when
-    // they are supposed to be active.  For the Driver Boards, this doesn't
-    // really matter, since they auto-detect polarity.  True seems to make
-    // more logical sense though.
-    const bool driverPolarity = true;
-
-    //const int WPCDriverLoopTime = 4; // milliseconds
-    //const int SternDriverLoopTime = 2; // milliseconds
-    
     // Each entry in the mappedDriverGroupEnableIndex is the enable line that 
     // will be asserted when the data belonging to the group is serviced.  
     // The enable line maps to a Driver Board and bank.  
@@ -126,27 +131,6 @@ void ConfigureDrivers(PRHandle proc)
     // in the matrixRowEnableIndex variables.
     const int mappedDriverGroupRowEnableSelect[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1};
     
-    // Set up the watchdog time for when the global settings are programmed.  1000
-    // means the drivers will disable automatically if the watchdog isn't updated
-    // for 1 second (1000ms).  This could happen if software crashes or if the USB
-    // cable is unplugged.
-    const int watchdogResetTime = 1000; // milliseconds
-    
-    // Now start actually programming thing in the P-ROC.
-
-    // First create individual driver records for each driver, and reset them to
-    // zero except for the polarity, which is set according to driverPolarity from
-    // above.  
-    for (i = 0; i < kPRDriverCount; i++)
-    {
-        PRDriverState driver;
-        memset(&driver, 0x00, sizeof(PRDriverState));
-        driver.driverNum = i;
-        driver.polarity = driverPolarity;
-        PRDriverUpdateState(proc, &driver);
-    }
-
-    // Now configure all of the groups.  
     for (i = 0; i <= kPRDriverGroupsMax; i++)
     {
         PRDriverGroupConfig group;
@@ -174,11 +158,17 @@ void ConfigureDrivers(PRHandle proc)
         
         PRDriverUpdateGroupConfig(proc, &group);
     }
+}
 
-
-    // Now set up the global driver parameters.
-
+void ConfigureDriverGlobals(PRHandle proc, bool driverPolarity)
+{
     PRDriverGlobalConfig globals;
+
+    // Set up the watchdog time for when the global settings are programmed.  1000
+    // means the drivers will disable automatically if the watchdog isn't updated
+    // for 1 second (1000ms).  This could happen if software crashes or if the USB
+    // cable is unplugged.
+    const int watchdogResetTime = 1000; // milliseconds
 
     // Start with outputs disabled so the P-ROC can initialize all of its
     // logic without actually driving anything.
@@ -228,6 +218,30 @@ void ConfigureDrivers(PRHandle proc)
     // resend the command.
     globals.enableOutputs = true;
     PRDriverUpdateGlobalConfig(proc, &globals);
+}
+    
+void ConfigureDrivers(PRHandle proc)
+{
+    int i;
+
+    // First set up a bunch of constants to use later:
+
+    // The driverPolarity determines when the drivers go high or low when
+    // they are supposed to be active.  For the Driver Boards, this doesn't
+    // really matter, since they auto-detect polarity.  True seems to make
+    // more logical sense though.
+    const bool driverPolarity = true;
+
+    // Now start actually programming thing in the P-ROC.
+
+    // First reset each individual driver.
+    InitializeDrivers(proc, driverPolarity);
+
+    // Now configure all of the groups.  
+    ConfigureDriverGroups(proc, driverPolarity);
+
+    // Now take care of the globals.
+    ConfigureDriverGlobals(proc, driverPolarity);
 
     // The P-ROC should now be configured to use our chain of Driver Boards. 
     // You can now change the outputs by issuing the normal PRDriver commands,
