@@ -204,6 +204,8 @@ int main(int argc, const char **argv)
         machineType = kPRMachineSternWhitestar;
     else if(machineTypeString == "sternSAM")
         machineType = kPRMachineSternSAM;
+    else if(machineTypeString == "custom")
+        machineType = kPRMachineCustom;
     else
     {
         fprintf(stderr, "Unknown machine type: %s\n", machineTypeString.c_str());
@@ -224,6 +226,7 @@ int main(int argc, const char **argv)
     // Even if WPCAlphanumeric, configure the DMD at least to get frame events for
     // timing purposes.
     ConfigureDMD(proc); 
+    if (machineType == kPRMachineCustom) ConfigureDrivers(proc);
     ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
     ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
 

@@ -70,7 +70,7 @@
 #define kDMDSubFrames (4) // For color depth of 16
 #define kDMDFrameBuffers (3) // 3 is the max
 
-void ConfigureDrivers(PRHandle proc, PRMachineType machineType, YAML::Node& yamlDoc);
+void ConfigureDrivers(PRHandle proc);
 
 void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc);
 void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc);
