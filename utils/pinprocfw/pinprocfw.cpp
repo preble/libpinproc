@@ -1930,10 +1930,12 @@ int checkPROCFile() {
     unsigned char data;
     int i=0,file_i=0;
     int min_board_rev, max_board_rev;
-    int temp, num_header_words;
+    int temp, num_header_words, proc_file_version;
 
     if (!fscanf(in, "%x\n", &temp)) return 0;
     num_header_words = (int)(0x012345678 - temp);
+    if (!fscanf(in, "%x\n", &temp)) return 0;
+    proc_file_version = (int)(-1 - temp);
     if (!fscanf(in, "%x\n", &temp)) return 0;
     file_i = (int)(-1 - temp);
     //fprintf(stderr, "\nbyte count: %d, %x", file_i, temp);
@@ -1961,6 +1963,11 @@ int checkPROCFile() {
                 (board_rev & 0x40) >> 5 |
                 (board_rev & 0x20) >> 3 |
                 (board_rev & 0x10) >> 1;
+
+    if (proc_file_version != 0) {
+        fprintf(stderr, "\nERROR: Invalid .p-roc file.");
+        return 0;
+    }
 
     // Check for valid board ID and rev
     if (board_id != file_board_id) {
@@ -2072,11 +2079,11 @@ int main( int argc, char** argv )
         // Check for .p-roc file
         if (strstr(pzXsvfFileName, ".p-roc")) {
 
-            fprintf(stderr, "\nP-ROC file format detected\n");
+            fprintf(stderr, "\nP-ROC file format detected\n.");
 
             in = fopen( pzXsvfFileName, "rb" );
             if ( !in ) {
-                fprintf(stderr, "ERROR:  Cannot open file %s\n", pzXsvfFileName );
+                fprintf(stderr, "ERROR:  Cannot open file %s\n.", pzXsvfFileName );
                 iErrorCode  = XSVF_ERRORCODE( XSVF_ERROR_UNKNOWN );
             }
             else {
@@ -2096,10 +2103,10 @@ int main( int argc, char** argv )
         }
         // Check for .p-roc file
         else if (strstr(pzXsvfFileName, ".xsvf")) {
-            fprintf(stderr, "\nXSVF file format detected\n");
+            fprintf(stderr, "\nXSVF file format detected.\n");
             in = fopen( pzXsvfFileName, "rb" );
             if ( !in ) {
-                fprintf(stderr, "ERROR:  Cannot open file %s\n", pzXsvfFileName );
+                fprintf(stderr, "ERROR:  Cannot open file %s\n.", pzXsvfFileName );
                 iErrorCode  = XSVF_ERRORCODE( XSVF_ERROR_UNKNOWN );
             }
             else {
@@ -2112,8 +2119,8 @@ int main( int argc, char** argv )
             }
         }
         else {
-            fprintf(stderr, "\nUnsupported file format.");
-            printUsage(argv[5]);
+            fprintf(stderr, "\nERROR: Unsupported file format.\n");
+            printUsage(argv[0]);
         }
     }
 
