@@ -192,8 +192,8 @@ void ConfigureDriverGlobals(PRHandle proc, bool driverPolarity)
     globals.matrixRowEnableIndex0 = 6;
     globals.matrixRowEnableIndex1 = 8;
 
-    // Choose the polarity for the Column strobes.  Again, this doesn't really
-    // matter since the Driver Boards auto-detect polarity.
+    // Choose the polarity for the Column strobes.  PDBs are active high.
+    // So rows should NOT be active low.
     globals.activeLowMatrixRows = false;
 
     // Not using the Stern P/D board.  So disable the Stern tickle logic.
@@ -227,9 +227,8 @@ void ConfigureDrivers(PRHandle proc)
     // First set up a bunch of constants to use later:
 
     // The driverPolarity determines when the drivers go high or low when
-    // they are supposed to be active.  For the Driver Boards, this doesn't
-    // really matter, since they auto-detect polarity.  True seems to make
-    // more logical sense though.
+    // they are supposed to be active.  PDBs are active high.  So
+    // this should be true.
     const bool driverPolarity = true;
 
     // Now start actually programming thing in the P-ROC.
