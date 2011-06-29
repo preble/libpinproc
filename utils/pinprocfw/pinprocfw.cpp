@@ -1965,13 +1965,13 @@ int checkPROCFile() {
                 (board_rev & 0x10) >> 1;
 
     if (proc_file_version != 0) {
-        fprintf(stderr, "\nERROR: Invalid .p-roc file.");
+        fprintf(stderr, "\nERROR: Unsupported .p-roc file version.  Check for an updated version of this tool.\n\n");
         return 0;
     }
 
     // Check for valid board ID and rev
     if (board_id != file_board_id) {
-        fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (ID: %x)", board_id);
+        fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (ID: %x)\n\n", board_id);
         return 0;
     }
     else fprintf(stderr, "\nBoard ID verified");
@@ -1996,7 +1996,7 @@ int checkPROCFile() {
     if ((i != file_i) ||
         (checksum != file_checksum) ||
         (header_checksum != new_header_checksum)) {
-        fprintf(stderr, "\nFPGA data verification failure!"); 
+        fprintf(stderr, "\nFPGA data verification failure!\n\n"); 
         return 0;
     }
 
@@ -2090,10 +2090,7 @@ int main( int argc, char** argv )
 
                 if (openPROC()) {
                     fprintf(stderr, "\nVerifying file contents and board compatibility...");
-                    if (!checkPROCFile()) {
-                        fprintf(stderr, "\nERROR: File %s is corrupt.\n\n", pzXsvfFileName);
-                    }
-                    else {
+                    if (checkPROCFile()) {
 			rewind(in);        
                         preparePROCFile();
                         processFile();
