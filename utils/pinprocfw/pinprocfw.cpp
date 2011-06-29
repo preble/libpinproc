@@ -522,7 +522,9 @@ void pulseClock()
 
 void readByte(unsigned char *data)
 {
-    if (numBytesCurrent == 0) {
+    if (numBytesCurrent == 10) {
+        fprintf(stderr, "\n\nUpdating P-ROC.  This may take a couple of minutes.\n");
+        fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
         printf("\nErasing... ");
         fflush(stdout);
     }
@@ -1912,8 +1914,6 @@ int processFile()
 
 
             /* Execute the XSVF in the file */
-            fprintf(stderr, "\n\nUpdating P-ROC.  This may take a couple of minutes.\n");
-            fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
             startClock  = clock();
             iErrorCode  = xsvfExecute();
             endClock    = clock();
