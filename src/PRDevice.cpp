@@ -131,7 +131,14 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
         uint16_t ruleIndex = i;
         ParseSwitchRuleIndex(ruleIndex, &switchRule->switchNum, &switchRule->eventType);
         switchRule->driver.polarity = driverGlobalConfig.globalPolarity;
-        if (switchRule->switchNum >= kPRSwitchVirtualFirst) // Disabled for compiler warning (always true due to data type): && switchRule->switchNum <= kPRSwitchVirtualLast)
+
+        // All of the base switch numbers in the P-ROC are used; so there are no
+        // full sets of switch rule resources that are available for the freelist for linked rules.
+        // However, some of the switches are always optos and don't need to be debounced.
+        // So the debounced rule resources for those switches are available for linked rules.
+        if (switchRule->switchNum >= kPRSwitchNeverDebounceFirst &&
+            (switchRule->eventType == kPREventTypeSwitchClosedDebounced || 
+             switchRule->eventType == kPREventTypeSwitchOpenDebounced)) 
             freeSwitchRuleIndexes.push(ruleIndex);
     }
     
@@ -142,7 +149,7 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     for (i = 0; i < kPRSwitchCount; i++)
     {
         // Send blank rule for each event type to Device if necessary
-        if ((resetFlags & kPRResetFlagUpdateDevice) && i <= kPRSwitchPhysicalLast) 
+        if (resetFlags & kPRResetFlagUpdateDevice)
         {
             SwitchUpdateRule(i, kPREventTypeSwitchOpenDebounced, &emptySwitchRule, NULL, 0, false);
             SwitchUpdateRule(i, kPREventTypeSwitchClosedDebounced, &emptySwitchRule, NULL, 0, false);
@@ -589,12 +596,6 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     const int burstSize = 4;
     uint32_t burst[burstSize];
     
-    if (switchNum > kPRSwitchPhysicalLast) // Always true due to data type.
-    {
-        PRSetLastErrorText("Switch rule out of range 0-%d", kPRSwitchPhysicalLast);
-        return kPRFailure;
-    }
-
     // If more the base rule will link to others, ensure free indexes exists for 
     // the links.
     if (numDrivers > 0 && freeSwitchRuleIndexes.size() < (uint32_t)(numDrivers-1)) // -1 because the first switch rule holds the first driver.

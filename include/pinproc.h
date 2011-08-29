@@ -383,9 +383,9 @@ PINPROC_API int PRGetEvents(PRHandle handle, PREvent *eventsOut, int maxEvents);
 
 
 #define kPRSwitchPhysicalFirst (0)   /**< Switch number of the first physical switch. */
-#define kPRSwitchPhysicalLast (223)  /**< Switch number of the last physical switch.  */
-#define kPRSwitchVirtualFirst (224)  /**< Switch number of the first virtual switch.  */
-#define kPRSwitchVirtualLast (255)   /**< Switch number of the last virtual switch.   */
+#define kPRSwitchPhysicalLast (255)  /**< Switch number of the last physical switch.  */
+#define kPRSwitchNeverDebounceFirst (192)  /**< Switch number of the first switch that doesn't need to debounced.  */
+#define kPRSwitchNeverDebounceLast (255)   /**< Switch number of the last switch that doesn't need to be debounce.   */
 #define kPRSwitchCount (256)
 #define kPRSwitchRulesCount (kPRSwitchCount << 2) /**< Total number of available switch rules. */
 
