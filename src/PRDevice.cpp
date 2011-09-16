@@ -176,11 +176,12 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
 
         events[i].value = event_data & P_ROC_EVENT_SWITCH_NUM_MASK;
         int open = (event_data & P_ROC_EVENT_SWITCH_STATE_MASK) >> P_ROC_EVENT_SWITCH_STATE_SHIFT;
-        
+
         switch ((event_data & P_ROC_EVENT_TYPE_MASK) >> P_ROC_EVENT_TYPE_SHIFT)
         {
             case P_ROC_EVENT_TYPE_SWITCH:
             {
+                events[i].time = (event_data & P_ROC_EVENT_SWITCH_TIMESTAMP_MASK) >> P_ROC_EVENT_SWITCH_TIMESTAMP_SHIFT;
                 int debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
                 if (open)
                     events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;

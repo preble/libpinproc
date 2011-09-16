@@ -134,6 +134,8 @@ const uint32_t P_ROC_EVENT_TYPE_SHIFT                      = 10;
 const uint32_t P_ROC_EVENT_SWITCH_NUM_MASK                 = 0xFF;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_MASK               = 0x100;
 const uint32_t P_ROC_EVENT_SWITCH_STATE_SHIFT              = 8;
+const uint32_t P_ROC_EVENT_SWITCH_TIMESTAMP_MASK           = 0xFFFFF000;
+const uint32_t P_ROC_EVENT_SWITCH_TIMESTAMP_SHIFT          = 12;
 
 const uint32_t P_ROC_EVENT_SWITCH_DEBOUNCED_MASK           = 0x200;
 const uint32_t P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT          = 9;
