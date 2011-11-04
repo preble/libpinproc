@@ -68,7 +68,7 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
     PRMachineType readMachineType = dev->GetReadMachineType();
 
     // Custom is always accepted
-    if (machineType != kPRMachineCustom &&
+    if (machineType != kPRMachineCustom && machineType != kPRMachinePDB &&
 
 	// Don't accept if requested type is WPC/WPC95 but read machine is not.
         ( (((machineType == kPRMachineWPC) || 
@@ -107,7 +107,7 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     num_collected_bytes = 0;
     numPreparedWriteWords = 0;
     
-    if (machineType != kPRMachineCustom) DriverLoadMachineTypeDefaults(machineType, resetFlags);
+    if (machineType != kPRMachineCustom && machineType != kPRMachinePDB) DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
     // Disable dmd events if updating the device.
 #if 0
@@ -296,7 +296,7 @@ if (0) {
 
     DEBUG(PRLog(kPRLogInfo, "Updating driver #%d\n", driverState->driverNum));
 
-    if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom)
+    if (driverState->polarity != drivers[driverState->driverNum].polarity && machineType != kPRMachineCustom && machineType != kPRMachinePDB)
     {
         PRSetLastErrorText("Refusing to update driver #%d; polarity differs on non-custom machine.", driverState->driverNum);
         return kPRFailure;
