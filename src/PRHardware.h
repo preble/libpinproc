@@ -178,6 +178,7 @@ const uint32_t P_ROC_DRIVER_CONFIG_TIMESLOT_SHIFT                    = 16;
 const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ON_TIME_SHIFT              = 16;
 const uint32_t P_ROC_DRIVER_CONFIG_PATTER_OFF_TIME_SHIFT             = 23;
 const uint32_t P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT               = 30;
+const uint32_t P_ROC_DRIVER_CONFIG_FUTURE_ENABLE_SHIFT               = 31;
 
 const uint32_t P_ROC_DRIVER_CONFIG_TABLE_DRIVER_NUM_SHIFT = 1;
 

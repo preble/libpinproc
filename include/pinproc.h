@@ -204,6 +204,7 @@ typedef struct PRDriverState {
     uint8_t patterOnTime;
     uint8_t patterOffTime;
     bool_t patterEnable;
+    bool_t futureEnable;
 } PRDriverState;
 
 typedef struct PRDriverAuxCommand {
@@ -256,6 +257,11 @@ PINPROC_API PRResult PRDriverDisable(PRHandle handle, uint8_t driverNum);
  * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
  */
 PINPROC_API PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds);
+/**
+ * Pulses the given driver for a number of milliseconds when the hardware reaches a specific timestamp.
+ * This function is provided for convenience.  See PRDriverStatePulse() for a full description.
+ */
+PINPROC_API PRResult PRDriverFuturePulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds, uint32_t futureTime);
 /**
  * Assigns a repeating schedule to the given driver.
  * This function is provided for convenience.  See PRDriverStateSchedule() for a full description.
@@ -316,6 +322,13 @@ PINPROC_API void PRDriverStateDisable(PRDriverState *driverState);
  * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
  */
 PINPROC_API void PRDriverStatePulse(PRDriverState *driverState, uint8_t milliseconds);
+/**
+ * Changes the given #PRDriverState to reflect a future scheduled pulse state.
+ * @param milliseconds Number of milliseconds to pulse the driver for.
+ * @param futureTime Value indicating at which HW timestamp the pulse should occur.  Currently only the low 10-bits are used.
+ * @note The driver state structure must be applied using PRDriverUpdateState() or linked to a switch rule using PRSwitchUpdateRule() to have any effect.
+ */
+PINPROC_API void PRDriverStateFuturePulse(PRDriverState *driverState, uint8_t milliseconds, uint32_t futureTime);
 /**
  * Changes the given #PRDriverState to reflect a scheduled state.
  * Assigns a repeating schedule to the given driver.

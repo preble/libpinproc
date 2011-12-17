@@ -142,7 +142,8 @@ int32_t CreateDriverUpdateBurst ( uint32_t * burst, PRDriverState *driver) {
     burst[2] = (driver->timeslots >> P_ROC_DRIVER_CONFIG_TIMESLOT_SHIFT) |
     (driver->patterOnTime << P_ROC_DRIVER_CONFIG_PATTER_ON_TIME_SHIFT) |
     (driver->patterOffTime << P_ROC_DRIVER_CONFIG_PATTER_OFF_TIME_SHIFT) |
-    (driver->patterEnable << P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT);
+    (driver->patterEnable << P_ROC_DRIVER_CONFIG_PATTER_ENABLE_SHIFT) |
+    (driver->futureEnable << P_ROC_DRIVER_CONFIG_FUTURE_ENABLE_SHIFT);
     return kPRSuccess;
 }
 

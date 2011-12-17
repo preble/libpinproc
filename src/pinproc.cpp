@@ -193,6 +193,13 @@ PRResult PRDriverPulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds)
     PRDriverStatePulse(&driver, milliseconds);
     return handleAsDevice->DriverUpdateState(&driver);
 }
+PRResult PRDriverFuturePulse(PRHandle handle, uint8_t driverNum, uint8_t milliseconds, uint32_t futureTime)
+{
+    PRDriverState driver;
+    handleAsDevice->DriverGetState(driverNum, &driver);
+    PRDriverStateFuturePulse(&driver, milliseconds, futureTime);
+    return handleAsDevice->DriverUpdateState(&driver);
+}
 PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
     PRDriverState driver;
@@ -279,6 +286,7 @@ void PRDriverStateDisable(PRDriverState *driver)
     driver->patterOnTime = 0;
     driver->patterOffTime = 0;
     driver->patterEnable = false;
+    driver->futureEnable = false;
 }
 void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
 {
@@ -289,6 +297,18 @@ void PRDriverStatePulse(PRDriverState *driver, uint8_t milliseconds)
     driver->patterOnTime = 0;
     driver->patterOffTime = 0;
     driver->patterEnable = false;
+    driver->futureEnable = false;
+}
+void PRDriverStateFuturePulse(PRDriverState *driver, uint8_t milliseconds, uint32_t futureTime)
+{
+    driver->state = 1;
+    driver->timeslots = futureTime;
+    driver->waitForFirstTimeSlot = false;
+    driver->outputDriveTime = milliseconds;
+    driver->patterOnTime = 0;
+    driver->patterOffTime = 0;
+    driver->patterEnable = false;
+    driver->futureEnable = true;
 }
 void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
@@ -299,6 +319,7 @@ void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cyc
     driver->patterOnTime = 0;
     driver->patterOffTime = 0;
     driver->patterEnable = false;
+    driver->futureEnable = false;
 }
 void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
 {
@@ -309,6 +330,7 @@ void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t 
     driver->patterOnTime = millisecondsOn;
     driver->patterOffTime = millisecondsOff;
     driver->patterEnable = true;
+    driver->futureEnable = false;
 }
 
 void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime)
@@ -320,6 +342,7 @@ void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, ui
     driver->patterOnTime = millisecondsOn;
     driver->patterOffTime = millisecondsOff;
     driver->patterEnable = true;
+    driver->futureEnable = false;
 }
 
 uint16_t PRDecode(PRMachineType machineType, const char *str)
