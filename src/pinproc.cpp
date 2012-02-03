@@ -207,18 +207,18 @@ PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32_t schedule,
     PRDriverStateSchedule(&driver, schedule, cycleSeconds, now);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
+PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime, bool_t now)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
-    PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime);
+    PRDriverStatePatter(&driver, millisecondsOn, millisecondsOff, originalOnTime, now);
     return handleAsDevice->DriverUpdateState(&driver);
 }
-PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t duration)
+PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t duration, bool_t now)
 {
     PRDriverState driver;
     handleAsDevice->DriverGetState(driverNum, &driver);
-    PRDriverStatePulsedPatter(&driver, millisecondsOn, millisecondsOff, duration);
+    PRDriverStatePulsedPatter(&driver, millisecondsOn, millisecondsOff, duration, now);
     return handleAsDevice->DriverUpdateState(&driver);
 }
 PRResult PRDriverAuxSendCommands(PRHandle handle, PRDriverAuxCommand * commands, uint8_t numCommands, uint8_t startingAddr)
@@ -321,11 +321,11 @@ void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cyc
     driver->patterEnable = false;
     driver->futureEnable = false;
 }
-void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime)
+void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime, bool_t now)
 {
     driver->state = true;
     driver->timeslots = 0;
-    driver->waitForFirstTimeSlot = false;
+    driver->waitForFirstTimeSlot = !now;
     driver->outputDriveTime = originalOnTime;
     driver->patterOnTime = millisecondsOn;
     driver->patterOffTime = millisecondsOff;
@@ -333,11 +333,11 @@ void PRDriverStatePatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t 
     driver->futureEnable = false;
 }
 
-void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime)
+void PRDriverStatePulsedPatter(PRDriverState *driver, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime, bool_t now)
 {
     driver->state = false;
     driver->timeslots = 0;
-    driver->waitForFirstTimeSlot = false;
+    driver->waitForFirstTimeSlot = !now;
     driver->outputDriveTime = patterTime;
     driver->patterOnTime = millisecondsOn;
     driver->patterOffTime = millisecondsOff;

@@ -271,17 +271,12 @@ PINPROC_API PRResult PRDriverSchedule(PRHandle handle, uint8_t driverNum, uint32
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver.
  * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
  */
-PINPROC_API PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
+PINPROC_API PRResult PRDriverPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime, bool_t now);
 /**
  * Assigns a pitter-patter schedule (repeating on/off) to the given driver on for the given duration.
  * This function is provided for convenience.  See PRDriverStatePulsedPatter() for a full description.
  */
-PINPROC_API PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
-/**
- * Assigns a pitter-patter schedule (repeating on/off) to the given driver for the given duration.
- * This function is provided for convenience.  See PRDriverStatePatter() for a full description.
- */
-PINPROC_API PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
+PINPROC_API PRResult PRDriverPulsedPatter(PRHandle handle, uint8_t driverNum, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime, bool_t now);
 /**
  * Prepares an Aux Command to drive the Aux bus.
  * This function is provided for convenience.
@@ -342,14 +337,14 @@ PINPROC_API void PRDriverStateSchedule(PRDriverState *driverState, uint32_t sche
  *
  * Use originalOnTime to pulse the driver for a number of milliseconds before the pitter-patter schedule begins.
  */
-PINPROC_API void PRDriverStatePatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime);
+PINPROC_API void PRDriverStatePatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t originalOnTime, bool_t now);
 
 /**
  * @brief Changes the given #PRDriverState to reflect a pitter-patter schedule state.
  * Just like the regular Patter above, but PulsePatter only drives the patter
  * scheduled for the given number of milliseconds before disabling the driver.
  */
-PINPROC_API void PRDriverStatePulsedPatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime);
+PINPROC_API void PRDriverStatePulsedPatter(PRDriverState *driverState, uint8_t millisecondsOn, uint8_t millisecondsOff, uint8_t patterTime, bool_t now);
 
 /**
  * Write Aux Port commands into the Aux Port command memory.

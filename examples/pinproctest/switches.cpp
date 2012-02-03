@@ -102,7 +102,7 @@ void ConfigureSternFlipperSwitchRule (PRHandle proc, int swNum, int mainCoilNum,
     
     // Flipper on rules
     PRDriverGetState(proc, mainCoilNum, &drivers[0]);
-    PRDriverStatePatter(&drivers[0],patterOnTime,patterOffTime,pulseTime); // Pulse coil for 34ms.
+    PRDriverStatePatter(&drivers[0],patterOnTime,patterOffTime,pulseTime,true); // Pulse coil for 34ms.
     sw.notifyHost = false;
     sw.reloadActive = false;
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedNondebounced, &sw, drivers, numDriverRules, true);
