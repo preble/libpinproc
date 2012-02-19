@@ -6,9 +6,7 @@ The install process should have created the following subdirectories:
 .\ext\python (includes a setup file for the pinproc python extension)
 
 *** USB Driver ***
-The FTDI driver should have been installed automatically during the libpinproc installation.
-If it did not, manually run .\FTDI_2.xx.yy\DPInst.exe.  This is necessary to communicate with
-the P-ROC over USB.
+The FTDI driver should have been installed automatically during the libpinproc installation.  If it did not, manually run .\FTDI_2.xx.yy\DPInst.exe.  This is necessary to communicate with the P-ROC over USB.
 
 *** pinprocfw.exe ***
 This application can be used to update the P-ROC's firmware when updates are made
