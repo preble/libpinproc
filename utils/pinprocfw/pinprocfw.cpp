@@ -1897,7 +1897,7 @@ int openPROC()
 
 void printUsage(char * name)
 {
-    fprintf(stderr, "\n%s: Version 1.0", name );
+    fprintf(stderr, "\n%s: Version 1.1", name );
     fprintf(stderr, "\nUSAGE: %s <filename>\n", name );
     fprintf(stderr, "        filename = the .xsvf or .p-roc file to execute.\n" );
 }
