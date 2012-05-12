@@ -174,15 +174,29 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
         uint32_t event_data = unrequestedDataQueue.front();
         unrequestedDataQueue.pop();
 
-        events[i].value = event_data & P_ROC_EVENT_SWITCH_NUM_MASK;
-        int open = (event_data & P_ROC_EVENT_SWITCH_STATE_MASK) >> P_ROC_EVENT_SWITCH_STATE_SHIFT;
+        int type; 
+        bool open, debounced;
 
-        switch ((event_data & P_ROC_EVENT_TYPE_MASK) >> P_ROC_EVENT_TYPE_SHIFT)
+        if (version >= 2) {
+            events[i].value = event_data & P_ROC_V2_EVENT_SWITCH_NUM_MASK;
+            type = (event_data & P_ROC_V2_EVENT_TYPE_MASK) >> P_ROC_V2_EVENT_TYPE_SHIFT;
+            open = (event_data & P_ROC_V2_EVENT_SWITCH_STATE_MASK) >> P_ROC_V2_EVENT_SWITCH_STATE_SHIFT;
+            debounced = (event_data & P_ROC_V2_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_V2_EVENT_SWITCH_DEBOUNCED_SHIFT;
+            events[i].time = (event_data & P_ROC_V2_EVENT_SWITCH_TIMESTAMP_MASK) >> P_ROC_V2_EVENT_SWITCH_TIMESTAMP_SHIFT;
+        }
+        else {
+            type = (event_data & P_ROC_V1_EVENT_TYPE_MASK) >> P_ROC_V1_EVENT_TYPE_SHIFT;
+            events[i].value = event_data & P_ROC_V1_EVENT_SWITCH_NUM_MASK;
+            open = (event_data & P_ROC_V1_EVENT_SWITCH_STATE_MASK) >> P_ROC_V1_EVENT_SWITCH_STATE_SHIFT;
+            debounced = (event_data & P_ROC_V1_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_V1_EVENT_SWITCH_DEBOUNCED_SHIFT;
+            events[i].time = (event_data & P_ROC_V1_EVENT_SWITCH_TIMESTAMP_MASK) >> P_ROC_V1_EVENT_SWITCH_TIMESTAMP_SHIFT;
+        }
+
+
+        switch (type)
         {
             case P_ROC_EVENT_TYPE_SWITCH:
             {
-                events[i].time = (event_data & P_ROC_EVENT_SWITCH_TIMESTAMP_MASK) >> P_ROC_EVENT_SWITCH_TIMESTAMP_SHIFT;
-                int debounced = (event_data & P_ROC_EVENT_SWITCH_DEBOUNCED_MASK) >> P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT;
                 if (open)
                     events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
                 else
@@ -194,6 +208,13 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
             {
                 events[i].type = kPREventTypeDMDFrameDisplayed;
                 break;
+            }
+
+            case P_ROC_EVENT_TYPE_BURST_SWITCH:
+            {
+                if (open) events[i].type = kPREventTypeSwitchOpenNondebounced;
+                else events[i].type = kPREventTypeSwitchClosedNondebounced;
+                break; 
             }
 
             default: events[i].type = kPREventTypeInvalid;

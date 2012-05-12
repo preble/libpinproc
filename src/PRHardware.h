@@ -129,16 +129,28 @@ const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 12;
 
 const uint32_t P_ROC_EVENT_TYPE_SWITCH                     = 0;
 const uint32_t P_ROC_EVENT_TYPE_DMD                        = 1;
-const uint32_t P_ROC_EVENT_TYPE_MASK                       = 0xC00;
-const uint32_t P_ROC_EVENT_TYPE_SHIFT                      = 10;
-const uint32_t P_ROC_EVENT_SWITCH_NUM_MASK                 = 0xFF;
-const uint32_t P_ROC_EVENT_SWITCH_STATE_MASK               = 0x100;
-const uint32_t P_ROC_EVENT_SWITCH_STATE_SHIFT              = 8;
-const uint32_t P_ROC_EVENT_SWITCH_TIMESTAMP_MASK           = 0xFFFFF000;
-const uint32_t P_ROC_EVENT_SWITCH_TIMESTAMP_SHIFT          = 12;
+const uint32_t P_ROC_EVENT_TYPE_BURST_SWITCH               = 2;
 
-const uint32_t P_ROC_EVENT_SWITCH_DEBOUNCED_MASK           = 0x200;
-const uint32_t P_ROC_EVENT_SWITCH_DEBOUNCED_SHIFT          = 9;
+const uint32_t P_ROC_V1_EVENT_TYPE_MASK                    = 0xC00;
+const uint32_t P_ROC_V1_EVENT_TYPE_SHIFT                   = 10;
+const uint32_t P_ROC_V2_EVENT_TYPE_MASK                    = 0xC000;
+const uint32_t P_ROC_V2_EVENT_TYPE_SHIFT                   = 14;
+
+const uint32_t P_ROC_V1_EVENT_SWITCH_NUM_MASK              = 0xFF;
+const uint32_t P_ROC_V2_EVENT_SWITCH_NUM_MASK              = 0x7FF;
+const uint32_t P_ROC_V1_EVENT_SWITCH_STATE_MASK            = 0x100;
+const uint32_t P_ROC_V2_EVENT_SWITCH_STATE_MASK            = 0x1000;
+const uint32_t P_ROC_V1_EVENT_SWITCH_STATE_SHIFT           = 8;
+const uint32_t P_ROC_V2_EVENT_SWITCH_STATE_SHIFT           = 12;
+const uint32_t P_ROC_V1_EVENT_SWITCH_DEBOUNCED_MASK        = 0x200;
+const uint32_t P_ROC_V2_EVENT_SWITCH_DEBOUNCED_MASK        = 0x2000;
+const uint32_t P_ROC_V1_EVENT_SWITCH_DEBOUNCED_SHIFT       = 9;
+const uint32_t P_ROC_V2_EVENT_SWITCH_DEBOUNCED_SHIFT       = 13;
+const uint32_t P_ROC_V1_EVENT_SWITCH_TIMESTAMP_MASK        = 0xFFFFF000;
+const uint32_t P_ROC_V1_EVENT_SWITCH_TIMESTAMP_SHIFT       = 12;
+const uint32_t P_ROC_V2_EVENT_SWITCH_TIMESTAMP_MASK        = 0xFFFF0000;
+const uint32_t P_ROC_V2_EVENT_SWITCH_TIMESTAMP_SHIFT       = 16;
+
 
 const uint32_t P_ROC_DRIVER_CTRL_DECODE_SHIFT     = 10;
 const uint32_t P_ROC_DRIVER_CTRL_REG_DECODE       = 0;
