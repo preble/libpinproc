@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "libpinproc"
-!define PRODUCT_VERSION "1.00"
+!define PRODUCT_VERSION "1.1"
 !define PRODUCT_PUBLISHER "Gerry Stellenberg"
 !define PRODUCT_WEB_SITE "http://www.pinballcontrollers.com"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\DPInst.exe"
@@ -36,7 +36,7 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "libpinproc_1.00_install.exe"
+OutFile "libpinproc_1.1_install.exe"
 InstallDir "$PROGRAMFILES\P-ROC\libpinproc"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
@@ -78,7 +78,7 @@ Section "MainSection" SEC01
   File "C:\MinGW\bin\libstdc++-6.dll"
   SetOutPath "$INSTDIR\ext\python"
   SetOverwrite ifnewer
-  File "C:\P-ROC\pypinproc\dist\pinproc-1.00.win32-py2.6.exe"
+  File "C:\P-ROC\pypinproc\dist\pinproc-1.1.win32-py2.6.exe"
   SetOutPath "$INSTDIR"
   SetOverwrite ifnewer
   File "C:\P-ROC\libpinproc\installers\Win\README.txt"
