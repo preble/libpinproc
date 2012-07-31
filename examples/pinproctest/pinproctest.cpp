@@ -80,7 +80,7 @@ void RunLoop(PRHandle proc)
     const int maxEvents = 16;
     int i;
     PREvent events[maxEvents];
-
+    uint32_t readData[5];
     // Create dot array using an array of bytes.  Each byte holds 8 dots.  Need
     // space for 4 sub-frames of 128/32 dots.
     unsigned char dots[4*((128*32)/8)]; 
@@ -99,10 +99,27 @@ void RunLoop(PRHandle proc)
       }
     }
 
+    PRReadData(proc, 6, 0x10D, 1, readData); 
+    printf("\nAccel chip id: %x\n", readData[0]);
+    fflush(stdout);
+
+    readData[0] = 0x3D;
+    PRWriteData(proc, 6, 0x12A, 1, readData); 
+
+    readData[0] = 0x02;
+    PRWriteData(proc, 6, 0x12B, 1, readData); 
+
+    // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
+    readData[0] = 0x0F;
+    PRWriteData(proc, 6, 0x000, 1, readData); 
+    PRFlushWriteData(proc);
+
+    int p = 0;
+
     while (runLoopRun)
     {
         PRDriverWatchdogTickle(proc);
-         
+
         int numEvents = PRGetEvents(proc, events, maxEvents);
         for (int i = 0; i < numEvents; i++)
         {
@@ -122,7 +139,6 @@ void RunLoop(PRHandle proc)
             struct timeval tv;
             gettimeofday(&tv, NULL);
 #endif
-            
             switch (event->type)
             {
                 case kPREventTypeSwitchOpenDebounced: 
@@ -148,6 +164,29 @@ void RunLoop(PRHandle proc)
                         PRDMDDraw(proc,dots);
                     }
                     break;
+                }
+                case kPREventTypeAccelerometerX:
+                {
+                    //readData[0] = event->value & 0x3FFF;
+                    readData[0] = event->value;
+                    break;
+                }
+                case kPREventTypeAccelerometerY:
+                {
+                    //readData[1] = event->value & 0x3FFF;
+                    readData[1] = event->value;
+                    break;
+                }
+                case kPREventTypeAccelerometerZ:
+                {
+                    //readData[2] = event->value & 0x3FFF;
+                    readData[2] = event->value;
+                    printf("\nAccel: X: %x, Y: %x, Z: %x", readData[0], readData[1],readData[2]);
+                    break;
+                }
+                default:
+                {
+                    printf("\nUnknown event: %x:%x", event->type, event->value);
                 }
             }
         }
@@ -211,7 +250,7 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Unknown machine type: %s\n", machineTypeString.c_str());
         return 1;
     }
-    
+
     // Finally instantiate the P-ROC device:
     PRHandle proc = PRCreate(machineType);
     if (proc == kPRHandleInvalid)
@@ -219,7 +258,7 @@ int main(int argc, const char **argv)
         fprintf(stderr, "Error during PRCreate: %s\n", PRGetLastErrorText());
         return 1;
     }
-    
+
     PRLogSetLevel (kPRLogInfo);
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     

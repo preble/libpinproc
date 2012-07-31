@@ -193,6 +193,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
         }
 
 
+        //fprintf(stderr, "\nLibpinproc: event type: %d", type);
         switch (type)
         {
             case P_ROC_EVENT_TYPE_SWITCH:
@@ -212,9 +213,37 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
 
             case P_ROC_EVENT_TYPE_BURST_SWITCH:
             {
-                if (open) events[i].type = kPREventTypeSwitchOpenNondebounced;
-                else events[i].type = kPREventTypeSwitchClosedNondebounced;
+                //fprintf(stderr, "\nBurst event");
+                if (open) events[i].type = kPREventTypeBurstSwitchOpen;
+                else events[i].type = kPREventTypeBurstSwitchClosed;
                 break; 
+            }
+
+            case P_ROC_EVENT_TYPE_ACCELEROMETER:
+            {
+                events[i].time = events[i].time >> 2;
+                events[i].value = event_data & 0x00003FFF;
+                int accel_type = (event_data & 0x00030000) >> 16;
+                switch (accel_type)
+                {
+                    case 0:
+                    {
+                        events[i].type = kPREventTypeAccelerometerX;
+                        break;
+                    }
+                    case 1:
+                    {
+                        events[i].type = kPREventTypeAccelerometerY;
+                        break;
+                    }
+                    case 2:
+                    {
+                        events[i].type = kPREventTypeAccelerometerZ;
+                        break;
+                    }
+                    default: events[i].type = kPREventTypeInvalid;
+                }
+                break;
             }
 
             default: events[i].type = kPREventTypeInvalid;
@@ -1290,7 +1319,7 @@ int32_t PRDevice::CollectReadData()
 PRResult PRDevice::SortReturningData()
 {
     int32_t num_bytes, num_words, rc;
-    uint32_t rd_buffer[512];
+    uint32_t rd_buffer[FTDI_BUFFER_SIZE/4];
 
     num_bytes = CollectReadData();
     if (num_bytes < 0)

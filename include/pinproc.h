@@ -376,6 +376,11 @@ typedef enum PREventType {
     kPREventTypeSwitchClosedNondebounced = 3, /**< The switch has gone from open to closed and the signal has not been debounced. */
     kPREventTypeSwitchOpenNondebounced   = 4, /**< The switch has gone from closed to open and the signal has not been debounced. */
     kPREventTypeDMDFrameDisplayed        = 5, /**< A DMD frame has been displayed. */
+    kPREventTypeBurstSwitchOpen          = 6, /**< A burst switch has gone from closed to open. */
+    kPREventTypeBurstSwitchClosed        = 7, /**< A burst switch has gone from open to closed. */
+    kPREventTypeAccelerometerX           = 8, /**< New value from the accelerometer - X plane. */
+    kPREventTypeAccelerometerY           = 9, /**< New value from the accelerometer - X plane. */
+    kPREventTypeAccelerometerZ           = 10, /**< New value from the accelerometer - X plane. */
     kPREventTypetLast = kPREventTypeSwitchOpenNondebounced
 } PREventType;
 
