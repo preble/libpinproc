@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "libpinproc"
-!define PRODUCT_VERSION "1.00"
+!define PRODUCT_VERSION "1.2"
 !define PRODUCT_PUBLISHER "Gerry Stellenberg"
 !define PRODUCT_WEB_SITE "http://www.pinballcontrollers.com"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\DPInst.exe"
@@ -24,7 +24,6 @@
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ; Finish page
-!define MUI_FINISHPAGE_RUN "$INSTDIR\FTDI_2.08.14\DPInst.exe"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -36,11 +35,25 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "libpinproc_1.00_install.exe"
+OutFile "libpinproc_1.2_install.exe"
 InstallDir "$PROGRAMFILES\P-ROC\libpinproc"
-InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
 ShowUnInstDetails show
+
+Function InstallFTDI
+
+  IfFileExists $WINDIR\SYSWOW64\*.* Is64bit Is32bit
+  Is32bit:
+    CopyFiles "$INSTDIR\FTDI_2.08.14\DPInst32.exe" "$INSTDIR\FTDI_2.08.14\DPInst.exe"
+    GOTO End32Bitvs64BitCheck
+
+  Is64bit:
+    CopyFiles "$INSTDIR\FTDI_2.08.14\DPInst64.exe" "$INSTDIR\FTDI_2.08.14\DPInst.exe"
+  End32Bitvs64BitCheck:
+
+  ExecWait '"$INSTDIR\FTDI_2.08.14\DPInst.exe"'
+
+FunctionEnd
 
 Section "MainSection" SEC01
   SetOutPath "$INSTDIR\FTDI_2.08.14\amd64"
@@ -54,7 +67,8 @@ Section "MainSection" SEC01
   File "C:\P-ROC\Install\FTDI_2.08.14\amd64\ftser2k.sys"
   File "C:\P-ROC\Install\FTDI_2.08.14\amd64\ftserui2.dll"
   SetOutPath "$INSTDIR\FTDI_2.08.14"
-  File "C:\P-ROC\Install\FTDI_2.08.14\DPInst.exe"
+  File "C:\P-ROC\Install\FTDI_2.08.14\DPInst32.exe"
+  File "C:\P-ROC\Install\FTDI_2.08.14\DPInst64.exe"
   File "C:\P-ROC\Install\FTDI_2.08.14\DPInst.xml"
   File "C:\P-ROC\Install\FTDI_2.08.14\ftd2xx.h"
   File "C:\P-ROC\Install\FTDI_2.08.14\ftdibus.cat"
@@ -78,10 +92,11 @@ Section "MainSection" SEC01
   File "C:\MinGW\bin\libstdc++-6.dll"
   SetOutPath "$INSTDIR\ext\python"
   SetOverwrite ifnewer
-  File "C:\P-ROC\pypinproc\dist\pinproc-1.00.win32-py2.6.exe"
+  File "C:\P-ROC\pypinproc\dist\pinproc-1.2.win32-py2.6.exe"
   SetOutPath "$INSTDIR"
   SetOverwrite ifnewer
   File "C:\P-ROC\libpinproc\installers\Win\README.txt"
+  Call InstallFTDI
 SectionEnd
 
 Section -Post
@@ -125,6 +140,8 @@ Section Uninstall
   Delete "$INSTDIR\FTDI_2.08.14\ftd2xx.h"
   Delete "$INSTDIR\FTDI_2.08.14\DPInst.xml"
   Delete "$INSTDIR\FTDI_2.08.14\DPInst.exe"
+  Delete "$INSTDIR\FTDI_2.08.14\DPInst32.exe"
+  Delete "$INSTDIR\FTDI_2.08.14\DPInst64.exe"
   Delete "$INSTDIR\FTDI_2.08.14\CDM 2 04 16 Release Info.doc"
   Delete "$INSTDIR\FTDI_2.08.14\amd64\ftserui2.dll"
   Delete "$INSTDIR\FTDI_2.08.14\amd64\ftser2k.sys"
