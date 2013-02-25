@@ -1173,7 +1173,7 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
 	PRResult res;
     uint32_t * buffer;
 
-    buffer = (uint32_t *)malloc((numWriteWords * 4) + 1);
+    buffer = (uint32_t *)malloc((numWriteWords * 4) + 4);
     buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
     memcpy(buffer+1, writeBuffer, numWriteWords * 4);
     res = WriteData(buffer, numWriteWords + 1);
