@@ -344,6 +344,16 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
     return kPRSuccess;
 }
 
+void FillPDBCommand(uint8_t command, uint8_t boardAddr, PRLEDRegisterType reg, uint8_t data, uint32_t * buffer)
+{
+    buffer[0] = (command << P_ROC_DRIVER_PDB_COMMAND_SHIFT) |
+                (boardAddr << P_ROC_DRIVER_PDB_BOARD_ADDR_SHIFT) |
+                (reg << P_ROC_DRIVER_PDB_REGISTER_SHIFT) |
+                (data << P_ROC_DRIVER_PDB_DATA_SHIFT);
+}
+
+
+
 /**
  * This is where all FTDI driver-specific code should go.
  * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.

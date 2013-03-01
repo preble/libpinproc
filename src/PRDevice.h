@@ -86,6 +86,13 @@ public:
     PRResult PRJTAGReadTDIMemory(uint16_t tableOffset, uint16_t numWords, uint32_t * tdiData);
     PRResult PRJTAGGetStatus(PRJTAGStatus * status);
 
+    PRResult PRLEDColor(PRLED * pLED, uint8_t color);
+    PRResult PRLEDFade(PRLED * pLED, uint8_t fadeColor, uint16_t fadeRate);
+    PRResult PRLEDFadeColor(PRLED * pLED, uint8_t fadeColor);
+    PRResult PRLEDFadeRate(uint8_t boardAddr, uint16_t fadeRate);
+    PRResult PRLEDRGBColor(PRLEDRGB * pLED, uint32_t color);
+    PRResult PRLEDRGBFade(PRLEDRGB * pLED, uint32_t fadeColor, uint16_t fadeRate);
+    PRResult PRLEDRGBFadeColor(PRLEDRGB * pLED, uint32_t fadeColor);
 
     int GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr);
 
