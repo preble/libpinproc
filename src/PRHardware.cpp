@@ -344,9 +344,12 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
     return kPRSuccess;
 }
 
-void FillLEDWriteCommand(uint8_t boardAddr, PRLEDRegisterType reg, uint8_t value, uint32_t * pData)
+void FillPDBCommand(uint8_t command, uint8_t boardAddr, PRLEDRegisterType reg, uint8_t data, uint32_t * buffer)
 {
-    pData[0] = (0x1 << 24) | (boardAddr << 16) | (reg << 8) | value;
+    buffer[0] = (command << P_ROC_DRIVER_PDB_COMMAND_SHIFT) |
+                (boardAddr << P_ROC_DRIVER_PDB_BOARD_ADDR_SHIFT) |
+                (reg << P_ROC_DRIVER_PDB_REGISTER_SHIFT) |
+                (data << P_ROC_DRIVER_PDB_DATA_SHIFT);
 }
 
 
