@@ -344,6 +344,13 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
     return kPRSuccess;
 }
 
+void FillLEDWriteCommand(uint8_t boardAddr, PRLEDRegisterType reg, uint8_t value, uint32_t * pData)
+{
+    pData[0] = (0x1 << 24) | (boardAddr << 16) | (reg << 8) | value;
+}
+
+
+
 /**
  * This is where all FTDI driver-specific code should go.
  * As we add support for other drivers (such as D2xx on Windows), we will add more implementations of the PRHardware*() functions here.

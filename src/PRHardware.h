@@ -254,6 +254,14 @@ const uint32_t P_ROC_DMD_RCLK_LOW_CYCLES_SHIFT       = 24;
 
 const uint32_t P_ROC_DMD_DOT_TABLE_BASE_ADDR         = 0x1000;
 
+typedef enum PRLEDRegisterType {
+    kPRLEDRegisterTypeLEDIndex        = 0,
+    kPRLEDRegisterTypeColor           = 1,
+    kPRLEDRegisterTypeFadeColor       = 2,
+    kPRLEDRegisterTypeFadeRateLow     = 3,
+    kPRLEDRegisterTypeFadeRateHigh    = 4
+} PRPDLEDRegisterType;
+
 typedef struct PRSwitchRuleInternal {
     uint8_t switchNum;    /**< Number of the physical switch, or for linked driver changes the virtual switch number (224 and up). */
     PREventType eventType; /**< The event type that this rule generates.  Determines closed/open, debounced/non-debounced. */
@@ -290,6 +298,8 @@ int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType, bool_t dr
 int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
 int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutputs);
 int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t dataBlockComplete);
+
+void FillLEDWriteCommand(uint8_t boardAddr, PRLEDRegisterType reg, uint8_t value, uint32_t * pData);
 
 PRResult PRHardwareOpen();
 void PRHardwareClose();

@@ -567,3 +567,38 @@ PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status)
 {
     return handleAsDevice->PRJTAGGetStatus(status);
 }
+
+PRResult PRLEDColor(PRHandle handle, PRLED * pLED, uint8_t color)
+{
+    return handleAsDevice->PRLEDColor(pLED, color);
+}
+
+PRResult PRLEDFade(PRHandle handle, PRLED * pLED, uint8_t fadeColor, uint16_t fadeRate)
+{
+    return handleAsDevice->PRLEDFade(pLED, fadeColor, fadeRate);
+}
+
+PRResult PRLEDFadeColor(PRHandle handle, PRLED * pLED, uint8_t fadeColor)
+{
+    return handleAsDevice->PRLEDFadeColor(pLED, fadeColor);
+}
+
+PRResult PRLEDFadeRate(PRHandle handle, uint8_t boardAddr, uint16_t fadeRate)
+{
+    return handleAsDevice->PRLEDFadeRate(boardAddr, fadeRate);
+}
+
+PRResult PRLEDRGBColor(PRHandle handle, PRLEDRGB * pLED, uint32_t color)
+{
+    return handleAsDevice->PRLEDRGBColor(pLED, color);
+}
+
+PRResult PRLEDRGBFade(PRHandle handle, PRLEDRGB * pLED, uint32_t fadeColor, uint16_t fadeRate)
+{
+    return handleAsDevice->PRLEDRGBFade(pLED, fadeColor, fadeRate);
+}
+
+PRResult PRLEDRGBFadeColor(PRHandle handle, PRLEDRGB * pLED, uint32_t fadeColor)
+{
+    return handleAsDevice->PRLEDRGBFadeColor(pLED, fadeColor);
+}
