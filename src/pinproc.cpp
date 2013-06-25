@@ -44,6 +44,7 @@
 typedef void (*PRLogCallback)(PRLogLevel level, const char *text);
 
 PRLogCallback logCallback = NULL;
+//PRLogLevel logLevel = kPRLogError;
 PRLogLevel logLevel = kPRLogError;
 
 void PRLog(PRLogLevel level, const char *format, ...)

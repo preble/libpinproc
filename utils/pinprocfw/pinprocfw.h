@@ -16,12 +16,12 @@
 #pragma once
 #endif
 
-#if defined(__WIN32__) || defined(_WIN32)
-    #include <windows.h>
-    #define PRSleep(milliseconds) Sleep(milliseconds)
-#else
-    #define PRSleep(milliseconds) sleep(milliseconds/1000)
-#endif
+//#if defined(__WIN32__) || defined(_WIN32)
+//    #include <windows.h>
+//    #define PRSleep(milliseconds) Sleep(milliseconds)
+//#else
+//    #define PRSleep(milliseconds) sleep(milliseconds/1000)
+//#endif
 
 /* Legacy error codes for xsvfExecute from original XSVF player v2.0 */
 #define XSVF_LEGACY_SUCCESS 1
@@ -54,6 +54,9 @@ extern int xsvfExecute();
 #define TCK (short) 0
 #define TMS (short) 1
 #define TDI (short) 2
+
+//#define P_ROC_ID 0xfeedbeef
+//#define P3_ROC_ID 0xf33db33f
 
 /* set the port "p" (TCK, TMS, or TDI) to val (0 or 1) */
 void setPort(short p, short val);

@@ -41,12 +41,14 @@
 
 const int32_t FTDI_VENDOR_ID = 0x0403;
 const int32_t FTDI_FT245RL_PRODUCT_ID = 0x6001;
+const int32_t FTDI_FT240X_PRODUCT_ID = 0x6015;
 
 //const int32_t FTDI_BUFFER_SIZE = 2048;
 const int32_t FTDI_BUFFER_SIZE = 8192;
 const uint32_t P_ROC_INIT_PATTERN_A         = 0x801F1122;
 const uint32_t P_ROC_INIT_PATTERN_B         = 0x345678AB;
 const uint32_t P_ROC_CHIP_ID                = 0xfeedbeef;
+const uint32_t P3_ROC_CHIP_ID                = 0xf33db33f;
 
 const uint32_t P_ROC_VER_REV_FIXED_SWITCH_STATE_READS = 0x10013; // 1.19
 
@@ -86,6 +88,16 @@ const uint32_t P_ROC_BUS_STATE_CHANGE_PROC_SELECT = 4;
 const uint32_t P_ROC_BUS_DMD_SELECT               = 5;
 const uint32_t P_ROC_BUS_UNASSOCIATED_SELECT      = 15;
 
+const uint32_t P3_ROC_MANAGER_SELECT               = 0;
+const uint32_t P3_ROC_BUS_SPI_SELECT               = 1;
+const uint32_t P3_ROC_BUS_SWITCH_CTRL_SELECT       = 2;
+const uint32_t P3_ROC_BUS_DRIVER_CTRL_SELECT       = 3;
+const uint32_t P3_ROC_BUS_STATE_CHANGE_PROC_SELECT = 4;
+const uint32_t P3_ROC_BUS_AUX_CTRL_SELECT          = 5;
+const uint32_t P3_ROC_BUS_ACCELEROMETER_SELECT     = 6;
+const uint32_t P3_ROC_BUS_I2C_SELECT               = 7;
+const uint32_t P3_ROC_BUS_UNASSOCIATED_SELECT      = 15;
+
 const uint32_t P_ROC_REG_CHIP_ID_ADDR             = 0;
 const uint32_t P_ROC_REG_VERSION_ADDR             = 1;
 const uint32_t P_ROC_REG_WATCHDOG_ADDR            = 2;
@@ -96,6 +108,21 @@ const uint32_t P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT         = 14;
 const uint32_t P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT     = 0;
 const uint32_t P_ROC_MANAGER_REUSE_DMD_DATA_FOR_AUX_SHIFT  = 10;
 const uint32_t P_ROC_MANAGER_INVERT_DIPSWITCH_1_SHIFT      = 9;
+
+const uint32_t P3_ROC_SPI_OPCODE_SHIFT            = 24;
+
+const uint32_t P3_ROC_SPI_OPCODE_WR_ENABLE        = 0;
+const uint32_t P3_ROC_SPI_OPCODE_WR_DISABLE       = 1;
+const uint32_t P3_ROC_SPI_OPCODE_RD_ID            = 2;
+const uint32_t P3_ROC_SPI_OPCODE_RD_STATUS        = 3;
+const uint32_t P3_ROC_SPI_OPCODE_WR_STATUS        = 4;
+const uint32_t P3_ROC_SPI_OPCODE_RD_DATA          = 5;
+const uint32_t P3_ROC_SPI_OPCODE_FRD_DATA         = 6;
+const uint32_t P3_ROC_SPI_OPCODE_PP               = 7;
+const uint32_t P3_ROC_SPI_OPCODE_SECTOR_ERASE     = 8;
+const uint32_t P3_ROC_SPI_OPCODE_BULK_ERASE       = 9;
+const uint32_t P3_ROC_SPI_OPCODE_DEEP_POWERDN     = 10;
+const uint32_t P3_ROC_SPI_OPCODE_RELEASE          = 11;
 
 const uint32_t P_ROC_JTAG_SHIFT_EXIT_SHIFT                 = 16;
 const uint32_t P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT             = 0;

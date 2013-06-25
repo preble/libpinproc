@@ -32,6 +32,7 @@
 #endif  /* DEBUG_MODE */
 
 #include "pinprocfw.h"
+#include "../../src/PRHardware.h"
 #include "lenval.h"
 #ifndef _MSC_VER
 #include <unistd.h>
@@ -525,7 +526,7 @@ void readByte(unsigned char *data)
     if (numBytesCurrent == 10) {
         fprintf(stderr, "\n\nUpdating P-ROC.  This may take a couple of minutes.\n");
         fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
-        printf("\nErasing... ");
+        printf("\nErasing PROM... ");
         fflush(stdout);
     }
 
@@ -1902,6 +1903,219 @@ void printUsage(char * name)
     fprintf(stderr, "        filename = the .xsvf or .p-roc file to execute.\n" );
 }
 
+int getNumFileBytes() {
+    unsigned char data;
+    int i=0;
+    while (!feof(in))
+    {
+        data   = (unsigned char)fgetc( in );
+        i++;
+    }
+    return i;
+}
+
+// Move file pointer to beginning of XSVF data.
+void preparePROCFile() {
+    int temp, num_header_words;
+    int i;
+
+    fscanf(in, "%x\n", &temp);
+    num_header_words = (int)(0x012345678 - temp);
+
+    for (i=0; i<num_header_words; i++) fscanf(in, "%x\n", &temp);
+}
+
+
+uint32_t P3ROC_SPIWaitForReady()
+{
+    uint32_t        dataBuffer[1];
+    uint32_t        addr = 0;
+    uint8_t         iters = 0;
+
+    do
+    {
+      dataBuffer[0] = P3_ROC_SPI_OPCODE_RD_STATUS << P3_ROC_SPI_OPCODE_SHIFT;
+      PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
+
+      PRReadData(proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer);
+      if (dataBuffer[0] & 0x1) 
+      { 
+         PRSleep(1);
+         if (iters++ > 5) {
+           fprintf(stderr, ".");
+           iters = 0;
+         }
+      }
+    }
+    while (dataBuffer[0] & 0x1);
+
+    return 1;
+}
+
+void P3ROC_SPISendWEL()
+{
+    uint32_t        dataBuffer[512];
+    uint32_t        addr = 0;
+
+    dataBuffer[0] = P3_ROC_SPI_OPCODE_WR_ENABLE << P3_ROC_SPI_OPCODE_SHIFT;
+    PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
+}
+
+void P3ROC_SPIBulkErase()
+{
+    uint32_t        dataBuffer[512];
+    uint32_t        addr = 0;
+
+    P3ROC_SPISendWEL();
+
+    // Send bulk_erase command
+    printf("\nErasing flash .");
+    fflush(stdout);
+    dataBuffer[0] = P3_ROC_SPI_OPCODE_BULK_ERASE << P3_ROC_SPI_OPCODE_SHIFT;
+    PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
+    P3ROC_SPIWaitForReady();
+}
+
+void P3ROC_SPIReadPage(uint32_t page_addr, uint32_t * dataBuffer)
+{
+    uint32_t        addr = 0;
+
+    dataBuffer[0] = P3_ROC_SPI_OPCODE_RD_DATA << P3_ROC_SPI_OPCODE_SHIFT;
+    dataBuffer[0] = dataBuffer[0] | (page_addr << 8);
+    PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, 0, 1, dataBuffer); 
+    PRReadData(proc, P3_ROC_BUS_SPI_SELECT, 0x10, 64, dataBuffer);
+}
+
+void P3ROC_SPIWritePage(uint32_t page_addr, uint32_t * writeDataBuffer)
+{
+    uint32_t        addr = 0;
+    uint32_t        dataBuffer[512];
+
+    PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, 0x10, 64, writeDataBuffer); 
+    P3ROC_SPISendWEL();
+
+    dataBuffer[0] = P3_ROC_SPI_OPCODE_PP << P3_ROC_SPI_OPCODE_SHIFT;
+    dataBuffer[0] = dataBuffer[0] | (page_addr << 8);
+    PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, 0, 1, dataBuffer); 
+    P3ROC_SPIWaitForReady();
+}
+
+int verifyP3ROCImage()
+{
+    unsigned char inChars [4];
+    uint32_t        dataBuffer[512];
+    uint32_t        readBuffer[64];
+
+    int pageAddr = 0;
+    long int bytesPerTenth = numBytesTotal / 10;
+    long int bytesPer200th = numBytesTotal / 200;
+    numBytesCurrent = 0;
+
+    P3ROC_SPIWaitForReady();
+    printf("\n\nVerifying image:\n0%%  ");
+    fflush(stdout);
+    while (!feof(in)) {
+      for (int i=0; i<64; i++) 
+      {
+          if (!feof(in)) 
+          {
+              for (int j=0; j<4; j++) 
+              {
+                  inChars[j] = fgetc(in);
+                  numBytesCurrent++;
+                  if (numBytesCurrent % bytesPerTenth == 0) {
+                      printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
+                      fflush(stdout);
+                  }
+                  else if (numBytesCurrent % bytesPer200th == 0) {
+                      printf(".");
+                      fflush(stdout);
+                  }
+
+              }
+              dataBuffer[i] = inChars[0] << 24 | inChars[1] << 16 |  \
+                              inChars[2] << 8 | inChars[3];
+          }
+      }
+
+      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      P3ROC_SPIReadPage(pageAddr, &readBuffer[0]);
+
+      for (int i=0; i<64; i++)
+      {
+          if (readBuffer[i] != dataBuffer[i]) return 0;
+      }
+
+      pageAddr++;
+    }
+
+    XSVFDBG_PRINTF( 0, "\n\nSUCCESS - Operation completed successfully.  Cycle P3-ROC power to activate any changes.\n" );
+}
+
+void writeP3ROCImage()
+{
+    unsigned char inChars [4];
+    uint32_t        dataBuffer[512];
+
+    int pageAddr = 0;
+    long int bytesPerTenth = numBytesTotal / 10;
+    long int bytesPer200th = numBytesTotal / 200;
+    numBytesCurrent = 0;
+
+    P3ROC_SPIWaitForReady();
+    printf("\nProgramming new image:\n0%%  ");
+    fflush(stdout);
+    while (!feof(in)) {
+      for (int i=0; i<64; i++) 
+      {
+          if (!feof(in)) 
+          {
+              for (int j=0; j<4; j++) 
+              {
+                  inChars[j] = fgetc(in);
+                  numBytesCurrent++;
+                  if (numBytesCurrent % bytesPerTenth == 0) {
+                      printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
+                      fflush(stdout);
+                  }
+                  else if (numBytesCurrent % bytesPer200th == 0) {
+                      printf(".");
+                      fflush(stdout);
+                  }
+
+              }
+              dataBuffer[i] = inChars[0] << 24 | inChars[1] << 16 |  \
+                              inChars[2] << 8 | inChars[3];
+          }
+      }
+
+      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      P3ROC_SPIWritePage(pageAddr, &dataBuffer[0]);
+
+      //for (int i=0; i<64; i++) 
+      //{
+      //  fprintf(stderr, "\nPage: %x, Byte: %x:%x", pageAddr, i*4, dataBuffer[i]);
+      //}
+
+      pageAddr++;
+    }
+
+}
+
+void processP3ROCFile()
+{
+    fprintf(stderr, "\n\nUpdating P3-ROC.  This may take a couple of minutes.\n");
+    fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
+    P3ROC_SPIWaitForReady();
+    P3ROC_SPIBulkErase();
+    fprintf(stderr, "\nFlash erased.\n");
+    writeP3ROCImage();
+    rewind(in);        
+    preparePROCFile();
+    if (verifyP3ROCImage() == 0)
+        fprintf(stderr, "\nERROR: Verification failed.  Please retry.  DO NOT CYCLE POWER.\n\n");
+}
+
 int processFile()
 {
     clock_t startClock;
@@ -1934,8 +2148,10 @@ int checkPROCFile() {
 
     if (!fscanf(in, "%x\n", &temp)) return 0;
     num_header_words = (int)(0x012345678 - temp);
+    //fprintf(stderr, "\nproc_file_version: %x, %x", num_header_words, temp);
     if (!fscanf(in, "%x\n", &temp)) return 0;
     proc_file_version = (int)(-1 - temp);
+    //fprintf(stderr, "\nproc_file_version: %x, %x", proc_file_version, temp);
     if (!fscanf(in, "%x\n", &temp)) return 0;
     file_i = (int)(-1 - temp);
     //fprintf(stderr, "\nbyte count: %d, %x", file_i, temp);
@@ -1965,13 +2181,18 @@ int checkPROCFile() {
                 (board_rev & 0x10) >> 1;
 
     if (proc_file_version != 0) {
-        fprintf(stderr, "\nERROR: Unsupported .p-roc file version.  Check for an updated version of this tool.\n\n");
+        fprintf(stderr, "\nERROR: Unsupported .p-roc file version: %x.  Check for an updated version of this tool.\n\n", proc_file_version);
         return 0;
     }
 
     // Check for valid board ID and rev
     if (board_id != file_board_id) {
-        fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (ID: %x)\n\n", board_id);
+        fprintf(stderr, "\nERROR: board type mismatch.", board_id);
+        if (board_id == P_ROC_CHIP_ID && file_board_id == P3_ROC_CHIP_ID)
+            fprintf(stderr, "\nCannot program a P3-ROC image onto a P-ROC\n\n", file_board_id, board_id);
+        else if (board_id == P3_ROC_CHIP_ID && file_board_id == P_ROC_CHIP_ID)
+            fprintf(stderr, "\nCannot program a P-ROC image onto a P3-ROC\n\n", file_board_id, board_id);
+        else fprintf(stderr, "\nBoard and image are incompatible\n\n", file_board_id, board_id);
         return 0;
     }
     else fprintf(stderr, "\nBoard ID verified");
@@ -2002,29 +2223,7 @@ int checkPROCFile() {
 
     numBytesTotal = i;
 
-    return 1;
-}
-
-int getNumFileBytes() {
-    unsigned char data;
-    int i=0;
-    while (!feof(in))
-    {
-        data   = (unsigned char)fgetc( in );
-        i++;
-    }
-    return i;
-}
-
-// Move file pointer to beginning of XSVF data.
-void preparePROCFile() {
-    int temp, num_header_words;
-    int i;
-
-    fscanf(in, "%x\n", &temp);
-    num_header_words = (int)(0x012345678 - temp);
-
-    for (i=0; i<num_header_words; i++) fscanf(in, "%x\n", &temp);
+    return file_board_id;
 }
 
 /*============================================================================
@@ -2090,11 +2289,21 @@ int main( int argc, char** argv )
 
                 if (openPROC()) {
                     fprintf(stderr, "\nVerifying file contents and board compatibility...");
-                    if (checkPROCFile()) {
+                    switch (checkPROCFile()) 
+                    {
+                      case P_ROC_CHIP_ID:
 			rewind(in);        
                         preparePROCFile();
                         processFile();
-                    }
+                        break;
+                      case P3_ROC_CHIP_ID:
+			  rewind(in);        
+                          preparePROCFile();
+                          processP3ROCFile();
+                          break;
+                      default:
+                          break;
+                     }
                 }
             }
         }

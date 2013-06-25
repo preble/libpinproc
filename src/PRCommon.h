@@ -37,4 +37,6 @@
 void PRLog(PRLogLevel level, const char *format, ...);
 void PRSetLastErrorText(const char *format, ...);
 
+#define NULL 0
+
 #endif /* PINPROC_PRCOMMON_H */
