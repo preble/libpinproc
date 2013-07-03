@@ -1207,7 +1207,7 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
 	PRResult res;
     uint32_t * buffer;
 
-    buffer = (uint32_t *)malloc((numWriteWords * 4) + 1);
+    buffer = (uint32_t *)malloc((numWriteWords * 4) + 4);
     buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
     memcpy(buffer+1, writeBuffer, numWriteWords * 4);
     res = WriteData(buffer, numWriteWords + 1);
@@ -1377,4 +1377,111 @@ int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combi
     *revPtr = revision;
     *combinedPtr = combinedVersionRevision;
     return 0;
+}
+
+PRResult PRDevice::PRLEDColor(PRLED * pLED, uint8_t color)
+{
+    const int bufferWords = 2;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->LEDIndex, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeColor, color, &buffer[1]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDFade(PRLED * pLED, uint8_t fadeColor, uint16_t fadeRate)
+{
+    const int bufferWords = 4;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeFadeRateLow, fadeRate & 0xFF, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeFadeRateHigh, (fadeRate >> 8) & 0xFF, &buffer[1]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->LEDIndex, &buffer[2]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeFadeColor, fadeColor, &buffer[3]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDFadeColor(PRLED * pLED, uint8_t fadeColor)
+{
+    const int bufferWords = 2;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->LEDIndex, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->boardAddr, kPRLEDRegisterTypeFadeColor, fadeColor, &buffer[1]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDFadeRate(uint8_t boardAddr, uint16_t fadeRate)
+{
+    const int bufferWords = 2;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, boardAddr, kPRLEDRegisterTypeFadeRateLow, fadeRate & 0xFF, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, boardAddr, kPRLEDRegisterTypeFadeRateHigh, (fadeRate >> 8) & 0xFF, &buffer[1]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDRGBColor(PRLEDRGB * pLED, uint32_t color)
+{
+    const int bufferWords = 6;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pRedLED->LEDIndex, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeColor, (color >> 16) & 0xFF, &buffer[1]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pGreenLED->LEDIndex, &buffer[2]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeColor, (color >> 8) & 0xFF, &buffer[3]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pBlueLED->LEDIndex, &buffer[4]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeColor, color & 0xFF, &buffer[5]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDRGBFade(PRLEDRGB * pLED, uint32_t fadeColor, uint16_t fadeRate)
+{
+    const int bufferWords = 12;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeFadeRateLow, fadeRate & 0xFF, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeFadeRateHigh, (fadeRate >> 8) & 0xFF, &buffer[1]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pRedLED->LEDIndex, &buffer[2]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeFadeColor, (fadeColor >> 16) & 0xFF, &buffer[3]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeFadeRateLow, fadeRate & 0xFF, &buffer[4]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeFadeRateHigh, (fadeRate >> 8) & 0xFF, &buffer[5]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pGreenLED->LEDIndex, &buffer[6]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeFadeColor, (fadeColor >> 8) & 0xFF, &buffer[7]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeFadeRateLow, fadeRate & 0xFF, &buffer[8]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeFadeRateHigh, (fadeRate >> 8) & 0xFF, &buffer[9]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pBlueLED->LEDIndex, &buffer[10]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeFadeColor, fadeColor & 0xFF, &buffer[11]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
+}
+
+PRResult PRDevice::PRLEDRGBFadeColor(PRLEDRGB * pLED, uint32_t fadeColor)
+{
+    const int bufferWords = 6;
+    uint32_t buffer[bufferWords];
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pRedLED->LEDIndex, buffer);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pRedLED->boardAddr, kPRLEDRegisterTypeFadeColor, (fadeColor >> 16) & 0xFF, &buffer[1]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pGreenLED->LEDIndex, &buffer[2]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pGreenLED->boardAddr, kPRLEDRegisterTypeFadeColor, (fadeColor >> 8) & 0xFF, &buffer[3]);
+
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeLEDIndex, pLED->pBlueLED->LEDIndex, &buffer[4]);
+    FillPDBCommand(P_ROC_DRIVER_PDB_WRITE_COMMAND, pLED->pBlueLED->boardAddr, kPRLEDRegisterTypeFadeColor, fadeColor & 0xFF, &buffer[5]);
+
+    return WriteDataRaw(P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, bufferWords, buffer);
 }

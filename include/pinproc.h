@@ -543,7 +543,47 @@ PINPROC_API PRResult PRJTAGReadTDIMemory(PRHandle handle, uint16_t tableOffset, 
 /** Read the JTAG status register for the command complete bit and JTAG pin states. */
 PINPROC_API PRResult PRJTAGGetStatus(PRHandle handle, PRJTAGStatus * status);
 
-/** @} */ // End of DMD
+/** @} */ // End of JTAG
+
+// PD-LED
+
+/**
+ * @defgroup pdled PD-LED Control
+ * @{
+ */
+
+
+typedef struct PRLED {
+    uint8_t boardAddr;
+    uint8_t LEDIndex;
+} PRLED;
+
+typedef struct PRLEDRGB {
+    PRLED* pRedLED;
+    PRLED* pGreenLED;
+    PRLED* pBlueLED;
+} PRLEDRGB;
+
+/** Sets the color of a given PRLED. */
+PINPROC_API PRResult PRLEDColor(PRHandle handle, PRLED * pLED, uint8_t color);
+/** Sets the fade color on a given PRLED. */
+PINPROC_API PRResult PRLEDFadeColor(PRHandle handle, PRLED * pLED, uint8_t fadeColor);
+/** Sets the fade color and rate on a given PRLED. Note: The rate will apply to any future PRLEDFadeColor or PRLEDRGBFadeColor calls on the same PD-LED board. */
+PINPROC_API PRResult PRLEDFade(PRHandle handle, PRLED * pLED, uint8_t fadeColor, uint16_t fadeRate);
+
+/** Sets the fade rate on a given board.  Note: The rate will apply to any future PRLEDFadeColor or PRLEDRGBFadeColor calls on the same PD-LED board. */
+PINPROC_API PRResult PRLEDFadeRate(PRHandle handle, uint8_t boardAddr, uint16_t fadeRate);
+
+/** Sets the color of a given PRLEDRGB. */
+PINPROC_API PRResult PRLEDRGBColor(PRHandle handle, PRLEDRGB * pLED, uint32_t color);
+/** Sets the fade color and rate on a given PRLEDRGB.  Note: The rate will apply to any future PRLEDFadeColor or PRLEDRGBFadeColor calls on any of the referenced PD-LED boards. */
+PINPROC_API PRResult PRLEDRGBFade(PRHandle handle, PRLEDRGB * pLED, uint32_t fadeColor, uint16_t fadeRate);
+/** Sets the fade color on a given PRLEDRGB. */
+PINPROC_API PRResult PRLEDRGBFadeColor(PRHandle handle, PRLEDRGB * pLED, uint32_t fadeColor);
+
+
+/** @} */ // End of PD-LED
+
 
 /** @cond */
 PINPROC_EXTERN_C_END
