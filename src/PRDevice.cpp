@@ -241,6 +241,11 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
                         events[i].type = kPREventTypeAccelerometerZ;
                         break;
                     }
+                    case 3:
+                    {
+                        events[i].type = kPREventTypeAccelerometerIRQ;
+                        break;
+                    }
                     default: events[i].type = kPREventTypeInvalid;
                 }
                 break;

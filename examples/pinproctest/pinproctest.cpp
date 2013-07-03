@@ -71,6 +71,107 @@ PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
     return kPRSuccess;
 }
 
+void ConfigureAccelerometerMotion(PRHandle proc)
+{
+    uint32_t readData[5];
+
+    PRReadData(proc, 6, 0x10D, 1, readData); 
+    printf("\nAccel chip id: %x\n", readData[0]);
+    fflush(stdout);
+
+    // Set FF_MT_COUNT (0x18)
+    readData[0] = 1;
+    PRWriteData(proc, 6, 0x118, 1, readData); 
+
+    // Set FF_MT_THRESH (0x17)
+    readData[0] = 1;
+    PRWriteData(proc, 6, 0x117, 1, readData); 
+
+    // Set FF_MT_CONFIG (0x15)
+    readData[0] = 0xD8;
+    PRWriteData(proc, 6, 0x115, 1, readData); 
+
+    // Enable Motion interrupts
+    readData[0] = 0x04;
+    PRWriteData(proc, 6, 0x12D, 1, readData); 
+
+    // Direct motion interrupt to int0 pin (default)
+    readData[0] = 0x04;
+    PRWriteData(proc, 6, 0x12E, 1, readData); 
+
+    readData[0] = 0x3D;
+    PRWriteData(proc, 6, 0x12A, 1, readData); 
+
+    readData[0] = 0x02;
+    PRWriteData(proc, 6, 0x12B, 1, readData); 
+
+
+    // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
+    //readData[0] = 0x0F; // Enable polling, 8 times a second.
+    readData[0] = 0x00;  // Disable polling
+    readData[0] = readData[0] | 0x1600; // Set IRQ status addr (FF_MT_SRC)
+    PRWriteData(proc, 6, 0x000, 1, readData); 
+    PRFlushWriteData(proc);
+
+}
+
+void ConfigureAccelerometerTransient(PRHandle proc)
+{
+    uint32_t readData[5];
+
+    PRReadData(proc, 6, 0x10D, 1, readData); 
+    printf("\nAccel chip id: %x\n", readData[0]);
+    fflush(stdout);
+
+    // Set to standby so register changes will take.
+    readData[0] = 0x0;
+    PRWriteData(proc, 6, 0x12A, 1, readData); 
+
+    // Set HPF_OUT bit in XYZ_DATA_CFG (0xOE)
+    //readData[0] = 0x10;
+    //PRWriteData(proc, 6, 0x10E, 1, readData); 
+
+
+    // Set HP_FILTER_CUTOFF (0x0F)
+    readData[0] = 0x03;
+    PRWriteData(proc, 6, 0x10F, 1, readData); 
+
+    // Set FF_TRANSIENT_COUNT (0x20)
+    readData[0] = 1;
+    PRWriteData(proc, 6, 0x120, 1, readData); 
+
+    // Set FF_TRANSIENT_THRESH (0x1F)
+    readData[0] = 1;
+    PRWriteData(proc, 6, 0x11F, 1, readData); 
+
+    // Set FF_TRANSIENT_CONFIG (0x1D)
+    readData[0] = 0x1E;
+    PRWriteData(proc, 6, 0x11D, 1, readData); 
+
+    // Enable Motion interrupts
+    readData[0] = 0x20;
+    PRWriteData(proc, 6, 0x12D, 1, readData); 
+
+    // Direct motion interrupt to int0 pin (default)
+    readData[0] = 0x20;
+    PRWriteData(proc, 6, 0x12E, 1, readData); 
+
+    //readData[0] = 0x3D;
+    readData[0] = 0x05;
+    PRWriteData(proc, 6, 0x12A, 1, readData); 
+
+    readData[0] = 0x02;
+    PRWriteData(proc, 6, 0x12B, 1, readData); 
+
+
+    // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
+    //readData[0] = 0x0F; // Enable polling, 8 times a second.
+    readData[0] = 0x00;  // Disable polling
+    readData[0] = readData[0] | 0x1E00; // Set IRQ status addr (FF_MT_SRC)
+    PRWriteData(proc, 6, 0x000, 1, readData); 
+    PRFlushWriteData(proc);
+
+}
 
 time_t startTime;
 bool runLoopRun = true;
@@ -99,20 +200,8 @@ void RunLoop(PRHandle proc)
       }
     }
 
-    PRReadData(proc, 6, 0x10D, 1, readData); 
-    printf("\nAccel chip id: %x\n", readData[0]);
-    fflush(stdout);
-
-    readData[0] = 0x3D;
-    PRWriteData(proc, 6, 0x12A, 1, readData); 
-
-    readData[0] = 0x02;
-    PRWriteData(proc, 6, 0x12B, 1, readData); 
-
-    // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
-    readData[0] = 0x0F;
-    PRWriteData(proc, 6, 0x000, 1, readData); 
-    PRFlushWriteData(proc);
+    //ConfigureAccelerometerMotion(proc);
+    ConfigureAccelerometerTransient(proc);
 
     int p = 0;
 
@@ -120,7 +209,21 @@ void RunLoop(PRHandle proc)
     {
         PRDriverWatchdogTickle(proc);
 
+//        PRReadData(proc, 6, 0x115, 1, readData); 
+//        printf("\n\n\nAccel chip id: %x\n", readData[0]);
+//        PRReadData(proc, 6, 0x116, 1, readData); 
+//        printf("\nAccel chip id: %x\n", readData[0]);
+//        PRReadData(proc, 6, 0x117, 1, readData); 
+//        printf("\nAccel chip id: %x\n", readData[0]);
+//        PRReadData(proc, 6, 0x118, 1, readData); 
+//        printf("\nAccel chip id: %x\n", readData[0]);
+//        PRReadData(proc, 6, 0x12D, 1, readData); 
+//        printf("\nAccel chip id: %x\n", readData[0]);
+//        PRReadData(proc, 6, 0x12E, 1, readData); 
+//        printf("\nAccel chip id: %x\n", readData[0]);
+
         int numEvents = PRGetEvents(proc, events, maxEvents);
+//        if (numEvents > 0) printf("\nNum events: %x\n", numEvents);
         for (int i = 0; i < numEvents; i++)
         {
             PREvent *event = &events[i];
@@ -182,6 +285,13 @@ void RunLoop(PRHandle proc)
                     //readData[2] = event->value & 0x3FFF;
                     readData[2] = event->value;
                     printf("\nAccel: X: %x, Y: %x, Z: %x", readData[0], readData[1],readData[2]);
+                    break;
+                }
+                case kPREventTypeAccelerometerIRQ:
+                {
+                    //readData[2] = event->value & 0x3FFF;
+                    readData[3] = event->value;
+                    printf("\nAccel IRQ: %x", readData[3]);
                     break;
                 }
                 default:
