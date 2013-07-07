@@ -1983,6 +1983,7 @@ void P3ROC_SPIReadPage(uint32_t page_addr, uint32_t * dataBuffer)
     dataBuffer[0] = P3_ROC_SPI_OPCODE_RD_DATA << P3_ROC_SPI_OPCODE_SHIFT;
     dataBuffer[0] = dataBuffer[0] | (page_addr << 8);
     PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, 0, 1, dataBuffer); 
+    P3ROC_SPIWaitForReady();
     PRReadData(proc, P3_ROC_BUS_SPI_SELECT, 0x10, 64, dataBuffer);
 }
 
