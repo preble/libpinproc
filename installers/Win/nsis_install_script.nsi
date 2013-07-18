@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "libpinproc"
-!define PRODUCT_VERSION "1.2"
+!define PRODUCT_VERSION "2.0"
 !define PRODUCT_PUBLISHER "Gerry Stellenberg"
 !define PRODUCT_WEB_SITE "http://www.pinballcontrollers.com"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\DPInst.exe"
@@ -35,7 +35,7 @@
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "libpinproc_1.2_install.exe"
+OutFile "libpinproc_2.0_install.exe"
 InstallDir "$PROGRAMFILES\P-ROC\libpinproc"
 ShowInstDetails show
 ShowUnInstDetails show
