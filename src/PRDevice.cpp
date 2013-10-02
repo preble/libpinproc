@@ -164,7 +164,10 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 int PRDevice::GetEvents(PREvent *events, int maxEvents)
 {
     if (SortReturningData() != kPRSuccess)
-		return -1;
+    {
+        PRSetLastErrorText("GetEvents ERROR: Error in CollectReadData");
+	return -1;
+    }
 
     // The unrequestedDataQueue only has unrequested switch event data.  Pop
     // events out 1 at a time, interpret them, and populate the outgoing list with them.
@@ -796,16 +799,28 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     // situations; so the inefficiencies are acceptable.
     for (i = 0; i < numSwitches / 32; i++)
     {
-        rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
-                         P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
 
-        if (combinedVersionRevision < P_ROC_VER_REV_FIXED_SWITCH_STATE_READS) {
+        if (chip_id == P_ROC_CHIP_ID)
+        {
             rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
-                             P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
+                             P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
+
+            if (combinedVersionRevision < P_ROC_VER_REV_FIXED_SWITCH_STATE_READS) {
+                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                                 P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
+            }
+            else {
+                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                                 P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+            }
         }
-        else {
+        else // chip == P3_ROC_CHIP_ID) 
+        {
             rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
-                             P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+                             P3_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
+
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                             P3_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
         }
     }
 
@@ -1102,6 +1117,7 @@ PRResult PRDevice::VerifyChipID()
             else rc = kPRSuccess;
             //std::cout << rc << " words read.  \n"
             DEBUG(PRLog(kPRLogError, "FPGA Chip ID: 0x%x\n", buffer[1]));
+            chip_id = buffer[1];
             revision = buffer[2] & 0xffff;
             version = buffer[2] >> 16;
             CalcCombinedVerRevision();

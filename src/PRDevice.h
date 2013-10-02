@@ -147,6 +147,7 @@ protected:
 
     uint16_t version;
     uint16_t revision;
+    uint32_t chip_id;
     uint32_t combinedVersionRevision;
     /**
      * Calculated combined Version/Revision number.

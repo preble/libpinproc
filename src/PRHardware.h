@@ -154,6 +154,8 @@ const uint32_t P_ROC_JTAG_TDI_MEMORY_BASE_ADDR             = 0x800;
 const uint32_t P_ROC_SWITCH_CTRL_STATE_BASE_ADDR           = 4;
 const uint32_t P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR    = 11;
 const uint32_t P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR        = 12;
+const uint32_t P3_ROC_SWITCH_CTRL_STATE_BASE_ADDR          = 16;
+const uint32_t P3_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR       = 32;
 
 const uint32_t P_ROC_EVENT_TYPE_SWITCH                     = 0;
 const uint32_t P_ROC_EVENT_TYPE_DMD                        = 1;
