@@ -313,7 +313,7 @@ void PRDriverStateFuturePulse(PRDriverState *driver, uint8_t milliseconds, uint3
 }
 void PRDriverStateSchedule(PRDriverState *driver, uint32_t schedule, uint8_t cycleSeconds, bool_t now)
 {
-    driver->state = 1;
+    driver->state = schedule != 0;
     driver->timeslots = schedule;
     driver->waitForFirstTimeSlot = !now;
     driver->outputDriveTime = cycleSeconds;
