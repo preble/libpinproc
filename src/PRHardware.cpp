@@ -346,7 +346,8 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
 
 void FillPDBCommand(uint8_t command, uint8_t boardAddr, PRLEDRegisterType reg, uint8_t data, uint32_t * buffer)
 {
-    buffer[0] = (command << P_ROC_DRIVER_PDB_COMMAND_SHIFT) |
+    buffer[0] = CreateBurstCommand (P_ROC_BUS_DRIVER_CTRL_SELECT, P_ROC_DRIVER_PDB_ADDR, 1 );
+    buffer[1] = (command << P_ROC_DRIVER_PDB_COMMAND_SHIFT) |
                 (boardAddr << P_ROC_DRIVER_PDB_BOARD_ADDR_SHIFT) |
                 (reg << P_ROC_DRIVER_PDB_REGISTER_SHIFT) |
                 (data << P_ROC_DRIVER_PDB_DATA_SHIFT);
