@@ -2188,12 +2188,12 @@ int checkPROCFile() {
 
     // Check for valid board ID and rev
     if (board_id != file_board_id) {
-        fprintf(stderr, "\nERROR: board type mismatch.", board_id);
+        fprintf(stderr, "\nERROR: board type mismatch.");
         if (board_id == P_ROC_CHIP_ID && file_board_id == P3_ROC_CHIP_ID)
-            fprintf(stderr, "\nCannot program a P3-ROC image onto a P-ROC\n\n", file_board_id, board_id);
+            fprintf(stderr, "\nCannot program a P3-ROC image onto a P-ROC\n\n");
         else if (board_id == P3_ROC_CHIP_ID && file_board_id == P_ROC_CHIP_ID)
-            fprintf(stderr, "\nCannot program a P-ROC image onto a P3-ROC\n\n", file_board_id, board_id);
-        else fprintf(stderr, "\nBoard and image are incompatible\n\n", file_board_id, board_id);
+            fprintf(stderr, "\nCannot program a P-ROC image onto a P3-ROC\n\n");
+        else fprintf(stderr, "\nImage (0x%08X) and board (0x%08X) are incompatible\n\n", file_board_id, board_id);
         return 0;
     }
     else fprintf(stderr, "\nBoard ID verified");
