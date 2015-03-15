@@ -28,7 +28,7 @@
  *  libpinproc
  */
 
-
+#include <stdlib.h>
 #include "PRHardware.h"
 #include "PRCommon.h"
 
