@@ -574,11 +574,17 @@ PRResult PRDevice::DriverAuxSendCommands(PRDriverAuxCommand * commands, uint8_t 
     uint32_t convertedCommand;
     uint32_t addr;
 
-    addr = (P_ROC_DRIVER_AUX_MEM_DECODE << P_ROC_DRIVER_CTRL_DECODE_SHIFT) |
-           startingAddr;
+    if (chip_id == P_ROC_CHIP_ID)
+    {
+        addr = (P_ROC_DRIVER_AUX_MEM_DECODE << P_ROC_DRIVER_CTRL_DECODE_SHIFT) | startingAddr;
+        commandBuffer[0] = CreateBurstCommand(P_ROC_BUS_DRIVER_CTRL_SELECT, addr, numCommands);
+    }
+    else // chip == P3_ROC_CHIP_ID)
+    {
+        addr = 0;
+        commandBuffer[0] = CreateBurstCommand(P3_ROC_BUS_AUX_CTRL_SELECT, addr, numCommands);
+    }
 
-    commandBuffer[0] = CreateBurstCommand(P_ROC_BUS_DRIVER_CTRL_SELECT, 
-                                          addr, numCommands);
     for (k=0; k<numCommands; k++) {
         convertedCommand = CreateDriverAuxCommand(commands[k]);
         commandBuffer[k+1] = convertedCommand;
