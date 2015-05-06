@@ -357,7 +357,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     const bool mappedSternDriverGroupPolarity[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     const int lastWPCCoilDriverGroup = 9;
     const int lastSternCoilDriverGroup = 7;
-    const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100, 0, 0, 0, 0, 0, 0, 0, 0};
+    const int mappedWPCDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
     const int mappedWPCDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7};
@@ -574,11 +574,17 @@ PRResult PRDevice::DriverAuxSendCommands(PRDriverAuxCommand * commands, uint8_t 
     uint32_t convertedCommand;
     uint32_t addr;
 
-    addr = (P_ROC_DRIVER_AUX_MEM_DECODE << P_ROC_DRIVER_CTRL_DECODE_SHIFT) |
-           startingAddr;
+    if (chip_id == P_ROC_CHIP_ID)
+    {
+        addr = (P_ROC_DRIVER_AUX_MEM_DECODE << P_ROC_DRIVER_CTRL_DECODE_SHIFT) | startingAddr;
+        commandBuffer[0] = CreateBurstCommand(P_ROC_BUS_DRIVER_CTRL_SELECT, addr, numCommands);
+    }
+    else // chip == P3_ROC_CHIP_ID)
+    {
+        addr = 0;
+        commandBuffer[0] = CreateBurstCommand(P3_ROC_BUS_AUX_CTRL_SELECT, addr, numCommands);
+    }
 
-    commandBuffer[0] = CreateBurstCommand(P_ROC_BUS_DRIVER_CTRL_SELECT, 
-                                          addr, numCommands);
     for (k=0; k<numCommands; k++) {
         convertedCommand = CreateDriverAuxCommand(commands[k]);
         commandBuffer[k+1] = convertedCommand;
