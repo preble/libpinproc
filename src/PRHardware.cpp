@@ -491,7 +491,7 @@ int PRHardwareWrite(uint8_t *buffer, int bytes)
 
 #else // WIN32
 
-#include <ftdi.h>
+#include <libftdi1/ftdi.h>
 
 static bool ftdiInitialized;
 static ftdi_context ftdic;
