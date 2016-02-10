@@ -1,0 +1,21 @@
+Source: libpinproc
+Priority: optional
+Maintainer: Jan Kantert <jan-mpf@kantert.net>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Section: libs
+Homepage: https://github.com/jabdoa2/libpinproc
+
+Package: libpinproc-dev
+Section: libdevel
+Architecture: any
+Depends: libpinproc (= ${binary:Version})
+Description: Devel header for libpinproc
+ Lib to speak to the P-Roc and P3-Roc hardware from Multimorphic
+
+Package: libpinproc
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: libpinproc
+ Lib to speak to the P-Roc and P3-Roc hardware from Multimorphic

@@ -1,0 +1,12 @@
+Package: libpinproc-dev
+Source: libpinproc
+Version: 0.1.0-1
+Architecture: amd64
+Maintainer: Jan Kantert <jan-mpf@kantert.net>
+Installed-Size: 68
+Depends: libpinproc (= 0.1.0-1)
+Section: libdevel
+Priority: optional
+Homepage: https://github.com/jabdoa2/libpinproc
+Description: Devel header for libpinproc
+ Lib to speak to the P-Roc and P3-Roc hardware from Multimorphic
