@@ -235,18 +235,18 @@ if(PINPROC_BUILD_TOOLS)
 # Create a target for the test tool
 #TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)
 #      see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#command:add_subdirectory
-add_executable(pinproctest
-	examples/pinproctest/pinproctest.cpp
-	examples/pinproctest/drivers.cpp
-	examples/pinproctest/dmd.cpp
-	examples/pinproctest/switches.cpp
-	examples/pinproctest/alphanumeric.cpp
-)
-target_link_libraries(pinproctest
-	pinproc
-	optimized ${YAML_CPP_LIB}
-	debug ${YAML_CPP_LIB_DBG}
-)
+#add_executable(pinproctest
+#	examples/pinproctest/pinproctest.cpp
+#	examples/pinproctest/drivers.cpp
+#	examples/pinproctest/dmd.cpp
+#	examples/pinproctest/switches.cpp
+#	examples/pinproctest/alphanumeric.cpp
+#)
+#target_link_libraries(pinproctest
+#	pinproc
+#	optimized ${YAML_CPP_LIB}
+#	debug ${YAML_CPP_LIB_DBG}
+#)
 
 # Create a target for the firmware tool
 #TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)
