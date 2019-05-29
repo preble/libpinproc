@@ -13,11 +13,12 @@ if(POLICY CMP0015)
 	cmake_policy(SET CMP0015 OLD)
 endif()
 
-
 ###
 ### Project settings
 ###
 project(PINPROC)
+
+set (CMAKE_CXX_STANDARD 11)
 
 set(PINPROC_VERSION_MAJOR "2")
 set(PINPROC_VERSION_MINOR "0")

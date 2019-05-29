@@ -142,36 +142,34 @@ void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
     // WPC  Flippers
     std::string numStr;
     const YAML::Node& flippers = yamlDoc[kFlippersSection];
-    for (YAML::Iterator flippersIt = flippers.begin(); flippersIt != flippers.end(); ++flippersIt)
+    for (YAML::const_iterator flippersIt = flippers.begin(); flippersIt != flippers.end(); ++flippersIt)
     {
         int swNum, coilMain, coilHold;
-        std::string flipperName;
-        *flippersIt >> flipperName;
+        std::string flipperName = flippersIt->as<std::string>();
         if (machineType == kPRMachineWPC)
         {
-            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
+            numStr = yamlDoc[kSwitchesSection][flipperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
+            numStr = yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField].as<std::string>(); coilMain = PRDecode(machineType, numStr.c_str());
+            numStr = yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField].as<std::string>(); coilHold = PRDecode(machineType, numStr.c_str());
             ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
         }
         else if (machineType == kPRMachineSternWhitestar || machineType == kPRMachineSternSAM)
         {
             printf("hi\n");
-            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
+            numStr = yamlDoc[kSwitchesSection][flipperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
+            numStr = yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField].as<std::string>(); coilMain = PRDecode(machineType, numStr.c_str());
             ConfigureSternFlipperSwitchRule (proc, swNum, coilMain, kFlipperPulseTime, kFlipperPatterOnTime, kFlipperPatterOffTime);
         }
     }
     
     const YAML::Node& bumpers = yamlDoc[kBumpersSection];
-    for (YAML::Iterator bumpersIt = bumpers.begin(); bumpersIt != bumpers.end(); ++bumpersIt)
+    for (YAML::const_iterator bumpersIt = bumpers.begin(); bumpersIt != bumpers.end(); ++bumpersIt)
     {
         int swNum, coilNum;
         // WPC  Slingshots
-        std::string bumperName;
-        *bumpersIt >> bumperName;
-        yamlDoc[kSwitchesSection][bumperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-        yamlDoc[kCoilsSection][bumperName][kNumberField] >> numStr; coilNum = PRDecode(machineType, numStr.c_str());
+        std::string bumperName = bumpersIt->as<std::string>();
+        numStr = yamlDoc[kSwitchesSection][bumperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
+        numStr = yamlDoc[kCoilsSection][bumperName][kNumberField].as<std::string>(); coilNum = PRDecode(machineType, numStr.c_str());
         ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
     }
 }
