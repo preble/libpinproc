@@ -1179,10 +1179,6 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
             wr_buffer[(j*4)+k] = (uint8_t)(temp_word & 0x000000ff);
             temp_word = temp_word >> 8;
         }
-//      for (k=0; k<4; k++)
-//      {
-//          item = wr_buffer[(j*4)+k];
-//      }
     }
 
     int bytesToWrite = numWords * 4;
@@ -1207,7 +1203,7 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
     buffer = (uint32_t *)malloc((numWriteWords * 4) + 4);
     buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
     memcpy(buffer+1, writeBuffer, numWriteWords * 4);
-    res = WriteData(buffer, numWriteWords + 1);
+    res = PrepareWriteData(buffer, numWriteWords + 1);
     free (buffer);
 	return res;
 }
