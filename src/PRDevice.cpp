@@ -71,15 +71,15 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
     if (machineType != kPRMachineCustom && machineType != kPRMachinePDB &&
 
 	// Don't accept if requested type is WPC/WPC95 but read machine is not.
-        ( (((machineType == kPRMachineWPC) || 
+        ( (((machineType == kPRMachineWPC) ||
             (machineType == kPRMachineWPC95) ||
-            (machineType == kPRMachineWPCAlphanumeric)) && 
-           (readMachineType != kPRMachineWPC && 
+            (machineType == kPRMachineWPCAlphanumeric)) &&
+           (readMachineType != kPRMachineWPC &&
             readMachineType != kPRMachineWPC95 &&
             readMachineType != kPRMachineWPCAlphanumeric)) ||
 	  // Also don't accept if the requested is not WPC/WPC95 but the P-ROC is.
-          (machineType != kPRMachineWPC && 
-           machineType != kPRMachineWPC95 && 
+          (machineType != kPRMachineWPC &&
+           machineType != kPRMachineWPC95 &&
            machineType != kPRMachineWPCAlphanumeric &&
            readMachineType == kPRMachineWPC) ) )
     {
@@ -95,7 +95,7 @@ PRDevice* PRDevice::Create(PRMachineType machineType)
 PRResult PRDevice::Reset(uint32_t resetFlags)
 {
     int i;
-    
+
     // Initialize buffer pointers
     collected_bytes_rd_addr = 0;
     collected_bytes_wr_addr = 0;
@@ -106,12 +106,12 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
     while (!requestedDataQueue.empty()) requestedDataQueue.pop();
     num_collected_bytes = 0;
     numPreparedWriteWords = 0;
-    
+
     if (machineType != kPRMachineCustom && machineType != kPRMachinePDB) DriverLoadMachineTypeDefaults(machineType, resetFlags);
 
     // Disable dmd events if updating the device.
 #if 0
-    if (resetFlags & kPRResetFlagUpdateDevice) 
+    if (resetFlags & kPRResetFlagUpdateDevice)
     {
         PRDMDConfig *dmdConfig = &(this->dmdConfig);
         dmdConfig->enableFrameEvents = false;
@@ -121,9 +121,9 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
 
     // Make sure the free list is empty.
     while (!freeSwitchRuleIndexes.empty()) freeSwitchRuleIndexes.pop();
-    
+
 	memset(switchRules, 0x00, sizeof(PRSwitchRuleInternal) * maxSwitchRules);
-	
+
     for (i = 0; i < kPRSwitchRulesCount; i++)
     {
         PRSwitchRuleInternal *switchRule = &switchRules[i];
@@ -137,15 +137,15 @@ PRResult PRDevice::Reset(uint32_t resetFlags)
         // However, some of the switches are always optos and don't need to be debounced.
         // So the debounced rule resources for those switches are available for linked rules.
         if (switchRule->switchNum >= kPRSwitchNeverDebounceFirst &&
-            (switchRule->eventType == kPREventTypeSwitchClosedDebounced || 
-             switchRule->eventType == kPREventTypeSwitchOpenDebounced)) 
+            (switchRule->eventType == kPREventTypeSwitchClosedDebounced ||
+             switchRule->eventType == kPREventTypeSwitchOpenDebounced))
             freeSwitchRuleIndexes.push(ruleIndex);
     }
-    
+
     // Create empty switch rule for clearing the rules in the device.
-    PRSwitchRule emptySwitchRule; 
+    PRSwitchRule emptySwitchRule;
     memset(&emptySwitchRule, 0x00, sizeof(PRSwitchRule));
-    
+
     for (i = 0; i < kPRSwitchCount; i++)
     {
         // Send blank rule for each event type to Device if necessary
@@ -177,7 +177,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
         uint32_t event_data = unrequestedDataQueue.front();
         unrequestedDataQueue.pop();
 
-        int type; 
+        int type;
         bool open, debounced;
 
         if (version >= 2) {
@@ -205,7 +205,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
                     events[i].type = debounced ? kPREventTypeSwitchOpenDebounced : kPREventTypeSwitchOpenNondebounced;
                 else
                     events[i].type = debounced ? kPREventTypeSwitchClosedDebounced : kPREventTypeSwitchClosedNondebounced;
-                break; 
+                break;
             }
 
             case P_ROC_EVENT_TYPE_DMD:
@@ -219,7 +219,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
                 //fprintf(stderr, "\nBurst event");
                 if (open) events[i].type = kPREventTypeBurstSwitchOpen;
                 else events[i].type = kPREventTypeBurstSwitchClosed;
-                break; 
+                break;
             }
 
             case P_ROC_EVENT_TYPE_ACCELEROMETER:
@@ -255,8 +255,8 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
             }
 
             default: events[i].type = kPREventTypeInvalid;
-           
-        } 
+
+        }
     }
     return i;
 }
@@ -324,7 +324,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
     int32_t rc;
 
     // Don't allow Constant Pulse (non-schedule with time = 0) for known high current drivers.
-    // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.  
+    // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.
     // TODO: Create some constants that are used both here and in DriverLoadMachineTypeDefaults.
 
     DEBUG(PRLog(kPRLogInfo, "Updating driver #%d\n", driverState->driverNum));
@@ -347,10 +347,10 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
 {
     int i;
     PRResult res = kPRSuccess;
-    
+
     //const int WPCDriverLoopTime = 4; // milliseconds
     //const int SternDriverLoopTime = 2; // milliseconds
-    
+
     const int mappedWPCDriverGroupEnableIndex[] = {0, 0, 0, 0, 0, 2, 4, 3, 1, 5, 7, 7, 7, 7, 7, 7, 7, 7, 8, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupEnableIndex[] = {0, 0, 0, 0, 1, 0, 2, 3, 0, 0, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9};
     const bool mappedWPCDriverGroupPolarity[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0};
@@ -361,9 +361,9 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     const int mappedSternDriverGroupSlowTime[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400, 400};
     const int mappedWPCDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0};
     const int mappedSternDriverGroupActivateIndex[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7};
-    
+
     const int watchdogResetTime = 1000; // milliseconds
-    
+
     int mappedDriverGroupEnableIndex[kPRDriverGroupsMax];
     bool mappedDriverGroupPolarity[kPRDriverGroupsMax];
     int mappedDriverGroupSlowTime[kPRDriverGroupsMax];
@@ -380,51 +380,51 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     int rowEnableSelect;
     int lastCoilDriverGroup;
 
-    
-    switch (machineType) 
+
+    switch (machineType)
     {
-        case kPRMachineWPC: 
-        case kPRMachineWPC95: 
-        case kPRMachineWPCAlphanumeric: 
+        case kPRMachineWPC:
+        case kPRMachineWPC95:
+        case kPRMachineWPCAlphanumeric:
         {
-            memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex, 
-                   sizeof(mappedDriverGroupEnableIndex)); 
-            memcpy(mappedDriverGroupPolarity,mappedWPCDriverGroupPolarity, 
-                   sizeof(mappedDriverGroupPolarity)); 
+            memcpy(mappedDriverGroupEnableIndex,mappedWPCDriverGroupEnableIndex,
+                   sizeof(mappedDriverGroupEnableIndex));
+            memcpy(mappedDriverGroupPolarity,mappedWPCDriverGroupPolarity,
+                   sizeof(mappedDriverGroupPolarity));
             rowEnableIndex1 = 6; // Unused in WPC
             rowEnableIndex0 = 6;
             tickleSternWatchdog = false;
             globalPolarity = false;
             activeLowMatrixRows = true;
             driverLoopTime = 4; // milliseconds
-            memcpy(mappedDriverGroupSlowTime,mappedWPCDriverGroupSlowTime, 
-                   sizeof(mappedDriverGroupSlowTime)); 
-            memcpy(mappedDriverGroupActivateIndex,mappedWPCDriverGroupActivateIndex, 
-                   sizeof(mappedDriverGroupActivateIndex)); 
+            memcpy(mappedDriverGroupSlowTime,mappedWPCDriverGroupSlowTime,
+                   sizeof(mappedDriverGroupSlowTime));
+            memcpy(mappedDriverGroupActivateIndex,mappedWPCDriverGroupActivateIndex,
+                   sizeof(mappedDriverGroupActivateIndex));
             numMatrixGroups = 8;
             encodeEnables = false;
             rowEnableSelect = 0;
             lastCoilDriverGroup = lastWPCCoilDriverGroup;
             break;
         }
-            
-        case kPRMachineSternWhitestar: 
-        case kPRMachineSternSAM: 
+
+        case kPRMachineSternWhitestar:
+        case kPRMachineSternSAM:
         {
-            memcpy(mappedDriverGroupEnableIndex,mappedSternDriverGroupEnableIndex, 
-                   sizeof(mappedDriverGroupEnableIndex)); 
-            memcpy(mappedDriverGroupPolarity,mappedSternDriverGroupPolarity, 
-                   sizeof(mappedDriverGroupPolarity)); 
+            memcpy(mappedDriverGroupEnableIndex,mappedSternDriverGroupEnableIndex,
+                   sizeof(mappedDriverGroupEnableIndex));
+            memcpy(mappedDriverGroupPolarity,mappedSternDriverGroupPolarity,
+                   sizeof(mappedDriverGroupPolarity));
             rowEnableIndex1 = 6; // Unused in Stern
             rowEnableIndex0 = 10;
             tickleSternWatchdog = true;
             globalPolarity = true;
             activeLowMatrixRows = false;
             driverLoopTime = 1; // milliseconds
-            memcpy(mappedDriverGroupSlowTime,mappedSternDriverGroupSlowTime, 
-                   sizeof(mappedDriverGroupSlowTime)); 
-            memcpy(mappedDriverGroupActivateIndex,mappedSternDriverGroupActivateIndex, 
-                   sizeof(mappedDriverGroupActivateIndex)); 
+            memcpy(mappedDriverGroupSlowTime,mappedSternDriverGroupSlowTime,
+                   sizeof(mappedDriverGroupSlowTime));
+            memcpy(mappedDriverGroupActivateIndex,mappedSternDriverGroupActivateIndex,
+                   sizeof(mappedDriverGroupActivateIndex));
             numMatrixGroups = 16;
             encodeEnables = true;
             rowEnableSelect = 0;
@@ -439,7 +439,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             return kPRSuccess;
 
     }
-    
+
     memset(&driverGlobalConfig, 0x00, sizeof(PRDriverGlobalConfig));
     for (i = 0; i < kPRDriverCount; i++)
     {
@@ -448,7 +448,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         driver->driverNum = i;
         driver->polarity = mappedDriverGroupPolarity[i/8];
         DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Driver: %d is %x.", i,driver->polarity));
-        if (resetFlags & kPRResetFlagUpdateDevice) 
+        if (resetFlags & kPRResetFlagUpdateDevice)
             res = DriverUpdateState(driver);
     }
     for (i = 0; i < kPRDriverGroupsMax; i++)
@@ -458,11 +458,11 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group->groupNum = i;
         group->polarity = mappedDriverGroupPolarity[i];
     }
-    
-    
+
+
     // Configure the groups.  Each group corresponds to 8 consecutive drivers, starting
     // with driver #32.  The following 6 groups are configured for coils/flashlamps.
-    
+
     PRDriverGroupConfig group;
     for (i = 4; i <= lastCoilDriverGroup; i++)
     {
@@ -475,7 +475,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group.polarity = mappedDriverGroupPolarity[i];
         group.active = 1;
         group.disableStrobeAfter = false;
-        
+
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
             DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
@@ -484,7 +484,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
             driverGroups[i] = group;
     }
 
-    
+
     // The following 8 groups are configured for the feature lamp matrix.
     for (i = 10; i < 10 + numMatrixGroups; i++) {
         DriverGetGroupConfig(i, &group);
@@ -496,7 +496,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group.polarity = mappedDriverGroupPolarity[i];
         group.active = 1;
         group.disableStrobeAfter = mappedDriverGroupSlowTime[i] != 0;
-        
+
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
             DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
@@ -517,7 +517,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         group.polarity = mappedDriverGroupPolarity[i];
         group.active = 1;
         group.disableStrobeAfter = false;
-        
+
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
             DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.\n", i,group.polarity));
@@ -540,16 +540,16 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
     globals.watchdogExpired = false;
     globals.watchdogEnable = true;
     globals.watchdogResetTime = watchdogResetTime;
-    
+
     // We want to start up safely, so we'll update the global driver config twice.
     // When we toggle enableOutputs like this P-ROC will reset the polarity:
-    
+
     // Enable now without the outputs enabled:
     if (resetFlags & kPRResetFlagUpdateDevice)
         res = DriverUpdateGlobalConfig(&globals);
     else
         driverGlobalConfig = globals;
-    
+
     // Now enable the outputs to protect against the polarity being driven incorrectly:
     globals.enableOutputs = true;
     if (resetFlags & kPRResetFlagUpdateDevice)
@@ -559,7 +559,7 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
 
     // If WPCAlphanumeric, select Aux functionality for the dual-purpose Aux/DMD
     // pins.
-     
+
     managerConfig.reuse_dmd_data_for_aux = (machineType == kPRMachineWPCAlphanumeric);
     managerConfig.invert_dipswitch_1 = false;
     ManagerUpdateConfig(&managerConfig);
@@ -599,11 +599,11 @@ PRResult PRDevice::DriverWatchdogTickle()
     const int burstWords = 2;
     uint32_t burst[burstWords];
     int32_t rc;
-    
+
     rc = CreateWatchdogConfigBurst(burst, driverGlobalConfig.watchdogExpired,
                                    driverGlobalConfig.watchdogEnable,
                                    driverGlobalConfig.watchdogResetTime);
-    
+
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -635,8 +635,8 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
     // Updates a single rule with the associated linked driver state changes.
     const int burstSize = 4;
     uint32_t burst[burstSize];
-    
-    // If more the base rule will link to others, ensure free indexes exists for 
+
+    // If more the base rule will link to others, ensure free indexes exists for
     // the links.
     if (numDrivers > 0 && freeSwitchRuleIndexes.size() < (uint32_t)(numDrivers-1)) // -1 because the first switch rule holds the first driver.
     {
@@ -646,46 +646,46 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
 
     PRResult res = kPRSuccess;
     uint32_t newRuleIndex = CreateSwitchRuleIndex(switchNum, eventType);
-    
+
     // Because we're redefining the rule chain, we need to remove all previously existing links and return the indexes to the free list.
     PRSwitchRuleInternal *oldRule = GetSwitchRuleByIndex(newRuleIndex);
-    
+
     uint16_t oldLinkIndex;
     while (oldRule->linkActive)
     {
 	// Save old link index so it can freed after the linked rule is retrieved.
-	oldLinkIndex = oldRule->linkIndex;	
+	oldLinkIndex = oldRule->linkIndex;
         oldRule = GetSwitchRuleByIndex(oldRule->linkIndex);
         freeSwitchRuleIndexes.push(oldLinkIndex);
-		
+
         if (freeSwitchRuleIndexes.size() > 128) // Detect a corrupted link-related values before it eats up all of the memory.
         {
 			PRSetLastErrorText("Too many free switch rule indicies!");
             return kPRFailure;
         }
     }
-    
+
     // Create a pointer for new rules.
     PRSwitchRuleInternal *newRule;
-    
+
     // Process each driver who's state should change in response to the switch event.
-    if (numDrivers > 0) 
+    if (numDrivers > 0)
     {
         uint32_t ruleIndex, savedRuleIndex;
 
         // Need to program the main rule last just in case drive_outputs_now is true.
         // Otherwise, the hardware could try to access the linked rules before they're
         // programmed.  So, program the rules in reverse order.
-       
+
         // Move to last driver
-        linkedDrivers += (numDrivers - 1); 
+        linkedDrivers += (numDrivers - 1);
         int totalNumDrivers = numDrivers;
-         
+
         while (numDrivers > 0)
         {
             if (numDrivers > 1)
             {
-                ruleIndex = freeSwitchRuleIndexes.front(); 
+                ruleIndex = freeSwitchRuleIndexes.front();
                 freeSwitchRuleIndexes.pop();
                 newRule = GetSwitchRuleByIndex(ruleIndex);
                 newRule->driver = linkedDrivers[0];
@@ -741,7 +741,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
                     DEBUG(PRLog(kPRLogError, "Failed to disable.\n"));
                 return res;
             }
-            
+
             linkedDrivers--;
             numDrivers--;
         }
@@ -762,7 +762,7 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
         // Write the rule:
         res = PrepareWriteData(burst, burstSize);
     }
-    
+
     return res;
 }
 
@@ -775,7 +775,7 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
 
     // Request one state word and one debounce word at a time.  Could make more efficient
     // use of the USB bus by requesting a burst of state words and then a burst of debounce
-    // words, but doing one word at a time makes it easier to process each switch when the 
+    // words, but doing one word at a time makes it easier to process each switch when the
     // data returns.  Also, this function shouldn't be called during timing sensitive
     // situations; so the inefficiencies are acceptable.
     for (i = 0; i < numSwitches / 32; i++)
@@ -783,36 +783,36 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
 
         if (chip_id == P_ROC_CHIP_ID)
         {
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
                              P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
 
             if (combinedVersionRevision < P_ROC_VER_REV_FIXED_SWITCH_STATE_READS) {
-                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
                                  P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
             }
             else {
-                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
                                  P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
             }
         }
-        else // chip == P3_ROC_CHIP_ID) 
+        else // chip == P3_ROC_CHIP_ID)
         {
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
                              P3_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
 
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT, 
+            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
                              P3_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
         }
     }
 
-    // Expect 4 words for each 32 switches.  The state and debounce words, 
+    // Expect 4 words for each 32 switches.  The state and debounce words,
     // and the address words for both.
-    uint16_t numWords = 4 * (numSwitches / 32);  
-                                                  
+    uint16_t numWords = 4 * (numSwitches / 32);
+
     i = 0; // Reset i so it can be used to prevent an infinite loop below
 
     // Wait for data to return.  Give it 10 loops before giving up.
-    while (requestedDataQueue.size() < numWords && i++ < 10) 
+    while (requestedDataQueue.size() < numWords && i++ < 10)
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
@@ -820,7 +820,7 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     }
 
     // Make sure all of the requested words are available before processing them.
-    // Too many words is just as bad as not enough words.  
+    // Too many words is just as bad as not enough words.
     // If too many come back, can they be trusted?
     if (requestedDataQueue.size() == numWords)
     {
@@ -829,10 +829,10 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
         {
             requestedDataQueue.pop(); // Ignore address word.  TODO: Verify this address word.
             stateWord = requestedDataQueue.front(); // This is the switch state word.
-            requestedDataQueue.pop(); 
+            requestedDataQueue.pop();
             requestedDataQueue.pop(); // Ignore address word.  TODO: Verify this address word.
             debounceWord = requestedDataQueue.front(); // This is the debounce word.
-            requestedDataQueue.pop(); 
+            requestedDataQueue.pop();
 
             // Loop through each bit of the words, combining them into an eventType
             for (j = 0; j < 32; j++)
@@ -993,8 +993,8 @@ PRResult PRDevice::Open()
 
         // Attempt to turn off events.  This is necessary if P-ROC wasn't shut down
         // properly previously.  If the P-ROC isn't initialized, this request will
-        // be ignored.  
-        
+        // be ignored.
+
         PRDMDConfig dmdConfig;
         dmdConfig.numRows = 32; // Doesn't matter.
         dmdConfig.numColumns = 128; // Doesn't matter
@@ -1016,7 +1016,7 @@ PRResult PRDevice::Open()
         switchConfig.pulseHalfPeriodTime = 13; // milliseconds
         SwitchUpdateConfig(&switchConfig);
 
-        // Flush read data to ensure VerifyChipID starts with clean buffer.  
+        // Flush read data to ensure VerifyChipID starts with clean buffer.
         // It's possible the P-ROC has a lot of data stored up in internal buffers.  So if
         // the verify still fails, do a bunch of flushes.
         res = FlushReadBuffer();
@@ -1074,7 +1074,7 @@ PRResult PRDevice::VerifyChipID()
 
     max_count = 0;
     // Wait for data to return.  Give it 10 loops before giving up.
-    while (requestedDataQueue.size() < 5 && max_count++ < max_count_limit) 
+    while (requestedDataQueue.size() < 5 && max_count++ < max_count_limit)
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
@@ -1088,10 +1088,10 @@ PRResult PRDevice::VerifyChipID()
                 buffer[i] = requestedDataQueue.front();
                 requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
             }
-            if (buffer[1] != P_ROC_CHIP_ID && buffer[1] != P3_ROC_CHIP_ID) 
+            if (buffer[1] != P_ROC_CHIP_ID && buffer[1] != P3_ROC_CHIP_ID)
             {
                 DEBUG(PRLog(kPRLogError, "Error in VerifyID(): Dumping buffer\n"));
-                for (i = 0; i < bufferWords; i++) 
+                for (i = 0; i < bufferWords; i++)
                     DEBUG(PRLog(kPRLogError, "buffer[%d]: 0x%x\n", i, buffer[i]));
                 rc = kPRFailure;
             }
@@ -1114,7 +1114,7 @@ PRResult PRDevice::VerifyChipID()
             rc = kPRFailure;
         }
     }
-    else 
+    else
     {
         // Return failure without logging; calling function must log.
         DEBUG(PRLog(kPRLogError, "Verify Chip ID took too long to receive data\n"));
@@ -1132,7 +1132,7 @@ PRResult PRDevice::RequestData(uint32_t module_select, uint32_t start_addr, int3
 PRResult PRDevice::PrepareWriteData(uint32_t * words, int32_t numWords)
 {
     if (numWords > maxWriteWords)
-    { 
+    {
         PRSetLastErrorText("%d words Exceeds write capabilities.  Restrict write requests to %d words.", numWords, maxWriteWords);
         return kPRFailure;
     }
@@ -1195,7 +1195,7 @@ PRResult PRDevice::WriteData(uint32_t * words, int32_t numWords)
     }
 }
 
-PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+PRResult PRDevice::WriteDataRawUnbuffered(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
 {
 	PRResult res;
     uint32_t * buffer;
@@ -1204,6 +1204,19 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
     buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
     memcpy(buffer+1, writeBuffer, numWriteWords * 4);
     res = PrepareWriteData(buffer, numWriteWords + 1);
+    free (buffer);
+	return res;
+}
+
+PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+{
+	PRResult res;
+    uint32_t * buffer;
+
+    buffer = (uint32_t *)malloc((numWriteWords * 4) + 4);
+    buffer[0] = CreateBurstCommand(moduleSelect, startingAddr, numWriteWords);
+    memcpy(buffer+1, writeBuffer, numWriteWords * 4);
+    res = WriteData(buffer, numWriteWords + 1);
     free (buffer);
 	return res;
 }
@@ -1220,7 +1233,7 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
 
     // Wait for data to return.  Give it 10 loops before giving up.
     // Expect numReadWords + 1 word with the address.
-    while (requestedDataQueue.size() < (uint32_t)((numReadWords + 1)) && i++ < 10) 
+    while (requestedDataQueue.size() < (uint32_t)((numReadWords + 1)) && i++ < 10)
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
@@ -1228,15 +1241,15 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
     }
 
     // Make sure all of the requested words are available before processing them.
-    // Too many words is just as bad as not enough words.  
+    // Too many words is just as bad as not enough words.
     // If too many come back, can they be trusted?
     if (requestedDataQueue.size() == (uint32_t)(numReadWords + 1))
     {
         requestedDataQueue.pop(); // Ignore address word.  TODO: Verify the address.
         for (i = 0; i < numReadWords; i++)
         {
-            readBuffer[i] =  requestedDataQueue.front(); 
-            requestedDataQueue.pop(); 
+            readBuffer[i] =  requestedDataQueue.front();
+            requestedDataQueue.pop();
         }
         return kPRSuccess;
     }
@@ -1282,7 +1295,7 @@ PRResult PRDevice::FlushReadBuffer()
     numBytes = CollectReadData();
     k = 0;
     DEBUG(PRLog(kPRLogError, "Flushing Read Buffer: %d bytes trashed\n", numBytes));
-    
+
     //while (k < numBytes) {
     //    rc = ReadData(rd_buffer, 1);
     //    k++;
