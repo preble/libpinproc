@@ -265,10 +265,9 @@ PRResult PRDevice::ManagerUpdateConfig(PRManagerConfig *managerConfig)
 {
     const int burstWords = 2;
     uint32_t burst[burstWords];
-    int32_t rc;
     DEBUG(PRLog(kPRLogInfo, "Setting Manager Config Register\n"));
     this->managerConfig = *managerConfig;
-    rc = CreateManagerUpdateConfigBurst(burst, managerConfig);
+    CreateManagerUpdateConfigBurst(burst, managerConfig);
     return PrepareWriteData(burst, burstWords);
 }
 
@@ -276,15 +275,14 @@ PRResult PRDevice::DriverUpdateGlobalConfig(PRDriverGlobalConfig *driverGlobalCo
 {
     const int burstWords = 4;
     uint32_t burst[burstWords];
-    int32_t rc;
 
     DEBUG(PRLog(kPRLogInfo, "Installing driver globals\n"));
 
     this->driverGlobalConfig = *driverGlobalConfig;
-    rc = CreateDriverUpdateGlobalConfigBurst(burst, driverGlobalConfig);
-    rc = CreateWatchdogConfigBurst(burst+2, driverGlobalConfig->watchdogExpired,
-                                            driverGlobalConfig->watchdogEnable,
-                                            driverGlobalConfig->watchdogResetTime);
+    CreateDriverUpdateGlobalConfigBurst(burst, driverGlobalConfig);
+    CreateWatchdogConfigBurst(burst+2, driverGlobalConfig->watchdogExpired,
+                                       driverGlobalConfig->watchdogEnable,
+                                       driverGlobalConfig->watchdogResetTime);
 
     DEBUG(PRLog(kPRLogVerbose, "Driver Global words: %x %x\n", burst[0], burst[1]));
     DEBUG(PRLog(kPRLogVerbose, "Watchdog words: %x %x\n", burst[2], burst[3]));
@@ -301,11 +299,10 @@ PRResult PRDevice::DriverUpdateGroupConfig(PRDriverGroupConfig *driverGroupConfi
 {
     const int burstWords = 2;
     uint32_t burst[burstWords];
-    int32_t rc;
 
     driverGroups[driverGroupConfig->groupNum] = *driverGroupConfig;
     DEBUG(PRLog(kPRLogInfo, "Installing driver group\n"));
-    rc = CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
+    CreateDriverUpdateGroupConfigBurst(burst, driverGroupConfig);
 
     DEBUG(PRLog(kPRLogVerbose, "Words: %x %x\n", burst[0], burst[1]));
     return PrepareWriteData(burst, burstWords);
@@ -321,7 +318,6 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
 {
     const int burstWords = 3;
     uint32_t burst[burstWords];
-    int32_t rc;
 
     // Don't allow Constant Pulse (non-schedule with time = 0) for known high current drivers.
     // Note, the driver numbers depend on the driver group settings from DriverLoadMachineTypeDefaults.
@@ -337,7 +333,7 @@ PRResult PRDevice::DriverUpdateState(PRDriverState *driverState)
 
     drivers[driverState->driverNum] = *driverState;
 
-    rc = CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
+    CreateDriverUpdateBurst(burst, &drivers[driverState->driverNum]);
     DEBUG(PRLog(kPRLogVerbose, "Words: %x %x %x\n", burst[0], burst[1], burst[2]));
 
     return PrepareWriteData(burst, burstWords);
@@ -598,11 +594,10 @@ PRResult PRDevice::DriverWatchdogTickle()
 {
     const int burstWords = 2;
     uint32_t burst[burstWords];
-    int32_t rc;
 
-    rc = CreateWatchdogConfigBurst(burst, driverGlobalConfig.watchdogExpired,
-                                   driverGlobalConfig.watchdogEnable,
-                                   driverGlobalConfig.watchdogResetTime);
+    CreateWatchdogConfigBurst(burst, driverGlobalConfig.watchdogExpired,
+                              driverGlobalConfig.watchdogEnable,
+                              driverGlobalConfig.watchdogResetTime);
 
     return PrepareWriteData(burst, burstWords);
 }
@@ -768,7 +763,6 @@ PRResult PRDevice::SwitchUpdateRule(uint8_t switchNum, PREventType eventType, PR
 
 PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwitches )
 {
-    uint32_t rc;
     uint32_t stateWord, debounceWord;
     uint8_t i, j;
     PREventType eventType;
@@ -783,25 +777,25 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
 
         if (chip_id == P_ROC_CHIP_ID)
         {
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
-                             P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
+            RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
+                        P_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
 
             if (combinedVersionRevision < P_ROC_VER_REV_FIXED_SWITCH_STATE_READS) {
-                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
-                                 P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
+                RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
+                            P_ROC_SWITCH_CTRL_OLD_DEBOUNCE_BASE_ADDR + i, 1);
             }
             else {
-                rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
-                                 P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+                RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
+                            P_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
             }
         }
         else // chip == P3_ROC_CHIP_ID)
         {
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
-                             P3_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
+            RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
+                        P3_ROC_SWITCH_CTRL_STATE_BASE_ADDR + i, 1);
 
-            rc = RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
-                             P3_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
+            RequestData(P_ROC_BUS_SWITCH_CTRL_SELECT,
+                        P3_ROC_SWITCH_CTRL_DEBOUNCE_BASE_ADDR + i, 1);
         }
     }
 
@@ -1232,11 +1226,10 @@ PRResult PRDevice::WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, in
 
 PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer)
 {
-    uint32_t rc;
-    uint32_t i;
+    int32_t i;
 
     // Send out the request.
-    rc = RequestData(moduleSelect, startingAddr, numReadWords);
+    RequestData(moduleSelect, startingAddr, numReadWords);
 
     i = 0; // Reset i so it can be used to prevent an infinite loop below
 
@@ -1304,10 +1297,9 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
 
 PRResult PRDevice::FlushReadBuffer()
 {
-    int32_t numBytes,rc=0,k;
+    int32_t numBytes,rc=0;
     //uint32_t rd_buffer[3];
     numBytes = CollectReadData();
-    k = 0;
     DEBUG(PRLog(kPRLogError, "Flushing Read Buffer: %d bytes trashed\n", numBytes));
 
     //while (k < numBytes) {
@@ -1343,7 +1335,7 @@ int32_t PRDevice::CollectReadData()
 
 PRResult PRDevice::SortReturningData()
 {
-    int32_t num_bytes, num_words, rc;
+    int32_t num_bytes, num_words;
     uint32_t rd_buffer[FTDI_BUFFER_SIZE/4];
 
     num_bytes = CollectReadData();
@@ -1355,7 +1347,7 @@ PRResult PRDevice::SortReturningData()
     num_words = num_collected_bytes/4;
 
     while (num_words >= 2) {
-        rc = ReadData(rd_buffer, 1);
+        ReadData(rd_buffer, 1);
         DEBUG(PRLog(kPRLogVerbose, "New returning word: 0x%x\n", rd_buffer[0]));
 
         switch ( (rd_buffer[0] & P_ROC_COMMAND_MASK) >> P_ROC_COMMAND_SHIFT)
