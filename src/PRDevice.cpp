@@ -166,7 +166,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
     if (SortReturningData() != kPRSuccess)
     {
         PRSetLastErrorText("GetEvents ERROR: Error in CollectReadData");
-	return -1;
+	    return -1;
     }
 
     // The unrequestedDataQueue only has unrequested switch event data.  Pop
@@ -816,7 +816,9 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
     {
         PRSleep (10); // 10 milliseconds should be plenty of time.
 		if (SortReturningData() != kPRSuccess)
+		{
 			return kPRFailure;
+        }
     }
 
     // Make sure all of the requested words are available before processing them.
@@ -851,7 +853,11 @@ PRResult PRDevice::SwitchGetStates( PREventType * switchStates, uint16_t numSwit
         }
         return kPRSuccess;
     }
-    else return kPRFailure;
+    else
+    {
+        PRSetLastErrorText("Switch response length does not match.");
+        return kPRFailure;
+    }
 }
 
 int32_t PRDevice::DMDUpdateConfig(PRDMDConfig *dmdConfig)
@@ -1093,6 +1099,7 @@ PRResult PRDevice::VerifyChipID()
                 DEBUG(PRLog(kPRLogError, "Error in VerifyID(): Dumping buffer\n"));
                 for (i = 0; i < bufferWords; i++)
                     DEBUG(PRLog(kPRLogError, "buffer[%d]: 0x%x\n", i, buffer[i]));
+                PRSetLastErrorText("Chip ID does not match.");
                 rc = kPRFailure;
             }
             else rc = kPRSuccess;
@@ -1110,7 +1117,8 @@ PRResult PRDevice::VerifyChipID()
             else readMachineType = kPRMachineWPC; // Choose WPC or WPC95, doesn't matter.
         }
         else {
-            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version.  Read %d words instead of 5.  The first 2 were: 0x%x and 0x%x.\n", requestedDataQueue.size(), buffer[0], buffer[1]));
+            DEBUG(PRLog(kPRLogError, "Error reading Chip IP and Version. Read %d words instead of 5. The first 2 were: 0x%x and 0x%x.\n", requestedDataQueue.size(), buffer[0], buffer[1]));
+            PRSetLastErrorText("Error reading Chip IP and Version. Read %d words instead of 5. The first 2 were: 0x%x and 0x%x.", requestedDataQueue.size(), buffer[0], buffer[1]);
             rc = kPRFailure;
         }
     }
@@ -1118,6 +1126,7 @@ PRResult PRDevice::VerifyChipID()
     {
         // Return failure without logging; calling function must log.
         DEBUG(PRLog(kPRLogError, "Verify Chip ID took too long to receive data\n"));
+        PRSetLastErrorText("Verify Chip ID took too long to receive data");
         rc = kPRFailure;
     }
     return (rc);
@@ -1253,7 +1262,11 @@ PRResult PRDevice::ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int
         }
         return kPRSuccess;
     }
-    else return kPRFailure;
+    else
+    {
+        PRSetLastErrorText("Response length did not match.");
+        return kPRFailure;
+    }
 }
 
 
@@ -1282,6 +1295,7 @@ int32_t PRDevice::ReadData(uint32_t *buffer, int32_t num_words)
         rc = num_words;
     }
     else {
+        PRSetLastErrorText("Read length did not match.");
         rc = 0;
     }
     DEBUG(PRLog(kPRLogVerbose, "Read num bytes: %d\n", rc));
