@@ -45,6 +45,7 @@ option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
 option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
 
+option(CROSS_ROOT "Cross-compilation root path" OFF)
 
 ###
 ### Sources, headers, directories and libs
@@ -69,8 +70,13 @@ if(VERBOSE)
 endif()
 
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
+if(CROSS_ROOT)
+include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} ${CROSS_ROOT}/usr/local/include)
+link_directories(${EXTRA_LINK} ${CROSS_ROOT}/usr/local/lib)
+else()
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
 link_directories(${EXTRA_LINK} /usr/local/lib)
+endif()
 
 set(YAML_CPP_LIB "yaml-cpp")
 set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
