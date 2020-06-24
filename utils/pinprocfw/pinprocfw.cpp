@@ -2051,6 +2051,8 @@ int verifyP3ROCImage()
     }
 
     XSVFDBG_PRINTF( 0, "\n\nSUCCESS - Operation completed successfully.  Cycle P3-ROC power to activate any changes.\n" );
+
+    return 1;
 }
 
 void writeP3ROCImage()
