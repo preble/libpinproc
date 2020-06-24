@@ -2302,6 +2302,7 @@ int main( int argc, char** argv )
                           processP3ROCFile();
                           break;
                       default:
+                          fprintf(stderr, "Failed to parse file.\n");
                           break;
                     }
                     // Destroy the P-ROC device handle created by openPROC()
