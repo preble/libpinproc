@@ -2142,7 +2142,7 @@ int processFile()
             return iErrorCode;
 }
 
-int checkPROCFile() {
+uint32_t checkPROCFile() {
     uint32_t checksum=0, file_checksum, file_board_id, header_checksum;
     unsigned char data;
     int i=0,file_i=0;
