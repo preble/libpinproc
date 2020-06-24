@@ -12,7 +12,7 @@ libpinproc requires:
 
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
 
-The pinproctest example requires [yaml-cpp](http://code.google.com/p/yaml-cpp/). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
+The pinproctest example requires [yaml-cpp](https://github.com/jbeder/yaml-cpp). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
 
     sudo cp lib/libyaml-cpp.a /usr/local/lib/
     sudo mkdir /usr/local/include/yaml-cpp
