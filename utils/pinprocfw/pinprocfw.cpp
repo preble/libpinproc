@@ -2136,9 +2136,6 @@ int processFile()
             endClock    = clock();
             fclose( in );
 
-            // Destroy the P-ROC device handle:
-            PRDelete(proc);
-            proc = kPRHandleInvalid;
             return iErrorCode;
 }
 
@@ -2306,7 +2303,10 @@ int main( int argc, char** argv )
                           break;
                       default:
                           break;
-                     }
+                    }
+                    // Destroy the P-ROC device handle created by openPROC()
+                    PRDelete(proc);
+                    proc = kPRHandleInvalid;
                 }
             }
         }
