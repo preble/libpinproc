@@ -70,6 +70,8 @@ if(VERBOSE)
 endif()
 
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
+set(EXTRA_INC "" CACHE STRING "Extra include directories separated by ;")
+set(EXTRA_LINK "" CACHE STRING "Extra link directories separated by ;")
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
 link_directories(${EXTRA_LINK} /usr/local/lib)
 
