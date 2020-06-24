@@ -13,6 +13,11 @@ if(POLICY CMP0015)
 	cmake_policy(SET CMP0015 OLD)
 endif()
 
+# allow relative paths in LINK_DIRECTORIES
+if(POLICY CMP0081)
+	cmake_policy(SET CMP0081 OLD)
+endif()
+
 ###
 ### Project settings
 ###
