@@ -169,6 +169,9 @@ if(MSVC)
 		set(YAML_CPP_LIB "${CMAKE_STATIC_LIBRARY_PREFIX}${YAML_CPP_LIB}${LIB_RT_SUFFIX}")
 		set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
 	endif()
+else()
+	# make sure executable files are standalone
+	SET(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 
