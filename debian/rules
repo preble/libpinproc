@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+%:
+	dh $@ 
+
+override_dh_auto_clean:
+	dh_auto_clean
+	@rm -Rf $(CURDIR)/bin
+
+override_dh_auto_configure:
+	mkdir $(CURDIR)/bin
+	cd $(CURDIR)/bin && cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="/usr/" ..
+
+override_dh_auto_build:
+	cd $(CURDIR)/bin && make
+
+override_dh_auto_install:
+	dh_auto_install
+	cd $(CURDIR)/bin && make install DESTDIR=$(CURDIR)/debian/tmp
+
+# needed until 15.10 because of manual compile
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

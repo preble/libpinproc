@@ -51,6 +51,7 @@ option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
 option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
 
+option(CROSS_ROOT "Cross-compilation root path" OFF)
 
 ###
 ### Sources, headers, directories and libs
@@ -77,8 +78,13 @@ endif()
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
 set(EXTRA_INC "" CACHE STRING "Extra include directories separated by ;")
 set(EXTRA_LINK "" CACHE STRING "Extra link directories separated by ;")
+if(CROSS_ROOT)
+include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} ${CROSS_ROOT}/usr/local/include)
+link_directories(${EXTRA_LINK} ${CROSS_ROOT}/usr/local/lib)
+else()
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
 link_directories(${EXTRA_LINK} /usr/local/lib)
+endif()
 
 set(YAML_CPP_LIB "yaml-cpp")
 set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
@@ -246,18 +252,18 @@ if(PINPROC_BUILD_TOOLS)
 # Create a target for the test tool
 #TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)
 #      see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#command:add_subdirectory
-add_executable(pinproctest
-	examples/pinproctest/pinproctest.cpp
-	examples/pinproctest/drivers.cpp
-	examples/pinproctest/dmd.cpp
-	examples/pinproctest/switches.cpp
-	examples/pinproctest/alphanumeric.cpp
-)
-target_link_libraries(pinproctest
-	pinproc
-	optimized ${YAML_CPP_LIB}
-	debug ${YAML_CPP_LIB_DBG}
-)
+#add_executable(pinproctest
+#	examples/pinproctest/pinproctest.cpp
+#	examples/pinproctest/drivers.cpp
+#	examples/pinproctest/dmd.cpp
+#	examples/pinproctest/switches.cpp
+#	examples/pinproctest/alphanumeric.cpp
+#)
+#target_link_libraries(pinproctest
+#	pinproc
+#	optimized ${YAML_CPP_LIB}
+#	debug ${YAML_CPP_LIB_DBG}
+#)
 
 # Create a target for the firmware tool
 #TODO: use add_subdirectory() and separate CMakeLists.txt (like yaml-cpp)

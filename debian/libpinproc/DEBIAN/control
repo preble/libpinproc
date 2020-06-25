@@ -1,0 +1,11 @@
+Package: libpinproc
+Version: 0.1.0-1
+Architecture: amd64
+Maintainer: Jan Kantert <jan-mpf@kantert.net>
+Installed-Size: 80
+Depends: libc6 (>= 2.14), libgcc1 (>= 1:4.1.1), libstdc++6 (>= 4.1.1)
+Section: libs
+Priority: optional
+Homepage: https://github.com/jabdoa2/libpinproc
+Description: libpinproc
+ Lib to speak to the P-Roc and P3-Roc hardware from Multimorphic
