@@ -2175,10 +2175,20 @@ uint32_t checkPROCFile() {
     PRReadData(proc, 0, 0, 4, readdata);
     board_id = readdata[0];
     board_rev = readdata[3];
-    board_rev = (board_rev & 0x80) >> 7 |
-                (board_rev & 0x40) >> 5 |
-                (board_rev & 0x20) >> 3 |
-                (board_rev & 0x10) >> 1;
+    if (board_id == P3_ROC_CHIP_ID) {
+        board_rev = (board_rev & 0x800) >> 11 |
+                    (board_rev & 0x400) >> 10 |
+                    (board_rev & 0x200) >> 9 |
+                    (board_rev & 0x100) >> 8;
+        fprintf(stderr, "\nReading P3-ROC board_rev: %d", board_rev);
+    }
+    else {
+        board_rev = (board_rev & 0x80) >> 7 |
+                    (board_rev & 0x40) >> 6 |
+                    (board_rev & 0x20) >> 5 |
+                    (board_rev & 0x10) >> 4;
+        fprintf(stderr, "\nReading P-ROC board_rev: %d", board_rev);
+    }
 
     if (proc_file_version != 0) {
         fprintf(stderr, "\nERROR: Unsupported .p-roc file version: %x.  Check for an updated version of this tool.\n\n", proc_file_version);
@@ -2196,6 +2206,14 @@ uint32_t checkPROCFile() {
         return 0;
     }
     else fprintf(stderr, "\nBoard ID verified");
+
+    if (board_rev > max_board_rev) {
+        fprintf(stderr, "\nERROR: board_rev %d > max_board_rev %d", board_rev, max_board_rev);
+    }
+    if (board_rev < min_board_rev) {
+        fprintf(stderr, "\nERROR: board_rev < min_board_rev");
+    }
+
     if (board_rev > max_board_rev || board_rev < min_board_rev) {
         fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (rev: %x)", board_id);
         return 0;
