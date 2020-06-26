@@ -1,19 +1,11 @@
 ###
 ### CMake settings
 ###
-## Due to Mac OSX we need to keep compatibility with CMake 2.6
-# see http://www.cmake.org/Wiki/CMake_Policies
-cmake_minimum_required(VERSION 2.6)
-# see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0012
-if(POLICY CMP0012)
-	cmake_policy(SET CMP0012 OLD)
-endif()
-# see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0015
-if(POLICY CMP0015)
-	cmake_policy(SET CMP0015 OLD)
-endif()
+# Version 2.8.1 was released 2010-03-16 and is a reasonable minimum.
+cmake_minimum_required(VERSION 2.8.1)
 
-# allow relative paths in LINK_DIRECTORIES
+# allow relative paths in link_directories()
+# see https://cmake.org/cmake/help/v3.18/policy/CMP0081.html
 if(POLICY CMP0081)
 	cmake_policy(SET CMP0081 OLD)
 endif()
@@ -162,7 +154,6 @@ if(MSVC)
 
 	# c) Correct suffixes for static libraries
 	if(NOT BUILD_SHARED_LIBS)
-		### General stuff
 		set(LIB_TARGET_SUFFIX "${LIB_SUFFIX}${LIB_RT_SUFFIX}")
 	endif()
 endif()

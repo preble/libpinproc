@@ -61,9 +61,9 @@ Make sure you have cmake installed for i686 (MinGW32) or x86_64 (MinGW64): `pacm
     cd libpinproc
     mkdir build; cd build
     cmake .. -A Win32
-    # configure paths for td2xxx; use `cmake .. -L` to list configured options
+    # configure paths for ftd2xxx; use `cmake .. -L` to list configured options
     cmake .. -D EXTRA_INC="../ftd2xx"
-    cmake .. -D EXTRA_LINK="../../ftd2xx/i386"
+    cmake .. -D EXTRA_LINK="../ftd2xx/i386"
 
 Then open PINPROC.sln in Visual Studio, switch to the Debug or Release configuration and perform ALL_BUILD.  It will place the libary and sample programs in `build/Debug` and `build/Release`.
 
