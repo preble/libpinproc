@@ -47,7 +47,7 @@ void ConfigureAccelerometerMotion(PRHandle proc)
     }
 
     PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData); 
-    printf("\nAccel chip id: %x\n", readData[0]);
+    printf("Accel chip id: %x\n", readData[0]);
     fflush(stdout);
 
     // Set FF_MT_COUNT (0x18)
@@ -95,7 +95,7 @@ void ConfigureAccelerometerTransient(PRHandle proc)
     }
 
     PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData);
-    printf("\nAccel chip id: %x\n", readData[0]);
+    printf("Accel chip id: %x\n", readData[0]);
     fflush(stdout);
 
     // Set to standby so register changes will take.
@@ -184,17 +184,25 @@ void RunLoop(PRHandle proc)
         PRDriverWatchdogTickle(proc);
 
         int numEvents = PRGetEvents(proc, events, maxEvents);
-//        if (numEvents > 0) printf("\nNum events: %x\n", numEvents);
         for (int i = 0; i < numEvents; i++)
         {
             PREvent *event = &events[i];
-            const char *stateText = "Unknown";
-            switch (event->type)
-            {
-                case kPREventTypeSwitchOpenDebounced: stateText = "open"; break;
-                case kPREventTypeSwitchClosedDebounced: stateText = "closed"; break;
-                case kPREventTypeSwitchOpenNondebounced: stateText = "open(ndb)"; break;
-                case kPREventTypeSwitchClosedNondebounced: stateText = "closed(ndb)"; break;
+            const char *stateText;
+            switch (event->type) {
+                case kPREventTypeSwitchOpenDebounced:
+                    stateText = "open";
+                    break;
+                case kPREventTypeSwitchClosedDebounced:
+                    stateText = "closed";
+                    break;
+                case kPREventTypeSwitchOpenNondebounced:
+                    stateText = "open(ndb)";
+                    break;
+                case kPREventTypeSwitchClosedNondebounced:
+                    stateText = "closed(ndb)";
+                    break;
+                default:
+                    stateText = "Unknown";
             }
 #ifdef _MSC_VER
             struct _timeb tv;
@@ -209,7 +217,6 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchClosedDebounced:
                 case kPREventTypeSwitchOpenNondebounced:
                 case kPREventTypeSwitchClosedNondebounced:
-                {
 #ifdef _MSC_VER
                     printf("%d.%03d switch %3d: %s\n", (int)(tv.time-startTime), tv.millitm, event->value, stateText);
 #else
@@ -217,9 +224,7 @@ void RunLoop(PRHandle proc)
 #endif
                     UpdateSwitchState( event );
                     break;
-                }
                 case kPREventTypeDMDFrameDisplayed:
-                {
                     if (machineType == kPRMachineWPCAlphanumeric) {
                         //UpdateAlphaDisplay(proc, dotOffset++);
                     }
@@ -228,37 +233,26 @@ void RunLoop(PRHandle proc)
                         PRDMDDraw(proc,dots);
                     }
                     break;
-                }
                 case kPREventTypeAccelerometerX:
-                {
                     //readData[0] = event->value & 0x3FFF;
                     readData[0] = event->value;
                     break;
-                }
                 case kPREventTypeAccelerometerY:
-                {
                     //readData[1] = event->value & 0x3FFF;
                     readData[1] = event->value;
                     break;
-                }
                 case kPREventTypeAccelerometerZ:
-                {
                     //readData[2] = event->value & 0x3FFF;
                     readData[2] = event->value;
-                    printf("\nAccel: X: %x, Y: %x, Z: %x", readData[0], readData[1],readData[2]);
+                    printf("Accel: X: %x, Y: %x, Z: %x\n", readData[0], readData[1],readData[2]);
                     break;
-                }
                 case kPREventTypeAccelerometerIRQ:
-                {
                     //readData[2] = event->value & 0x3FFF;
                     readData[3] = event->value;
-                    printf("\nAccel IRQ: %x", readData[3]);
+                    printf("Accel IRQ: %x\n", readData[3]);
                     break;
-                }
                 default:
-                {
-                    printf("\nUnknown event: %x:%x", event->type, event->value);
-                }
+                    printf("Unknown event: %x:%x\n", event->type, event->value);
             }
         }
         if (numEvents > 0) {
