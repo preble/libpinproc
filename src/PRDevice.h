@@ -95,7 +95,7 @@ public:
     PRResult PRLEDRGBFade(PRLEDRGB * pLED, uint32_t fadeColor, uint16_t fadeRate);
     PRResult PRLEDRGBFadeColor(PRLEDRGB * pLED, uint32_t fadeColor);
 
-    int GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr);
+    int GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint32_t *combinedPtr);
 
 protected:
 
