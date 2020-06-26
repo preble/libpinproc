@@ -1,6 +1,6 @@
 ## libpinproc
 
-Library for Gerry Stellenberg's [P-ROC](http://pinballcontrollers.com/) (Pinball Remote Operations Controller).
+Library for [Multimorphic, Inc.'s](https://www.multimorphic.com/) P-ROC and P3-ROC pinball controller boards.
 
 ### Compiling
 
@@ -11,12 +11,6 @@ libpinproc requires:
 - [libusb-0.1.12](http://libusb.wiki.sourceforge.net/): Install with the default /usr/local prefix.  Version 0.1.12 has been tested on Mac and Linux.  Mac users: If you want to use libpinproc under Cocoa or pygame, you may wish to try libusb 1.0.  See below.
 
 - [libftdi-0.16](http://www.intra2net.com/en/developer/libftdi/): Install with the default /usr/local prefix.
-
-The pinproctest example requires [yaml-cpp](https://github.com/jbeder/yaml-cpp). Follow the build instructions, creating the build subdirectory.  After building, from the main source directory, run the following commands to manually install it:
-
-    sudo cp lib/libyaml-cpp.a /usr/local/lib/
-    sudo mkdir /usr/local/include/yaml-cpp
-    sudo cp include/*.h /usr/local/include/yaml-cpp/
 
 ##### libusb-1.0 and libusb-compat
 
@@ -37,7 +31,7 @@ Download and install [CMake](http://www.cmake.org/cmake/resources/software.html)
 
 The CMakeLists.txt file is presently designed to be run from a directory inside the libpinproc directory.  This will build both libpinproc and pinproctest.  Binaries will be placed in the directory that make was run from.  We recommend 'bin', as it is the path expected by pypinproc.
 
-Note: On some systems, it may be necessary to build libpinproc with the '-fPIC' option.  To do this with cmake, instead of running 'cmake ..', run 'cmake .. -DCMAKE_CXX_FLAGS="-fPIC"'.  Compiling without '-fPIC' may cause problems when building the python extensions on some 64-bit Linux machines.
+Note: On some systems, it may be necessary to build libpinproc with the '-fPIC' option.  To do this with cmake, instead of running 'cmake ..', run 'cmake .. -DCMAKE_CXX_FLAGS="-fPIC"'.  Compiling without '-fPIC' may cause problems when building the Python extensions on some 64-bit Linux machines.
 
 #### Building in Windows with MinGW/CMake
 
@@ -52,17 +46,31 @@ Follow directions above for building yaml-cpp with the following exception:
 
 To build libpinproc:
 
-- add the paths for ftd2xx.h (from the unzipped driver package) and the yaml-cpp/include/*.h files to the "include_directories" line in libpinproc/CMakeLists.txt. 
-
-- either create the directory c:\usr\local\lib and copy libyaml-cpp*.a from the yaml-cpp build directory and ftd2xx.sys to it or add the location of those files to the "link_directories" line in libpinproc/CMakeLists.txt.
+- Use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>" to add include/library paths for `ftd2xx.h` and `ftd2xx.sys`.
 
 Follow instructions above for building libpinproc with cmake with the following exceptions:
  add '-G "MinGW Makefiles' to the cmake command line,
  use mingw32-make instead of make
- 
+
+#### Building in Windows with Visual Studio 2019
+
+Assumes you are already running an MSYS2/MinGW64 system.
+
+Make sure you have cmake installed for i686 (MinGW32) or x86_64 (MinGW64): `pacman -S cmake mingw-w64-i686-cmake mingw-w64-x86_64-cmake`
+
+    cd libpinproc
+    mkdir build; cd build
+    cmake .. -A Win32
+    # configure paths for td2xxx; use `cmake .. -L` to list configured options
+    cmake .. -D EXTRA_INC="../ftd2xx"
+    cmake .. -D EXTRA_LINK="../../ftd2xx/i386"
+
+Then open PINPROC.sln in Visual Studio, switch to the Debug or Release configuration and perform ALL_BUILD.  It will place the libary and sample programs in `build/Debug` and `build/Release`.
+
 ### License
 
 Copyright (c) 2009 Gerry Stellenberg, Adam Preble
+Copyright (c) 2020 Multimorphic, Inc.
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
