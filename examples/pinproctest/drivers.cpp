@@ -131,7 +131,7 @@ void ConfigureDriverGroups(PRHandle proc, bool driverPolarity)
     // in the matrixRowEnableIndex variables.
     const int mappedDriverGroupRowEnableSelect[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1};
     
-    for (i = 0; i <= kPRDriverGroupsMax; i++)
+    for (i = 0; i < kPRDriverGroupsMax; i++)
     {
         PRDriverGroupConfig group;
         //memset(&group, 0x00, sizeof(PRDriverGroupConfig));
