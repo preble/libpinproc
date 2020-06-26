@@ -222,8 +222,6 @@ void ConfigureDriverGlobals(PRHandle proc, bool driverPolarity)
     
 void ConfigureDrivers(PRHandle proc)
 {
-    int i;
-
     // First set up a bunch of constants to use later:
 
     // The driverPolarity determines when the drivers go high or low when

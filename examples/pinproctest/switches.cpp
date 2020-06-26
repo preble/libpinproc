@@ -151,7 +151,7 @@ void LoadSwitchStates( PRHandle proc )
     // Get all of the switch states from the P-ROC.
     if (PRSwitchGetStates( proc, procSwitchStates, kPRSwitchPhysicalLast + 1 ) == kPRFailure)
     {
-        fprintf(stderr, "Error: Unable to retrieve switch states\n");
+        printf("Error: Unable to retrieve switch states\n");
     }
     else
     {
@@ -162,17 +162,15 @@ void LoadSwitchStates( PRHandle proc )
         }
 
         int zero = 0;
-        fprintf(stderr, "\nCurrent Switch States: %3d : ", zero);
         for (i = 0; i < kPRSwitchPhysicalLast + 1; i++)
         {
-            fprintf(stderr, "%d ", switches[i].state);
-            if ((i + 1) % 32 == 0) 
-            {
+            if (i % 32 == 0) {
                 printf("\n");
                 if (i != kPRSwitchPhysicalLast) 
-                    fprintf(stderr, "Current Switch States: %3d : ", i+1);
+                    printf("Current Switch States: %3d: ", i);
             }
+            printf("%d", switches[i].state);
         }
-        fprintf(stderr, "\n");
+        printf("\n");
     }
 }
