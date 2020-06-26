@@ -314,7 +314,7 @@ int main(int argc, const char **argv)
     PRLogSetCallback(TestLogger);
     
     for (i = 0; i < MACHINE_TYPES; i++) {
-        if (_strcmpi(argv[1], machine_types[i].name) == 0) {
+        if (strcmp(argv[1], machine_types[i].name) == 0) {
             machineType = machine_types[i].type;
             break;
         }
