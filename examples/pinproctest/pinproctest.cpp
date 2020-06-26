@@ -48,7 +48,6 @@ void ConfigureAccelerometerMotion(PRHandle proc)
 
     PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData); 
     printf("Accel chip id: %x\n", readData[0]);
-    fflush(stdout);
 
     // Set FF_MT_COUNT (0x18)
     readData[0] = 1;
@@ -96,7 +95,6 @@ void ConfigureAccelerometerTransient(PRHandle proc)
 
     PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData);
     printf("Accel chip id: %x\n", readData[0]);
-    fflush(stdout);
 
     // Set to standby so register changes will take.
     readData[0] = 0x0;
@@ -255,9 +253,6 @@ void RunLoop(PRHandle proc)
                     printf("Unknown event: %x:%x\n", event->type, event->value);
             }
         }
-        if (numEvents > 0) {
-            fflush(stdout);
-        }
         PRFlushWriteData(proc);
 #ifdef _MSC_VER
         Sleep(10);
@@ -291,6 +286,9 @@ const struct {
 int main(int argc, const char **argv)
 {
     int i;
+
+    // Set stdout unbuffered to eliminate need to fflush()
+    setbuf(stdout, NULL);
 
     // Set a signal handler so that we can exit gracefully on Ctrl-C:
     signal(SIGINT, sigint);

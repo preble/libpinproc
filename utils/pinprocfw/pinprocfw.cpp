@@ -533,12 +533,10 @@ void readByte(unsigned char *data)
         fprintf(stderr, "\n\nUpdating P-ROC.  This may take a couple of minutes.\n");
         fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
         printf("\nErasing PROM... ");
-        fflush(stdout);
     }
 
     if (numBytesCurrent == 5000) {
         printf("complete.\nProgramming:\n0%%  ");
-        fflush(stdout);
     }
     // read in a byte of data from the xsvf file
     *data   = (unsigned char)fgetc( in );
@@ -547,11 +545,9 @@ void readByte(unsigned char *data)
     numBytesCurrent++;
     if (numBytesCurrent % bytesPerTenth == 0) {
         printf("\n%d0%% ",(int) (numBytesCurrent/bytesPerTenth));
-        fflush(stdout);
     }
     else if (numBytesCurrent % bytesPer200th == 0) {
         printf(".");
-        fflush(stdout);
     }
 }
 
@@ -1968,7 +1964,6 @@ void P3ROC_SPIBulkErase(void)
 
     // Send bulk_erase command
     printf("\nErasing flash .");
-    fflush(stdout);
     dataBuffer[0] = P3_ROC_SPI_OPCODE_BULK_ERASE << P3_ROC_SPI_OPCODE_SHIFT;
     PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
     P3ROC_SPIWaitForReady();
@@ -2012,7 +2007,6 @@ int verifyP3ROCImage(void)
 
     P3ROC_SPIWaitForReady();
     printf("\n\nVerifying image:\n0%%  ");
-    fflush(stdout);
     while (!feof(in)) {
       for (int i=0; i<64; i++) 
       {
@@ -2024,11 +2018,9 @@ int verifyP3ROCImage(void)
                   numBytesCurrent++;
                   if (numBytesCurrent % bytesPerTenth == 0) {
                       printf("\n%d0%% ", (int)(numBytesCurrent / bytesPerTenth));
-                      fflush(stdout);
                   }
                   else if (numBytesCurrent % bytesPer200th == 0) {
                       printf(".");
-                      fflush(stdout);
                   }
 
               }
@@ -2064,7 +2056,6 @@ void writeP3ROCImage(void)
 
     P3ROC_SPIWaitForReady();
     printf("\nProgramming new image:\n0%%  ");
-    fflush(stdout);
     while (!feof(in)) {
       for (int i=0; i<64; i++) {
           if (!feof(in)) {
@@ -2073,11 +2064,9 @@ void writeP3ROCImage(void)
                   numBytesCurrent++;
                   if (numBytesCurrent % bytesPerTenth == 0) {
                       printf("\n%d0%% ", (int)(numBytesCurrent / bytesPerTenth));
-                      fflush(stdout);
                   }
                   else if (numBytesCurrent % bytesPer200th == 0) {
                       printf(".");
-                      fflush(stdout);
                   }
 
               }
@@ -2254,6 +2243,9 @@ int main( int argc, char** argv )
     char*   pzXsvfFileName;
     int     i;
     int     iErrorCode;
+
+    // Set stdout unbuffered to eliminate need to fflush()
+    setbuf(stdout, NULL);
 
     iErrorCode          = XSVF_ERRORCODE( XSVF_ERROR_NONE );
     pzXsvfFileName      = NULL;
