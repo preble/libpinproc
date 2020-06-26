@@ -33,7 +33,7 @@ typedef struct SwitchStatus {
 
 static SwitchStatus switches[kPRSwitchPhysicalLast + 1];
 
-void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
+void ConfigureSwitches(PRHandle proc)
 {
     // Configure switch controller registers (if the defaults aren't acceptable)
     PRSwitchConfig switchConfig;
@@ -135,43 +135,6 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     sw.notifyHost = true;
     sw.reloadActive = false;
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
-}
-
-void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
-{
-    // WPC  Flippers
-    std::string numStr;
-    const YAML::Node& flippers = yamlDoc[kFlippersSection];
-    for (YAML::const_iterator flippersIt = flippers.begin(); flippersIt != flippers.end(); ++flippersIt)
-    {
-        int swNum, coilMain, coilHold;
-        std::string flipperName = flippersIt->as<std::string>();
-        if (machineType == kPRMachineWPC)
-        {
-            numStr = yamlDoc[kSwitchesSection][flipperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
-            numStr = yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField].as<std::string>(); coilMain = PRDecode(machineType, numStr.c_str());
-            numStr = yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField].as<std::string>(); coilHold = PRDecode(machineType, numStr.c_str());
-            ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
-        }
-        else if (machineType == kPRMachineSternWhitestar || machineType == kPRMachineSternSAM)
-        {
-            printf("hi\n");
-            numStr = yamlDoc[kSwitchesSection][flipperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
-            numStr = yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField].as<std::string>(); coilMain = PRDecode(machineType, numStr.c_str());
-            ConfigureSternFlipperSwitchRule (proc, swNum, coilMain, kFlipperPulseTime, kFlipperPatterOnTime, kFlipperPatterOffTime);
-        }
-    }
-    
-    const YAML::Node& bumpers = yamlDoc[kBumpersSection];
-    for (YAML::const_iterator bumpersIt = bumpers.begin(); bumpersIt != bumpers.end(); ++bumpersIt)
-    {
-        int swNum, coilNum;
-        // WPC  Slingshots
-        std::string bumperName = bumpersIt->as<std::string>();
-        numStr = yamlDoc[kSwitchesSection][bumperName][kNumberField].as<std::string>(); swNum = PRDecode(machineType, numStr.c_str());
-        numStr = yamlDoc[kCoilsSection][bumperName][kNumberField].as<std::string>(); coilNum = PRDecode(machineType, numStr.c_str());
-        ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
-    }
 }
 
 void UpdateSwitchState( PREvent * event )

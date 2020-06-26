@@ -86,9 +86,6 @@ include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/includ
 link_directories(${EXTRA_LINK} /usr/local/lib)
 endif()
 
-set(YAML_CPP_LIB "yaml-cpp")
-set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
-
 
 ###
 ### General compilation settings
@@ -169,15 +166,7 @@ if(MSVC)
 	if(NOT BUILD_SHARED_LIBS)
 		### General stuff
 		set(LIB_TARGET_SUFFIX "${LIB_SUFFIX}${LIB_RT_SUFFIX}")
-
-		### Project stuff
-		# correct external library names
-		set(YAML_CPP_LIB "${CMAKE_STATIC_LIBRARY_PREFIX}${YAML_CPP_LIB}${LIB_RT_SUFFIX}")
-		set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
 	endif()
-else()
-	# make sure executable files are standalone
-	SET(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 
@@ -261,8 +250,6 @@ add_executable(pinproctest
 )
 target_link_libraries(pinproctest
 	pinproc
-	optimized ${YAML_CPP_LIB}
-	debug ${YAML_CPP_LIB_DBG}
 )
 
 # Create a target for the firmware tool

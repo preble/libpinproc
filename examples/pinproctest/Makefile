@@ -11,7 +11,7 @@ SRCS = pinproctest.cpp drivers.cpp dmd.cpp switches.cpp
 OBJS := $(SRCS:.cpp=.o)
 INCLUDES = ../../include/pinproc.h
 
-LIBS = usb pinproc yaml-cpp
+LIBS = usb pinproc
 ifneq ($(uname_s),Windows) # not Windows
 	LIBS += ftdi
 endif

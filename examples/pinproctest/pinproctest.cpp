@@ -36,37 +36,6 @@ void TestLogger(PRLogLevel level, const char *text)
     fprintf(stderr, "TEST: %s", text);
 }
 
-PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
-{
-    try
-    {
-        std::ifstream fin(yamlFilePath);
-        if (fin.is_open() == false)
-        {
-            fprintf(stderr, "YAML file not found: %s\n", yamlFilePath);
-            return kPRFailure;
-        }
-        
-        yamlDoc = YAML::Load(fin);
-    }
-//    catch (YAML::ParserException& ex)
-//    {
-//        fprintf(stderr, "YAML parse error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
- //       return kPRFailure;
-//    }
-//    catch (YAML::RepresentationException& ex)
-//    {
-//        fprintf(stderr, "YAML representation error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
-//        return kPRFailure;
-//    }
-    catch (...)
-    {
-        fprintf(stderr, "Unexpected exception while parsing YAML config.\n");
-        return kPRFailure;
-    }
-    return kPRSuccess;
-}
-
 void ConfigureAccelerometerMotion(PRHandle proc)
 {
     uint32_t readData[5];
@@ -312,6 +281,20 @@ void sigint(int)
     printf("Exiting...\n");
 }
 
+const struct {
+    PRMachineType   type;
+    const char      *name;
+} machine_types[] = {
+    { kPRMachineCustom,             "custom" },
+    { kPRMachineWPCAlphanumeric,    "wpcAlphanumeric" },
+    { kPRMachineWPC,                "wpc" },
+    { kPRMachineWPC95,              "wpc95" },
+    { kPRMachineSternWhitestar,     "sternWhitestar" },
+    { kPRMachineSternSAM,           "sternSAM" },
+    { kPRMachinePDB,                "pdb" },
+};
+#define MACHINE_TYPES  (sizeof(machine_types) / sizeof(machine_types[0]))
+
 int main(int argc, const char **argv)
 {
     int i;
@@ -320,39 +303,26 @@ int main(int argc, const char **argv)
     signal(SIGINT, sigint);
     startTime = time(NULL);
 
-    if (argc < 2)
-    {
-        fprintf(stderr, "Usage: %s <yaml machine description>\n", argv[0]);
+    if (argc < 2) {
+        printf("Usage: %s <machine_type>\n\nWhere machine_type is one of:\n ", argv[0]);
+        for (i = 0; i < MACHINE_TYPES; i++) {
+            printf("%s %s", i ? "," : "", machine_types[i].name);
+        }
         return 1;
     }
-    const char *yamlFilename = argv[1];
     
     // Assign a custom logging callback to demonstrate capturing log information from P-ROC:
     PRLogSetCallback(TestLogger);
     
-    YAML::Node yamlDoc;
-    if (LoadConfiguration(yamlDoc, yamlFilename) != kPRSuccess)
-    {
-        fprintf(stderr, "Failed to load configuration file %s\n", yamlFilename);
-        return 1;
+    for (i = 0; i < MACHINE_TYPES; i++) {
+        if (_strcmpi(argv[1], machine_types[i].name) == 0) {
+            machineType = machine_types[i].type;
+            break;
+        }
     }
 
-    std::string machineTypeString = yamlDoc["PRGame"]["machineType"].as<std::string>();
-    if (machineTypeString == "wpc")
-        machineType = kPRMachineWPC;
-    else if (machineTypeString == "wpc95")
-        machineType = kPRMachineWPC95;
-    else if (machineTypeString == "wpcAlphanumeric")
-        machineType = kPRMachineWPCAlphanumeric;
-    else if(machineTypeString == "sternWhitestar")
-        machineType = kPRMachineSternWhitestar;
-    else if(machineTypeString == "sternSAM")
-        machineType = kPRMachineSternSAM;
-    else if(machineTypeString == "custom")
-        machineType = kPRMachineCustom;
-    else
-    {
-        fprintf(stderr, "Unknown machine type: %s\n", machineTypeString.c_str());
+    if (machineType == kPRMachineInvalid) {
+        printf("Unknown machine type: %s\n", argv[1]);
         return 1;
     }
 
@@ -371,8 +341,7 @@ int main(int argc, const char **argv)
     // timing purposes.
     ConfigureDMD(proc); 
     if (machineType == kPRMachineCustom) ConfigureDrivers(proc);
-    ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
-    ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
+    ConfigureSwitches(proc);                // Notify host for all debounced switch events.
 
     if (machineType == kPRMachineWPCAlphanumeric) UpdateAlphaDisplay(proc, 0);
 
