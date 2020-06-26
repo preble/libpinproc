@@ -893,44 +893,6 @@ PRResult PRDevice::DMDDraw(uint8_t * dots)
     }
 
     return PrepareWriteData(dmd_command_buffer, words_per_frame+1);
-
-    // The following code prints out the init lines for the 4 Xilinx BlockRAMs
-    // in the FPGA.  It's used to make an image for the P-ROC to display on power-up.
-#if 0
-    // This is the original version... needs to be deleted.
-    for (i=0; i<4; i++) {
-      std::cout << "For memory: "<< i << "\n";
-      // Need 4 lines to get 1 frame (4*256*4 = 4096)
-      // The rest will be all 0.
-      for (y=0; y<4; y++) {
-        std::cout << "defparam blockram.INIT_00 = 256'b";
-        for (j=31; j>=0; j--) {
-          for (x=7; x>=0; x--) {
-            std::cout << ((dmd_frame_buffer[(y*32)+j] >> ((i*8)+x)) & 1);
-          }
-        }
-        std::cout << ";\n";
-      }
-      std::cout << "\n\n\n";
-    }
-#endif
-#if 0
-    for (i=0; i<4; i++) {
-      std::cout << "For memory: "<< i << "\n";
-      // Need 4 lines to get 1 frame (4*256*4 = 4096)
-      // The rest will be all 0.
-      for (y=0; y<4; y++) {
-        std::cout << "defparam blockram.INIT_00 = 256'b";
-        for (j=8; j>=0; j--) {
-          for (x=31; x>=0; x--) {
-            std::cout << ((dmd_frame_buffer[(y*32)+j] >> ((i*8)+x)) & 1);
-          }
-        }
-        std::cout << ";\n";
-      }
-      std::cout << "\n\n\n";
-    }
-#endif
 }
 
 PRResult PRDevice::PRJTAGDriveOutputs(PRJTAGOutputs * jtagOutputs, bool_t toggleClk)
