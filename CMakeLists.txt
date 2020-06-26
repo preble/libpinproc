@@ -101,7 +101,7 @@ if(WIN32)
 		set(CMAKE_INSTALL_PREFIX "C:/")
 	endif()
 else()
-	set(lib_ftdi_usb usb ftdi1)
+	set(lib_ftdi_usb usb-1.0 ftdi1)
 endif()
 
 # GCC specialities
