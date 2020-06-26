@@ -1383,7 +1383,7 @@ int PRDevice::CalcCombinedVerRevision()
     return 0;
 }
 
-int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint16_t *combinedPtr)
+int PRDevice::GetVersionInfo(uint16_t *verPtr, uint16_t *revPtr, uint32_t *combinedPtr)
 {
     *verPtr = version;
     *revPtr = revision;
