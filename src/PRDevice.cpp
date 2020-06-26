@@ -196,7 +196,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
         }
 
 
-        //fprintf(stderr, "\nLibpinproc: event type: %d", type);
+        //fprintf(stderr, "Libpinproc: event type: %d\n", type);
         switch (type)
         {
             case P_ROC_EVENT_TYPE_SWITCH:
@@ -216,7 +216,7 @@ int PRDevice::GetEvents(PREvent *events, int maxEvents)
 
             case P_ROC_EVENT_TYPE_BURST_SWITCH:
             {
-                //fprintf(stderr, "\nBurst event");
+                //fprintf(stderr, "Burst event\n");
                 if (open) events[i].type = kPREventTypeBurstSwitchOpen;
                 else events[i].type = kPREventTypeBurstSwitchClosed;
                 break;
@@ -443,7 +443,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
         memset(driver, 0x00, sizeof(PRDriverState));
         driver->driverNum = i;
         driver->polarity = mappedDriverGroupPolarity[i/8];
-        DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Driver: %d is %x.", i,driver->polarity));
+        DEBUG(PRLog(kPRLogInfo, "Driver Polarity for Driver: %d is %x.\n",
+                    i, driver->polarity));
         if (resetFlags & kPRResetFlagUpdateDevice)
             res = DriverUpdateState(driver);
     }
@@ -474,7 +475,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
 
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
-            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
+            DEBUG(PRLog(kPRLogInfo, "Driver Polarity for Group: %d is %x.\n",
+                        i, group.polarity));
         }
         else
             driverGroups[i] = group;
@@ -495,7 +497,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
 
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
-            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.", i,group.polarity));
+            DEBUG(PRLog(kPRLogInfo,"Driver Polarity for Group: %d is %x.\n",
+                        i, group.polarity));
         }
         else
             driverGroups[i] = group;
@@ -516,7 +519,8 @@ PRResult PRDevice::DriverLoadMachineTypeDefaults(PRMachineType machineType, uint
 
         if (resetFlags & kPRResetFlagUpdateDevice) {
             res = DriverUpdateGroupConfig(&group);
-            DEBUG(PRLog(kPRLogInfo,"\nDriver Polarity for Group: %d is %x.\n", i,group.polarity));
+            DEBUG(PRLog(kPRLogInfo, "Driver Polarity for Group: %d is %x.\n",
+                        i, group.polarity));
         }
         else
             driverGroups[i] = group;

@@ -2037,7 +2037,7 @@ int verifyP3ROCImage(void)
           }
       }
 
-      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      //fprintf(stderr, "Writing Page: 0x%x\n", pageAddr);
       P3ROC_SPIReadPage(pageAddr, &readBuffer[0]);
 
       if (memcmp(readBuffer, dataBuffer, sizeof readBuffer) != 0) {
@@ -2086,12 +2086,12 @@ void writeP3ROCImage(void)
           }
       }
 
-      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      //fprintf(stderr, "Writing Page: 0x%x\n", pageAddr);
       P3ROC_SPIWritePage(pageAddr, &dataBuffer[0]);
 
       //for (int i=0; i<64; i++) 
       //{
-      //  fprintf(stderr, "\nPage: %x, Byte: %x:%x", pageAddr, i*4, dataBuffer[i]);
+      //  fprintf(stderr, "Page: %x, Byte: %x:%x\n", pageAddr, i*4, dataBuffer[i]);
       //}
 
       pageAddr++;

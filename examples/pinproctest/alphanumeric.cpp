@@ -116,9 +116,9 @@ void display(PRHandle proc, char * string_1, char * string_2)
         segs_a = asciiSegments[char_a - 32];
         segs_b = asciiSegments[char_b - 32];
 
-        printf("\nASCII Chars and associated segment values: %d", i);
-        printf("\nchar_a: %x, segs_a: %x", char_a, segs_a);
-        printf("\nchar_b: %x, segs_b: %x", char_b, segs_b);
+        printf("ASCII Chars and associated segment values: %d\n", i);
+        printf("char_a: %x, segs_a: %x\n", char_a, segs_a);
+        printf("char_b: %x, segs_b: %x\n", char_b, segs_b);
 
         PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), segs_a & 0xff, 0, STB_1, false, 0);
         PRDriverAuxPrepareOutput(&(auxCommands[cmd_index++]), (segs_a >> 8) & 0xff, 0, STB_2, false, 0);
@@ -137,9 +137,11 @@ void display(PRHandle proc, char * string_1, char * string_2)
     
     PRDriverAuxPrepareJump(&auxCommands[cmd_index++],1);
 
-    printf("\nAux commands being sent:");
+    printf("Aux commands being sent:\n");
     for (i=0; i<cmd_index; i++) {
-        printf("\nCommand: %d\tdata: %8x\tenables: %4d\tdelay_time: %10d\tjumpAddr: %4d",auxCommands[i].command, auxCommands[i].data, auxCommands[i].enables, auxCommands[i].delayTime, auxCommands[i].jumpAddr);
+        printf("Command: %d\tdata: %8x\tenables: %4d\tdelay_time: %10d\tjumpAddr: %4d\n",
+               auxCommands[i].command, auxCommands[i].data, auxCommands[i].enables,
+               auxCommands[i].delayTime, auxCommands[i].jumpAddr);
     }
 
     // Send the commands.
@@ -150,9 +152,11 @@ void display(PRHandle proc, char * string_1, char * string_2)
     PRDriverAuxPrepareJump(&auxCommands[cmd_index++],1);
     PRDriverAuxSendCommands(proc, auxCommands, cmd_index, 0);
 
-    printf("\nAux commands being sent:");
+    printf("Aux commands being sent:\n");
     for (i=0; i<cmd_index; i++) {
-        printf("\nCommand: %d\tdata: %x\tenables: %d\tdelay_time: %d\tjumpAddr: %d",auxCommands[i].command, auxCommands[i].data, auxCommands[i].enables, auxCommands[i].delayTime, auxCommands[i].jumpAddr);
+        printf("Command: %d\tdata: %x\tenables: %d\tdelay_time: %d\tjumpAddr: %d\n",
+                auxCommands[i].command, auxCommands[i].data, auxCommands[i].enables,
+                auxCommands[i].delayTime, auxCommands[i].jumpAddr);
     }
     
 } 
