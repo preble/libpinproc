@@ -82,7 +82,7 @@ void PRSetLastErrorText(const char *format, ...)
     PRLog(kPRLogError, "%s\n", lastErrorText);
 }
 
-const char *PRGetLastErrorText()
+const char *PRGetLastErrorText(void)
 {
     return lastErrorText;
 }
