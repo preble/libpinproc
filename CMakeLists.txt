@@ -13,11 +13,17 @@ if(POLICY CMP0015)
 	cmake_policy(SET CMP0015 OLD)
 endif()
 
+# allow relative paths in LINK_DIRECTORIES
+if(POLICY CMP0081)
+	cmake_policy(SET CMP0081 OLD)
+endif()
 
 ###
 ### Project settings
 ###
 project(PINPROC)
+
+set (CMAKE_CXX_STANDARD 11)
 
 set(PINPROC_VERSION_MAJOR "2")
 set(PINPROC_VERSION_MINOR "0")
@@ -45,6 +51,7 @@ option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
 option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
 
+option(CROSS_ROOT "Cross-compilation root path" OFF)
 
 ###
 ### Sources, headers, directories and libs
@@ -69,8 +76,15 @@ if(VERBOSE)
 endif()
 
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
+set(EXTRA_INC "" CACHE STRING "Extra include directories separated by ;")
+set(EXTRA_LINK "" CACHE STRING "Extra link directories separated by ;")
+if(CROSS_ROOT)
+include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} ${CROSS_ROOT}/usr/local/include)
+link_directories(${EXTRA_LINK} ${CROSS_ROOT}/usr/local/lib)
+else()
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
 link_directories(${EXTRA_LINK} /usr/local/lib)
+endif()
 
 set(YAML_CPP_LIB "yaml-cpp")
 set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
@@ -161,6 +175,9 @@ if(MSVC)
 		set(YAML_CPP_LIB "${CMAKE_STATIC_LIBRARY_PREFIX}${YAML_CPP_LIB}${LIB_RT_SUFFIX}")
 		set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
 	endif()
+else()
+	# make sure executable files are standalone
+	SET(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
 

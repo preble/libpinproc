@@ -2051,6 +2051,8 @@ int verifyP3ROCImage()
     }
 
     XSVFDBG_PRINTF( 0, "\n\nSUCCESS - Operation completed successfully.  Cycle P3-ROC power to activate any changes.\n" );
+
+    return 1;
 }
 
 void writeP3ROCImage()
@@ -2134,13 +2136,10 @@ int processFile()
             endClock    = clock();
             fclose( in );
 
-            // Destroy the P-ROC device handle:
-            PRDelete(proc);
-            proc = kPRHandleInvalid;
             return iErrorCode;
 }
 
-int checkPROCFile() {
+uint32_t checkPROCFile() {
     uint32_t checksum=0, file_checksum, file_board_id, header_checksum;
     unsigned char data;
     int i=0,file_i=0;
@@ -2176,10 +2175,20 @@ int checkPROCFile() {
     PRReadData(proc, 0, 0, 4, readdata);
     board_id = readdata[0];
     board_rev = readdata[3];
-    board_rev = (board_rev & 0x80) >> 7 |
-                (board_rev & 0x40) >> 5 |
-                (board_rev & 0x20) >> 3 |
-                (board_rev & 0x10) >> 1;
+    if (board_id == P3_ROC_CHIP_ID) {
+        board_rev = (board_rev & 0x800) >> 11 |
+                    (board_rev & 0x400) >> 10 |
+                    (board_rev & 0x200) >> 9 |
+                    (board_rev & 0x100) >> 8;
+        fprintf(stderr, "\nReading P3-ROC board_rev: %d", board_rev);
+    }
+    else {
+        board_rev = (board_rev & 0x80) >> 7 |
+                    (board_rev & 0x40) >> 6 |
+                    (board_rev & 0x20) >> 5 |
+                    (board_rev & 0x10) >> 4;
+        fprintf(stderr, "\nReading P-ROC board_rev: %d", board_rev);
+    }
 
     if (proc_file_version != 0) {
         fprintf(stderr, "\nERROR: Unsupported .p-roc file version: %x.  Check for an updated version of this tool.\n\n", proc_file_version);
@@ -2197,6 +2206,14 @@ int checkPROCFile() {
         return 0;
     }
     else fprintf(stderr, "\nBoard ID verified");
+
+    if (board_rev > max_board_rev) {
+        fprintf(stderr, "\nERROR: board_rev %d > max_board_rev %d", board_rev, max_board_rev);
+    }
+    if (board_rev < min_board_rev) {
+        fprintf(stderr, "\nERROR: board_rev < min_board_rev");
+    }
+
     if (board_rev > max_board_rev || board_rev < min_board_rev) {
         fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (rev: %x)", board_id);
         return 0;
@@ -2303,8 +2320,12 @@ int main( int argc, char** argv )
                           processP3ROCFile();
                           break;
                       default:
+                          fprintf(stderr, "Failed to parse file.\n");
                           break;
-                     }
+                    }
+                    // Destroy the P-ROC device handle created by openPROC()
+                    PRDelete(proc);
+                    proc = kPRHandleInvalid;
                 }
             }
         }

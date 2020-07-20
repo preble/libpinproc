@@ -46,12 +46,8 @@ PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
             fprintf(stderr, "YAML file not found: %s\n", yamlFilePath);
             return kPRFailure;
         }
-        YAML::Parser parser(fin);
         
-        while(parser) 
-        {
-            parser.GetNextDocument(yamlDoc);
-        }
+        yamlDoc = YAML::Load(fin);
     }
 //    catch (YAML::ParserException& ex)
 //    {
@@ -341,8 +337,7 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    std::string machineTypeString;
-    yamlDoc["PRGame"]["machineType"] >> machineTypeString;
+    std::string machineTypeString = yamlDoc["PRGame"]["machineType"].as<std::string>();
     if (machineTypeString == "wpc")
         machineType = kPRMachineWPC;
     else if (machineTypeString == "wpc95")

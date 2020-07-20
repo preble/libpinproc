@@ -60,6 +60,7 @@ public:
 
     PRResult FlushWriteData();
     PRResult WriteDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * buffer);
+    PRResult WriteDataRawUnbuffered(uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * buffer);
     PRResult ReadDataRaw(uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
 
     PRResult ManagerUpdateConfig(PRManagerConfig *managerConfig);
@@ -108,7 +109,7 @@ protected:
 
     // Raw write and read methods
     //
-    
+
     /** Schedules data to be written to the P-ROC.  */
     PRResult PrepareWriteData(uint32_t * buffer, int32_t numWords);
 
@@ -174,7 +175,7 @@ protected:
     PRDriverGroupConfig driverGroups[maxDriverGroups];
     PRDriverState drivers[maxDrivers];
     PRDMDConfig dmdConfig;
-	
+
     PRSwitchConfig switchConfig;
     PRSwitchRuleInternal switchRules[maxSwitchRules];
 	queue<uint32_t> freeSwitchRuleIndexes; /**< Indexes of available switch rules. */

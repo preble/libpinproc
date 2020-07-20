@@ -138,6 +138,9 @@ PINPROC_API PRResult PRFlushWriteData(PRHandle handle);
 /** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData). */
 PINPROC_API PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer);
 
+/** Write data buffered to P-ROC (does require a call to PRFlushWriteData). */
+PINPROC_API PRResult PRWriteDataUnbuffered(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer);
+
 /** Read data from the P-ROC. */
 PINPROC_API PRResult PRReadData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numReadWords, uint32_t * readBuffer);
 
