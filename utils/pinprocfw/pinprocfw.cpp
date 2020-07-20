@@ -2142,8 +2142,6 @@ uint32_t checkPROCFile(void) {
 
     fprintf(stderr, "File version %d, for board_id 0x%08X (board revs %d to %d)\n",
             proc_file_version, file_board_id, min_board_rev, max_board_rev);
-    fprintf(stderr, "%d-byte data checksum 0x%08X, header checksum 0x%08X\n",
-            file_i, file_checksum, header_checksum);
 
     uint32_t readdata[4], board_id;
     PRReadData(proc, P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 4, readdata);
