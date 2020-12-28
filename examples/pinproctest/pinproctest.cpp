@@ -27,150 +27,122 @@
  *  libpinproc
  */
 #include "pinproctest.h"
+uint32_t board_id = 0;
 
 PRMachineType machineType = kPRMachineInvalid;
 
 /** Demonstration of the custom logging callback. */
 void TestLogger(PRLogLevel level, const char *text)
 {
-    fprintf(stderr, "TEST: %s", text);
-}
-
-PRResult LoadConfiguration(YAML::Node& yamlDoc, const char *yamlFilePath)
-{
-    try
-    {
-        std::ifstream fin(yamlFilePath);
-        if (fin.is_open() == false)
-        {
-            fprintf(stderr, "YAML file not found: %s\n", yamlFilePath);
-            return kPRFailure;
-        }
-        YAML::Parser parser(fin);
-        
-        while(parser) 
-        {
-            parser.GetNextDocument(yamlDoc);
-        }
-    }
-//    catch (YAML::ParserException& ex)
-//    {
-//        fprintf(stderr, "YAML parse error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
- //       return kPRFailure;
-//    }
-//    catch (YAML::RepresentationException& ex)
-//    {
-//        fprintf(stderr, "YAML representation error at line=%d col=%d: %s\n", ex.line, ex.column, ex.msg.c_str());
-//        return kPRFailure;
-//    }
-    catch (...)
-    {
-        fprintf(stderr, "Unexpected exception while parsing YAML config.\n");
-        return kPRFailure;
-    }
-    return kPRSuccess;
+    printf("TEST: %s", text);
 }
 
 void ConfigureAccelerometerMotion(PRHandle proc)
 {
     uint32_t readData[5];
 
-    PRReadData(proc, 6, 0x10D, 1, readData); 
-    printf("\nAccel chip id: %x\n", readData[0]);
-    fflush(stdout);
+    // Only the P3-ROC has an accelerometer.
+    if (board_id != P3_ROC_CHIP_ID) {
+        return;
+    }
+
+    PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData); 
+    printf("Accel chip id: %x\n", readData[0]);
 
     // Set FF_MT_COUNT (0x18)
     readData[0] = 1;
-    PRWriteData(proc, 6, 0x118, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x118, 1, readData); 
 
     // Set FF_MT_THRESH (0x17)
     readData[0] = 1;
-    PRWriteData(proc, 6, 0x117, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x117, 1, readData); 
 
     // Set FF_MT_CONFIG (0x15)
     readData[0] = 0xD8;
-    PRWriteData(proc, 6, 0x115, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x115, 1, readData); 
 
     // Enable Motion interrupts
     readData[0] = 0x04;
-    PRWriteData(proc, 6, 0x12D, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12D, 1, readData); 
 
     // Direct motion interrupt to int0 pin (default)
     readData[0] = 0x04;
-    PRWriteData(proc, 6, 0x12E, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12E, 1, readData); 
 
     readData[0] = 0x3D;
-    PRWriteData(proc, 6, 0x12A, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12A, 1, readData); 
 
     readData[0] = 0x02;
-    PRWriteData(proc, 6, 0x12B, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12B, 1, readData); 
 
 
     // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
     //readData[0] = 0x0F; // Enable polling, 8 times a second.
     readData[0] = 0x00;  // Disable polling
     readData[0] = readData[0] | 0x1600; // Set IRQ status addr (FF_MT_SRC)
-    PRWriteData(proc, 6, 0x000, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x000, 1, readData); 
     PRFlushWriteData(proc);
-
 }
 
 void ConfigureAccelerometerTransient(PRHandle proc)
 {
     uint32_t readData[5];
 
-    PRReadData(proc, 6, 0x10D, 1, readData); 
-    printf("\nAccel chip id: %x\n", readData[0]);
-    fflush(stdout);
+    // Only the P3-ROC has an accelerometer.
+    if (board_id != P3_ROC_CHIP_ID) {
+        return;
+    }
+
+    PRReadData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10D, 1, readData);
+    printf("Accel chip id: %x\n", readData[0]);
 
     // Set to standby so register changes will take.
     readData[0] = 0x0;
-    PRWriteData(proc, 6, 0x12A, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12A, 1, readData); 
 
-    // Set HPF_OUT bit in XYZ_DATA_CFG (0xOE)
+    // Set HPF_OUT bit in XYZ_DATA_CFG (0x0E)
     //readData[0] = 0x10;
-    //PRWriteData(proc, 6, 0x10E, 1, readData); 
+    //PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10E, 1, readData); 
 
 
     // Set HP_FILTER_CUTOFF (0x0F)
     readData[0] = 0x03;
-    PRWriteData(proc, 6, 0x10F, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x10F, 1, readData); 
 
     // Set FF_TRANSIENT_COUNT (0x20)
     readData[0] = 1;
-    PRWriteData(proc, 6, 0x120, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x120, 1, readData); 
 
     // Set FF_TRANSIENT_THRESH (0x1F)
     readData[0] = 1;
-    PRWriteData(proc, 6, 0x11F, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x11F, 1, readData); 
 
     // Set FF_TRANSIENT_CONFIG (0x1D)
     readData[0] = 0x1E;
-    PRWriteData(proc, 6, 0x11D, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x11D, 1, readData); 
 
     // Enable Motion interrupts
     readData[0] = 0x20;
-    PRWriteData(proc, 6, 0x12D, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12D, 1, readData); 
 
     // Direct motion interrupt to int0 pin (default)
     readData[0] = 0x20;
-    PRWriteData(proc, 6, 0x12E, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12E, 1, readData); 
 
     //readData[0] = 0x3D;
     readData[0] = 0x05;
-    PRWriteData(proc, 6, 0x12A, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12A, 1, readData); 
 
     readData[0] = 0x02;
-    PRWriteData(proc, 6, 0x12B, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x12B, 1, readData); 
 
 
     // Enable auto-polling of accelerometer every 128 ms (8 times a sec).
     //readData[0] = 0x0F; // Enable polling, 8 times a second.
     readData[0] = 0x00;  // Disable polling
     readData[0] = readData[0] | 0x1E00; // Set IRQ status addr (FF_MT_SRC)
-    PRWriteData(proc, 6, 0x000, 1, readData); 
+    PRWriteData(proc, P3_ROC_BUS_ACCELEROMETER_SELECT, 0x000, 1, readData); 
     PRFlushWriteData(proc);
-
 }
 
 time_t startTime;
@@ -209,35 +181,30 @@ void RunLoop(PRHandle proc)
     {
         PRDriverWatchdogTickle(proc);
 
-//        PRReadData(proc, 6, 0x115, 1, readData); 
-//        printf("\n\n\nAccel chip id: %x\n", readData[0]);
-//        PRReadData(proc, 6, 0x116, 1, readData); 
-//        printf("\nAccel chip id: %x\n", readData[0]);
-//        PRReadData(proc, 6, 0x117, 1, readData); 
-//        printf("\nAccel chip id: %x\n", readData[0]);
-//        PRReadData(proc, 6, 0x118, 1, readData); 
-//        printf("\nAccel chip id: %x\n", readData[0]);
-//        PRReadData(proc, 6, 0x12D, 1, readData); 
-//        printf("\nAccel chip id: %x\n", readData[0]);
-//        PRReadData(proc, 6, 0x12E, 1, readData); 
-//        printf("\nAccel chip id: %x\n", readData[0]);
-
         int numEvents = PRGetEvents(proc, events, maxEvents);
-//        if (numEvents > 0) printf("\nNum events: %x\n", numEvents);
         for (int i = 0; i < numEvents; i++)
         {
             PREvent *event = &events[i];
-            const char *stateText = "Unknown";
-            switch (event->type)
-            {
-                case kPREventTypeSwitchOpenDebounced: stateText = "open"; break;
-                case kPREventTypeSwitchClosedDebounced: stateText = "closed"; break;
-                case kPREventTypeSwitchOpenNondebounced: stateText = "open(ndb)"; break;
-                case kPREventTypeSwitchClosedNondebounced: stateText = "closed(ndb)"; break;
+            const char *stateText;
+            switch (event->type) {
+                case kPREventTypeSwitchOpenDebounced:
+                    stateText = "open";
+                    break;
+                case kPREventTypeSwitchClosedDebounced:
+                    stateText = "closed";
+                    break;
+                case kPREventTypeSwitchOpenNondebounced:
+                    stateText = "open(ndb)";
+                    break;
+                case kPREventTypeSwitchClosedNondebounced:
+                    stateText = "closed(ndb)";
+                    break;
+                default:
+                    stateText = "Unknown";
             }
 #ifdef _MSC_VER
             struct _timeb tv;
-            _ftime(&tv);
+            _ftime_s(&tv);
 #else
             struct timeval tv;
             gettimeofday(&tv, NULL);
@@ -248,17 +215,14 @@ void RunLoop(PRHandle proc)
                 case kPREventTypeSwitchClosedDebounced:
                 case kPREventTypeSwitchOpenNondebounced:
                 case kPREventTypeSwitchClosedNondebounced:
-                {
 #ifdef _MSC_VER
-                    printf("%d.%03d switch % 3d: %s\n", tv.time-startTime, tv.millitm, event->value, stateText);
+                    printf("%d.%03d switch %3d: %s\n", (int)(tv.time-startTime), tv.millitm, event->value, stateText);
 #else
-                    printf("%d.%03d switch % 3d: %s\n", (int)(tv.tv_sec-startTime), (int)tv.tv_usec/1000, event->value, stateText);
+                    printf("%d.%03d switch %3d: %s\n", (int)(tv.tv_sec-startTime), (int)tv.tv_usec/1000, event->value, stateText);
 #endif
                     UpdateSwitchState( event );
                     break;
-                }
                 case kPREventTypeDMDFrameDisplayed:
-                {
                     if (machineType == kPRMachineWPCAlphanumeric) {
                         //UpdateAlphaDisplay(proc, dotOffset++);
                     }
@@ -267,37 +231,26 @@ void RunLoop(PRHandle proc)
                         PRDMDDraw(proc,dots);
                     }
                     break;
-                }
                 case kPREventTypeAccelerometerX:
-                {
                     //readData[0] = event->value & 0x3FFF;
                     readData[0] = event->value;
                     break;
-                }
                 case kPREventTypeAccelerometerY:
-                {
                     //readData[1] = event->value & 0x3FFF;
                     readData[1] = event->value;
                     break;
-                }
                 case kPREventTypeAccelerometerZ:
-                {
                     //readData[2] = event->value & 0x3FFF;
                     readData[2] = event->value;
-                    printf("\nAccel: X: %x, Y: %x, Z: %x", readData[0], readData[1],readData[2]);
+                    printf("Accel: X: %x, Y: %x, Z: %x\n", readData[0], readData[1],readData[2]);
                     break;
-                }
                 case kPREventTypeAccelerometerIRQ:
-                {
                     //readData[2] = event->value & 0x3FFF;
                     readData[3] = event->value;
-                    printf("\nAccel IRQ: %x", readData[3]);
+                    printf("Accel IRQ: %x\n", readData[3]);
                     break;
-                }
                 default:
-                {
-                    printf("\nUnknown event: %x:%x", event->type, event->value);
-                }
+                    printf("Unknown event: %x:%x\n", event->type, event->value);
             }
         }
         PRFlushWriteData(proc);
@@ -316,70 +269,85 @@ void sigint(int)
     printf("Exiting...\n");
 }
 
+const struct {
+    PRMachineType   type;
+    const char      *name;
+} machine_types[] = {
+    { kPRMachineCustom,             "custom" },
+    { kPRMachineWPCAlphanumeric,    "wpcAlphanumeric" },
+    { kPRMachineWPC,                "wpc" },
+    { kPRMachineWPC95,              "wpc95" },
+    { kPRMachineSternWhitestar,     "sternWhitestar" },
+    { kPRMachineSternSAM,           "sternSAM" },
+    { kPRMachinePDB,                "pdb" },
+};
+#define MACHINE_TYPES  (sizeof(machine_types) / sizeof(machine_types[0]))
+
 int main(int argc, const char **argv)
 {
     int i;
+
+    // Set stdout unbuffered to eliminate need to fflush()
+    setbuf(stdout, NULL);
 
     // Set a signal handler so that we can exit gracefully on Ctrl-C:
     signal(SIGINT, sigint);
     startTime = time(NULL);
 
-    if (argc < 2)
-    {
-        fprintf(stderr, "Usage: %s <yaml machine description>\n", argv[0]);
+    if (argc < 2) {
+        printf("Usage: %s <machine_type>\n\nWhere machine_type is one of:\n ", argv[0]);
+        for (i = 0; i < MACHINE_TYPES; i++) {
+            printf("%s %s", i ? "," : "", machine_types[i].name);
+        }
         return 1;
     }
-    const char *yamlFilename = argv[1];
     
     // Assign a custom logging callback to demonstrate capturing log information from P-ROC:
     PRLogSetCallback(TestLogger);
     
-    YAML::Node yamlDoc;
-    if (LoadConfiguration(yamlDoc, yamlFilename) != kPRSuccess)
-    {
-        fprintf(stderr, "Failed to load configuration file %s\n", yamlFilename);
-        return 1;
+    for (i = 0; i < MACHINE_TYPES; i++) {
+        if (strcmp(argv[1], machine_types[i].name) == 0) {
+            machineType = machine_types[i].type;
+            break;
+        }
     }
 
-    std::string machineTypeString;
-    yamlDoc["PRGame"]["machineType"] >> machineTypeString;
-    if (machineTypeString == "wpc")
-        machineType = kPRMachineWPC;
-    else if (machineTypeString == "wpc95")
-        machineType = kPRMachineWPC95;
-    else if (machineTypeString == "wpcAlphanumeric")
-        machineType = kPRMachineWPCAlphanumeric;
-    else if(machineTypeString == "sternWhitestar")
-        machineType = kPRMachineSternWhitestar;
-    else if(machineTypeString == "sternSAM")
-        machineType = kPRMachineSternSAM;
-    else if(machineTypeString == "custom")
-        machineType = kPRMachineCustom;
-    else
-    {
-        fprintf(stderr, "Unknown machine type: %s\n", machineTypeString.c_str());
+    if (machineType == kPRMachineInvalid) {
+        printf("Unknown machine type: %s\n", argv[1]);
         return 1;
     }
 
     // Finally instantiate the P-ROC device:
     PRHandle proc = PRCreate(machineType);
-    if (proc == kPRHandleInvalid)
-    {
-        fprintf(stderr, "Error during PRCreate: %s\n", PRGetLastErrorText());
+    if (proc == kPRHandleInvalid) {
+        printf("Error during PRCreate: %s\n", PRGetLastErrorText());
         return 1;
     }
+    PRReadData(proc, P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 1, &board_id);
+    if (board_id == P_ROC_CHIP_ID) {
+        printf("Connected to P-ROC\n");
+    }
+    else if (board_id == P3_ROC_CHIP_ID) {
+        printf("Connected to P3-ROC\n");
+    }
+    else {
+        printf("Warning: unrecognized board ID 0x%08X\n", board_id);
+    }
 
-    PRLogSetLevel (kPRLogInfo);
+    PRLogSetLevel(kPRLogInfo);
     PRReset(proc, kPRResetFlagUpdateDevice); // Reset the device structs and write them into the device.
     
     // Even if WPCAlphanumeric, configure the DMD at least to get frame events for
     // timing purposes.
     ConfigureDMD(proc); 
-    if (machineType == kPRMachineCustom) ConfigureDrivers(proc);
-    ConfigureSwitches(proc, yamlDoc); // Notify host for all debounced switch events.
-    ConfigureSwitchRules(proc, yamlDoc); // Flippers, slingshots
+    if (machineType == kPRMachineCustom) {
+        ConfigureDrivers(proc);
+    }
+    ConfigureSwitches(proc);                // Notify host for all debounced switch events.
 
-    if (machineType == kPRMachineWPCAlphanumeric) UpdateAlphaDisplay(proc, 0);
+    if (machineType == kPRMachineWPCAlphanumeric) {
+        UpdateAlphaDisplay(proc, 0);
+    }
 
     // Pulse a coil for testing purposes.
     PRDriverPulse(proc, 47, 30);
@@ -420,7 +388,6 @@ int main(int argc, const char **argv)
     PRDriverAuxSendCommands(proc, auxCommands, 1, 0);
 */
     PRFlushWriteData(proc);
-
 
     printf("Running.  Hit Ctrl-C to exit.\n");
     

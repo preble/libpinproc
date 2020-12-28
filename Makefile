@@ -10,7 +10,6 @@ LIBPINPROC_DYLIB = bin/libpinproc.dylib
 SRCS = src/pinproc.cpp src/PRDevice.cpp src/PRHardware.cpp
 OBJS := $(SRCS:.cpp=.o)
 INCLUDES = include/pinproc.h src/PRCommon.h src/PRDevice.h src/PRHardware.h
-LIBS = usb ftdi
 
 .PHONY: libpinproc
 libpinproc: $(LIBPINPROC) $(LIBPINPROC_DYLIB)
@@ -20,7 +19,7 @@ $(LIBPINPROC): $(OBJS)
 	$(RANLIB) $@
 
 $(LIBPINPROC_DYLIB): $(OBJS)
-	g++ -dynamiclib -o $@ /usr/local/lib/libftdi.dylib $(LDFLAGS) $(OBJS)
+	g++ -dynamiclib -o $@ `pkg-config --libs libftdi1` $(LDFLAGS) $(OBJS)
 
 .cpp.o:
 	$(CC) $(LIBPINPROC_CFLAGS) $(CFLAGS) -o $@ $<

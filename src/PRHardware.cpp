@@ -33,9 +33,9 @@
 #include "PRCommon.h"
 
 bool_t IsStern (uint32_t hardware_data) {
-//    if ( ((hardware_data & P_ROC_BOARD_VERSION_MASK) >> P_ROC_BOARD_VERSION_SHIFT) == 0x1) 
+//    if ( ((hardware_data & P_ROC_BOARD_VERSION_MASK) >> P_ROC_BOARD_VERSION_SHIFT) == 0x1)
  //       return ( ((hardware_data & P_ROC_AUTO_STERN_DETECT_MASK) >> P_ROC_AUTO_STERN_DETECT_SHIFT) == P_ROC_AUTO_STERN_DETECT_VALUE);
-//    else 
+//    else
         return ( ((hardware_data & P_ROC_MANUAL_STERN_DETECT_MASK) >> P_ROC_MANUAL_STERN_DETECT_SHIFT) == P_ROC_MANUAL_STERN_DETECT_VALUE);
 }
 
@@ -59,11 +59,11 @@ int32_t CreateManagerUpdateConfigBurst ( uint32_t * burst, PRManagerConfig *mana
 
     addr = P_ROC_REG_DIPSWITCH_ADDR;
     burst[0] = CreateBurstCommand (P_ROC_MANAGER_SELECT, addr, 1 );
-    burst[1] = ( (manager_config->reuse_dmd_data_for_aux << 
+    burst[1] = ( (manager_config->reuse_dmd_data_for_aux <<
                         P_ROC_MANAGER_REUSE_DMD_DATA_FOR_AUX_SHIFT) |
-                 (manager_config->invert_dipswitch_1 << 
+                 (manager_config->invert_dipswitch_1 <<
                         P_ROC_MANAGER_INVERT_DIPSWITCH_1_SHIFT) );
-    
+
     return kPRSuccess;
 }
 
@@ -181,7 +181,7 @@ uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command) {
         }
         break;
         default : {
-            return (false << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT); 
+            return (false << P_ROC_DRIVER_AUX_ENTRY_ACTIVE_SHIFT);
         }
     }
 }
@@ -189,13 +189,13 @@ uint32_t CreateDriverAuxCommand ( PRDriverAuxCommand command) {
 int32_t CreateWatchdogConfigBurst ( uint32_t * burst, bool_t watchdogExpired,
                                    bool_t watchdogEnable, uint16_t watchdogResetTime) {
     uint32_t addr;
-    
+
     addr = P_ROC_REG_WATCHDOG_ADDR;
     burst[0] = CreateBurstCommand (P_ROC_MANAGER_SELECT, addr, 1 );
     burst[1] = ( (watchdogExpired << P_ROC_MANAGER_WATCHDOG_EXPIRED_SHIFT) |
                 (watchdogEnable << P_ROC_MANAGER_WATCHDOG_ENABLE_SHIFT) |
                 (watchdogResetTime << P_ROC_MANAGER_WATCHDOG_RESET_TIME_SHIFT) );
-    
+
     return kPRSuccess;
 }
 
@@ -206,39 +206,39 @@ int32_t CreateSwitchUpdateConfigBurst ( uint32_t * burst, PRSwitchConfig *switch
     addr = 0;
     burst[0] = CreateBurstCommand (P_ROC_BUS_SWITCH_CTRL_SELECT, addr, 1 );
     burst[1] = (switchConfig->clear << P_ROC_SWITCH_CONFIG_CLEAR_SHIFT) |
-               (switchConfig->directMatrixScanLoopTime << 
+               (switchConfig->directMatrixScanLoopTime <<
                    P_ROC_SWITCH_CONFIG_MS_PER_DM_SCAN_LOOP_SHIFT) |
-               (switchConfig->pulsesBeforeCheckingRX << 
+               (switchConfig->pulsesBeforeCheckingRX <<
                    P_ROC_SWITCH_CONFIG_PULSES_BEFORE_CHECKING_RX_SHIFT) |
-               (switchConfig->inactivePulsesAfterBurst << 
+               (switchConfig->inactivePulsesAfterBurst <<
                    P_ROC_SWITCH_CONFIG_INACTIVE_PULSES_AFTER_BURST_SHIFT) |
-               (switchConfig->pulsesPerBurst << 
+               (switchConfig->pulsesPerBurst <<
                    P_ROC_SWITCH_CONFIG_PULSES_PER_BURST_SHIFT) |
-               (switchConfig->pulseHalfPeriodTime << 
+               (switchConfig->pulseHalfPeriodTime <<
                    P_ROC_SWITCH_CONFIG_MS_PER_PULSE_HALF_PERIOD_SHIFT) |
-               (switchConfig->use_column_8 << 
+               (switchConfig->use_column_8 <<
                    P_ROC_SWITCH_CONFIG_USE_COLUMN_8) |
-               (switchConfig->use_column_9 << 
+               (switchConfig->use_column_9 <<
                    P_ROC_SWITCH_CONFIG_USE_COLUMN_9);
-    burst[2] = CreateBurstCommand (P_ROC_BUS_STATE_CHANGE_PROC_SELECT, 
+    burst[2] = CreateBurstCommand (P_ROC_BUS_STATE_CHANGE_PROC_SELECT,
                                    P_ROC_STATE_CHANGE_CONFIG_ADDR, 1 );
     burst[3] = switchConfig->hostEventsEnable;
 
     return kPRSuccess;
 }
 
-int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType) 
+int16_t CreateSwitchRuleIndex(uint8_t switchNum, PREventType eventType)
 {
     uint32_t debounce = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchClosedDebounced) ? 1 : 0;
     uint32_t state    = (eventType == kPREventTypeSwitchOpenDebounced) || (eventType == kPREventTypeSwitchOpenNondebounced) ? 1 : 0;
-	
+
     uint32_t index = ((debounce << P_ROC_SWITCH_RULE_NUM_DEBOUNCE_SHIFT) |
                       (state << P_ROC_SWITCH_RULE_NUM_STATE_SHIFT) |
                       (switchNum << P_ROC_SWITCH_RULE_NUM_SWITCH_NUM_SHIFT) );
     return index;
 }
 
-int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType, bool_t drive_outputs_now) 
+int32_t CreateSwitchRuleAddr(uint8_t switchNum, PREventType eventType, bool_t drive_outputs_now)
 {
     uint16_t number = CreateSwitchRuleIndex( switchNum, eventType );
     uint32_t addr = (number << P_ROC_SWITCH_RULE_NUM_TO_ADDR_SHIFT) |
@@ -291,7 +291,7 @@ int32_t CreateDMDUpdateConfigBurst ( uint32_t * burst, PRDMDConfig *dmd_config)
                (dmd_config->numFrameBuffers << P_ROC_DMD_NUM_FRAME_BUFFERS_SHIFT) |
                (dmd_config->numSubFrames << P_ROC_DMD_NUM_SUB_FRAMES_SHIFT) |
                (dmd_config->numRows << P_ROC_DMD_NUM_ROWS_SHIFT) |
-               (dmd_config->numColumns << P_ROC_DMD_NUM_COLUMNS_SHIFT); 
+               (dmd_config->numColumns << P_ROC_DMD_NUM_COLUMNS_SHIFT);
 
     addr = 8;
     burst[2] = CreateBurstCommand (P_ROC_BUS_DMD_SELECT, addr, 4 );
@@ -311,12 +311,12 @@ int32_t CreateJTAGForceOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutpu
     burst[1] = 1 << P_ROC_JTAG_CMD_START_SHIFT |
                1 << P_ROC_JTAG_CMD_OE_SHIFT |
                P_ROC_JTAG_CMD_SET_PORTS << P_ROC_JTAG_CMD_CMD_SHIFT |
-               jtagOutputs->tckMask << P_ROC_JTAG_TRANSITION_TCK_MASK_SHIFT | 
-               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT | 
-               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT | 
-               jtagOutputs->tck << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
-               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
-               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TCK_SHIFT; 
+               jtagOutputs->tckMask << P_ROC_JTAG_TRANSITION_TCK_MASK_SHIFT |
+               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT |
+               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT |
+               jtagOutputs->tck << P_ROC_JTAG_TRANSITION_TCK_SHIFT |
+               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT |
+               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TCK_SHIFT;
     return kPRSuccess;
 
 }
@@ -326,10 +326,10 @@ int32_t CreateJTAGLatchOutputsBurst ( uint32_t * burst, PRJTAGOutputs *jtagOutpu
     burst[1] = 1 << P_ROC_JTAG_CMD_START_SHIFT |
                1 << P_ROC_JTAG_CMD_OE_SHIFT |
                P_ROC_JTAG_CMD_TRANSITION << P_ROC_JTAG_CMD_CMD_SHIFT |
-               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT | 
-               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT | 
-               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT | 
-               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TMS_SHIFT; 
+               jtagOutputs->tdoMask << P_ROC_JTAG_TRANSITION_TDO_MASK_SHIFT |
+               jtagOutputs->tmsMask << P_ROC_JTAG_TRANSITION_TMS_MASK_SHIFT |
+               jtagOutputs->tdo << P_ROC_JTAG_TRANSITION_TCK_SHIFT |
+               jtagOutputs->tms << P_ROC_JTAG_TRANSITION_TMS_SHIFT;
     return kPRSuccess;
 
 }
@@ -340,7 +340,7 @@ int32_t CreateJTAGShiftTDODataBurst ( uint32_t * burst, uint16_t numBits, bool_t
                1 << P_ROC_JTAG_CMD_OE_SHIFT |
                P_ROC_JTAG_CMD_SHIFT << P_ROC_JTAG_CMD_CMD_SHIFT |
                dataBlockComplete << P_ROC_JTAG_SHIFT_EXIT_SHIFT |
-               numBits << P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT; 
+               numBits << P_ROC_JTAG_SHIFT_NUM_BITS_SHIFT;
     return kPRSuccess;
 }
 
@@ -385,18 +385,19 @@ PRResult PRHardwareOpen()
         ftHandles[i] = NULL;
     }
     pcBufLD[MAX_DEVICES] = NULL;
-    
+
     ftStatus = FT_ListDevices(pcBufLD, &iNumDevs, FT_LIST_ALL | FT_OPEN_BY_SERIAL_NUMBER);
-    
+
     if(ftStatus != FT_OK) {
+        PRSetLastErrorText("FT_ListDevices(%d)\n", ftStatus);
         DEBUG(PRLog(kPRLogInfo,"Error: FT_ListDevices(%d)\n", ftStatus));
         return kPRFailure;
     }
-    
+
     for(j = 0; j < BUF_SIZE; j++) {
         cBufWrite[j] = j;
     }
-    
+
     for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ); i++) {
         DEBUG(PRLog(kPRLogInfo,"Device %d Serial Number - %s\n", i, cBufLD[i]));
     }
@@ -404,34 +405,39 @@ PRResult PRHardwareOpen()
     for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ) ; i++) {
         /* Setup */
         if((ftStatus = FT_OpenEx(cBufLD[i], FT_OPEN_BY_SERIAL_NUMBER, &ftHandles[i])) != FT_OK){
-            /* 
+            /*
                 This can fail if the ftdi_sio driver is loaded
                 use lsmod to check this and rmmod ftdi_sio to remove
                 also rmmod usbserial
             */
             DEBUG(PRLog(kPRLogInfo,"Error FT_OpenEx(%d), device\n", ftStatus, i));
+            PRSetLastErrorText("Error FT_OpenEx(%d), device\n", ftStatus, i);
             return kPRFailure;
         }
-    
+
         DEBUG(PRLog(kPRLogInfo,"Opened device %s\n", cBufLD[i]));
         ftHandle = ftHandles[i];
 
         if((ftStatus = FT_SetBaudRate(ftHandles[i], 1228800)) != FT_OK) {
             DEBUG(PRLog(kPRLogInfo,"Error FT_SetBaudRate(%d), cBufLD[i] = %s\n", ftStatus, cBufLD[i]));
         }
-    
+
         iDevicesOpen++;
     }
 
-    if (iDevicesOpen > 0) 
+    if (iDevicesOpen > 0)
     {
       FT_ResetDevice(ftHandle);
       DEBUG(PRLog(kPRLogInfo,"FTDI Device Opened\n"));
       return kPRSuccess;
     }
-    else return kPRFailure;
+    else
+    {
+        PRSetLastErrorText("No FTDI device found.");
+        return kPRFailure;
+    }
 }
-    
+
 void PRHardwareClose()
 {
     int i;
@@ -447,14 +453,14 @@ void PRHardwareClose()
 
 int PRHardwareRead(uint8_t *buffer, int maxBytes)
 {
-    FT_STATUS ftStatus; 
+    FT_STATUS ftStatus;
     DWORD bytesToRead;
     DWORD bytesRead;
     int i;
 
     ftStatus = FT_GetQueueStatus(ftHandle,&bytesToRead);
     if (ftStatus != FT_OK) return 0;
-   
+
     if ((DWORD)maxBytes < bytesToRead) bytesToRead = maxBytes;
     ftStatus = FT_Read(ftHandle, buffer, bytesToRead, &bytesRead);
     if (ftStatus == FT_OK) {
@@ -469,13 +475,13 @@ int PRHardwareRead(uint8_t *buffer, int maxBytes)
 
 int PRHardwareWrite(uint8_t *buffer, int bytes)
 {
-    FT_STATUS ftStatus=0; 
+    FT_STATUS ftStatus=0;
     DWORD bytesWritten=0;
     int i;
 
     DEBUG(PRLog(kPRLogVerbose,"Writing %d bytes:\n",bytes));
     ftStatus = FT_Write(ftHandle, buffer, (DWORD)bytes, &bytesWritten);
-    if (ftStatus == FT_OK) 
+    if (ftStatus == FT_OK)
     {
         DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes:\n",bytesWritten));
         if (bytesWritten != DWORD(bytes)) DEBUG(PRLog(kPRLogVerbose,"Wrote %d bytes, should have written %d bytes",bytesWritten,bytes));
@@ -503,23 +509,23 @@ PRResult PRHardwareOpen()
     PRResult rc;
     struct ftdi_device_list *devlist, *curdev;
     char manufacturer[128], description[128];
-    
+
     ftdiInitialized = false;
-    
+
     // Open the FTDI device
     if (ftdi_init(&ftdic) != 0)
     {
         PRSetLastErrorText("Failed to initialize FTDI.");
         return kPRFailure;
     }
-    
+
     // Find all FTDI devices
     // This is very basic and really only expects to see 1 device.  It needs to be
     // smarter.  At the very least, it should check some register on the P-ROC versus
     // an input parameter to ensure the software is set up for the same architecture as
     // the P-ROC (Stern vs WPC).  Otherwise, it's possible to drive the coils the wrong
     // polarity and blow fuses or fry transistors and all other sorts of badness.
-    
+
     // We first enumerate all of the devices:
     int numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID);
     if (numDevices <=0) numDevices = ftdi_usb_find_all(&ftdic, &devlist, FTDI_VENDOR_ID, FTDI_FT240X_PRODUCT_ID);
@@ -530,7 +536,7 @@ PRResult PRHardwareOpen()
     }
     else {
         DEBUG(PRLog(kPRLogInfo, "Number of FTDI devices found: %d\n", numDevices));
-        
+
         for (curdev = devlist; curdev != NULL; i++) {
             DEBUG(PRLog(kPRLogInfo, "Checking device %d\n", i));
             if ((rc = (int32_t)ftdi_usb_get_strings(&ftdic, curdev->dev, manufacturer, 128, description, 128, NULL, 0)) < 0) {
@@ -543,12 +549,12 @@ PRResult PRHardwareOpen()
             }
             curdev = curdev->next;
         }
-        
+
     }
-    
+
     // Don't need the device list anymore
     ftdi_list_free (&devlist);
-    
+
     if (((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT245RL_PRODUCT_ID)) < 0) && ((rc = (int32_t)ftdi_usb_open(&ftdic, FTDI_VENDOR_ID, FTDI_FT240X_PRODUCT_ID)) < 0))
     {
         PRSetLastErrorText("Unable to open ftdi device: %d: %s", rc, ftdi_get_error_string(&ftdic));

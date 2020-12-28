@@ -369,7 +369,6 @@
 				INSTALL_PATH = /usr/local/bin;
 				OTHER_LDFLAGS = (
 					"-Lbin",
-					"-lyaml-cpp",
 					"-lftdi",
 				);
 				PREBINDING = NO;
@@ -388,7 +387,6 @@
 				HEADER_SEARCH_PATHS = /usr/local/include;
 				INSTALL_PATH = /usr/local/bin;
 				OTHER_LDFLAGS = (
-					"-lyaml-cpp",
 					"-lftdi",
 				);
 				PREBINDING = NO;

@@ -32,10 +32,16 @@
 #endif  /* DEBUG_MODE */
 
 #include "pinprocfw.h"
-#include "../../src/PRHardware.h"
 #include "lenval.h"
 #ifndef _MSC_VER
 #include <unistd.h>
+#endif
+
+#if defined(__WIN32__) || defined(_WIN32)
+#include <windows.h>
+#define PRSleep(milliseconds) Sleep(milliseconds)
+#else
+#define PRSleep(milliseconds) usleep(milliseconds*1000)
 #endif
 
 #include "pinproc.h" // Include libpinproc's header.
@@ -514,7 +520,7 @@ void setPort(short p,short val)
 
 
 // Toggle TCK.
-void pulseClock()
+void pulseClock(void)
 {
     setPort(TCK,0);  /* set the TCK port to low  */
     setPort(TCK,1);  /* set the TCK port to high */
@@ -527,12 +533,10 @@ void readByte(unsigned char *data)
         fprintf(stderr, "\n\nUpdating P-ROC.  This may take a couple of minutes.\n");
         fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
         printf("\nErasing PROM... ");
-        fflush(stdout);
     }
 
     if (numBytesCurrent == 5000) {
         printf("complete.\nProgramming:\n0%%  ");
-        fflush(stdout);
     }
     // read in a byte of data from the xsvf file
     *data   = (unsigned char)fgetc( in );
@@ -540,16 +544,14 @@ void readByte(unsigned char *data)
     long int bytesPer200th = numBytesTotal / 200;
     numBytesCurrent++;
     if (numBytesCurrent % bytesPerTenth == 0) {
-        printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
-        fflush(stdout);
+        printf("\n%d0%% ",(int) (numBytesCurrent/bytesPerTenth));
     }
     else if (numBytesCurrent % bytesPer200th == 0) {
         printf(".");
-        fflush(stdout);
     }
 }
 
-unsigned char readTDOBit()
+unsigned char readTDOBit(void)
 {
     PRJTAGStatus jtagStatus;
 
@@ -1853,7 +1855,7 @@ void xsvfCleanup( SXsvfInfo* pXsvfInfo )
 * Parameters:   none.
 * Returns:      int - Legacy result values:  1 == success;  0 == failed.
 *****************************************************************************/
-int xsvfExecute()
+int xsvfExecute(void)
 {
     SXsvfInfo   xsvfInfo;
 
@@ -1874,7 +1876,7 @@ int xsvfExecute()
     }
     else
     {
-        XSVFDBG_PRINTF( 0, "SUCCESS - Operation completed successfully.  Cycle P-ROC power to activate any changes.\n" );
+        XSVFDBG_PRINTF( 0, "SUCCESS - Operation completed successfully.\nCycle P-ROC power to activate any changes.\n" );
     }
 
     xsvfCleanup( &xsvfInfo );
@@ -1882,7 +1884,7 @@ int xsvfExecute()
     return( XSVF_ERRORCODE(xsvfInfo.iErrorCode) );
 }
 
-int openPROC()
+int openPROC(void)
 {
     // Instantiate the P-ROC device:
     XSVFDBG_PRINTF( 1, "Opening P-ROC.\n");
@@ -1898,35 +1900,27 @@ int openPROC()
 
 void printUsage(char * name)
 {
-    fprintf(stderr, "\n%s: Version 1.1", name );
-    fprintf(stderr, "\nUSAGE: %s <filename>\n", name );
+    fprintf(stderr, "%s: Version 1.1\n", name );
+    fprintf(stderr, "USAGE: %s <filename>\n", name );
     fprintf(stderr, "        filename = the .xsvf or .p-roc file to execute.\n" );
 }
 
-int getNumFileBytes() {
-    unsigned char data;
-    int i=0;
-    while (!feof(in))
-    {
-        data   = (unsigned char)fgetc( in );
-        i++;
-    }
-    return i;
-}
-
 // Move file pointer to beginning of XSVF data.
-void preparePROCFile() {
+void preparePROCFile(void) {
     int temp, num_header_words;
     int i;
 
+    rewind(in);
     fscanf(in, "%x\n", &temp);
     num_header_words = (int)(0x012345678 - temp);
 
-    for (i=0; i<num_header_words; i++) fscanf(in, "%x\n", &temp);
+    for (i = 0; i < num_header_words; i++) {
+        fscanf(in, "%x\n", &temp);
+    }
 }
 
 
-uint32_t P3ROC_SPIWaitForReady()
+uint32_t P3ROC_SPIWaitForReady(void)
 {
     uint32_t        dataBuffer[1];
     uint32_t        addr = 0;
@@ -1952,7 +1946,7 @@ uint32_t P3ROC_SPIWaitForReady()
     return 1;
 }
 
-void P3ROC_SPISendWEL()
+void P3ROC_SPISendWEL(void)
 {
     uint32_t        dataBuffer[512];
     uint32_t        addr = 0;
@@ -1961,7 +1955,7 @@ void P3ROC_SPISendWEL()
     PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
 }
 
-void P3ROC_SPIBulkErase()
+void P3ROC_SPIBulkErase(void)
 {
     uint32_t        dataBuffer[512];
     uint32_t        addr = 0;
@@ -1970,7 +1964,6 @@ void P3ROC_SPIBulkErase()
 
     // Send bulk_erase command
     printf("\nErasing flash .");
-    fflush(stdout);
     dataBuffer[0] = P3_ROC_SPI_OPCODE_BULK_ERASE << P3_ROC_SPI_OPCODE_SHIFT;
     PRWriteData (proc, P3_ROC_BUS_SPI_SELECT, addr, 1, dataBuffer); 
     P3ROC_SPIWaitForReady();
@@ -2001,10 +1994,10 @@ void P3ROC_SPIWritePage(uint32_t page_addr, uint32_t * writeDataBuffer)
     P3ROC_SPIWaitForReady();
 }
 
-int verifyP3ROCImage()
+int verifyP3ROCImage(void)
 {
     unsigned char inChars [4];
-    uint32_t        dataBuffer[512];
+    uint32_t        dataBuffer[64];
     uint32_t        readBuffer[64];
 
     int pageAddr = 0;
@@ -2014,7 +2007,6 @@ int verifyP3ROCImage()
 
     P3ROC_SPIWaitForReady();
     printf("\n\nVerifying image:\n0%%  ");
-    fflush(stdout);
     while (!feof(in)) {
       for (int i=0; i<64; i++) 
       {
@@ -2025,12 +2017,10 @@ int verifyP3ROCImage()
                   inChars[j] = fgetc(in);
                   numBytesCurrent++;
                   if (numBytesCurrent % bytesPerTenth == 0) {
-                      printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
-                      fflush(stdout);
+                      printf("\n%d0%% ", (int)(numBytesCurrent / bytesPerTenth));
                   }
                   else if (numBytesCurrent % bytesPer200th == 0) {
                       printf(".");
-                      fflush(stdout);
                   }
 
               }
@@ -2039,21 +2029,22 @@ int verifyP3ROCImage()
           }
       }
 
-      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      //fprintf(stderr, "Writing Page: 0x%x\n", pageAddr);
       P3ROC_SPIReadPage(pageAddr, &readBuffer[0]);
 
-      for (int i=0; i<64; i++)
-      {
-          if (readBuffer[i] != dataBuffer[i]) return 0;
+      if (memcmp(readBuffer, dataBuffer, sizeof readBuffer) != 0) {
+          return 0;
       }
 
       pageAddr++;
     }
 
-    XSVFDBG_PRINTF( 0, "\n\nSUCCESS - Operation completed successfully.  Cycle P3-ROC power to activate any changes.\n" );
+    XSVFDBG_PRINTF( 0, "\n\nSUCCESS - Operation completed successfully.\nCycle P3-ROC power to activate any changes.\n" );
+
+    return 1;
 }
 
-void writeP3ROCImage()
+void writeP3ROCImage(void)
 {
     unsigned char inChars [4];
     uint32_t        dataBuffer[512];
@@ -2065,23 +2056,17 @@ void writeP3ROCImage()
 
     P3ROC_SPIWaitForReady();
     printf("\nProgramming new image:\n0%%  ");
-    fflush(stdout);
     while (!feof(in)) {
-      for (int i=0; i<64; i++) 
-      {
-          if (!feof(in)) 
-          {
-              for (int j=0; j<4; j++) 
-              {
+      for (int i=0; i<64; i++) {
+          if (!feof(in)) {
+              for (int j=0; j<4; j++) {
                   inChars[j] = fgetc(in);
                   numBytesCurrent++;
                   if (numBytesCurrent % bytesPerTenth == 0) {
-                      printf("\n%ld0%% ",numBytesCurrent/bytesPerTenth);
-                      fflush(stdout);
+                      printf("\n%d0%% ", (int)(numBytesCurrent / bytesPerTenth));
                   }
                   else if (numBytesCurrent % bytesPer200th == 0) {
                       printf(".");
-                      fflush(stdout);
                   }
 
               }
@@ -2090,12 +2075,12 @@ void writeP3ROCImage()
           }
       }
 
-      //fprintf(stderr, "\nWriting Page: %x", pageAddr);
+      //fprintf(stderr, "Writing Page: 0x%x\n", pageAddr);
       P3ROC_SPIWritePage(pageAddr, &dataBuffer[0]);
 
       //for (int i=0; i<64; i++) 
       //{
-      //  fprintf(stderr, "\nPage: %x, Byte: %x:%x", pageAddr, i*4, dataBuffer[i]);
+      //  fprintf(stderr, "Page: %x, Byte: %x:%x\n", pageAddr, i*4, dataBuffer[i]);
       //}
 
       pageAddr++;
@@ -2103,7 +2088,7 @@ void writeP3ROCImage()
 
 }
 
-void processP3ROCFile()
+void processP3ROCFile(void)
 {
     fprintf(stderr, "\n\nUpdating P3-ROC.  This may take a couple of minutes.\n");
     fprintf(stderr, "WARNING: DO NOT POWER CYCLE UNTIL COMPLETE!\n");
@@ -2111,102 +2096,112 @@ void processP3ROCFile()
     P3ROC_SPIBulkErase();
     fprintf(stderr, "\nFlash erased.\n");
     writeP3ROCImage();
-    rewind(in);        
     preparePROCFile();
     if (verifyP3ROCImage() == 0)
         fprintf(stderr, "\nERROR: Verification failed.  Please retry.  DO NOT CYCLE POWER.\n\n");
 }
 
-int processFile()
+int processFile(void)
 {
     clock_t startClock;
     clock_t endClock;
     int     iErrorCode;
-            //fseek(in, 0L, SEEK_END);
-            //numBytesTotal = ftell(in);
-            //fseek(in, 0L, SEEK_SET);
-            numBytesCurrent = 0;
 
+    numBytesCurrent = 0;
 
-            /* Execute the XSVF in the file */
-            startClock  = clock();
-            iErrorCode  = xsvfExecute();
-            endClock    = clock();
-            fclose( in );
+    /* Execute the XSVF in the file */
+    startClock  = clock();
+    iErrorCode  = xsvfExecute();
+    endClock    = clock();
+    fclose( in );
 
-            // Destroy the P-ROC device handle:
-            PRDelete(proc);
-            proc = kPRHandleInvalid;
-            return iErrorCode;
+    return iErrorCode;
 }
 
-int checkPROCFile() {
+uint32_t checkPROCFile(void) {
     uint32_t checksum=0, file_checksum, file_board_id, header_checksum;
     unsigned char data;
     int i=0,file_i=0;
     int min_board_rev, max_board_rev;
-    int temp, num_header_words, proc_file_version;
+    int temp[8], num_header_words, proc_file_version;
 
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    num_header_words = (int)(0x012345678 - temp);
-    //fprintf(stderr, "\nproc_file_version: %x, %x", num_header_words, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    proc_file_version = (int)(-1 - temp);
-    //fprintf(stderr, "\nproc_file_version: %x, %x", proc_file_version, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    file_i = (int)(-1 - temp);
-    //fprintf(stderr, "\nbyte count: %d, %x", file_i, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    file_board_id = (uint32_t)(-1 - temp);
-    //fprintf(stderr, "\nid: %x, %x", file_board_id, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    min_board_rev = (int)(-1 - temp);
-    //fprintf(stderr, "\nmin_board: %d, %x", min_board_rev, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    max_board_rev = (int)(-1 - temp);
-    //fprintf(stderr, "\nmax_board: %d, %x", max_board_rev, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    file_checksum = (uint32_t)(-1 - temp);
-    //fprintf(stderr, "\nchecksum: %d, %x", file_checksum, temp);
-    if (!fscanf(in, "%x\n", &temp)) return 0;
-    header_checksum = (uint32_t)(-1 - temp);
-    //fprintf(stderr, "\nheader_checksum: %d, %x", header_checksum, temp);
+    // Read 8 hex values from start of file.
+    for (i = 0; i < 8; i++) {
+        if (!fscanf(in, "%x\n", &temp[i])) {
+            return 0;
+        }
+    }
+    num_header_words = (int)(0x012345678 - temp[0]);
+    proc_file_version = (int)(-1 - temp[1]);
+    file_i = (int)(-1 - temp[2]);
+    file_board_id = (uint32_t)(-1 - temp[3]);
+    min_board_rev = (int)(-1 - temp[4]);
+    max_board_rev = (int)(-1 - temp[5]);
+    file_checksum = (uint32_t)(-1 - temp[6]);
+    header_checksum = (uint32_t)(-1 - temp[7]);
 
-    uint32_t readdata[4], board_rev, board_id;
-    PRReadData(proc, 0, 0, 4, readdata);
+    fprintf(stderr, "File version %d, for board_id 0x%08X (board revs %d to %d)\n",
+            proc_file_version, file_board_id, min_board_rev, max_board_rev);
+
+    uint32_t readdata[4], board_id;
+    PRReadData(proc, P_ROC_MANAGER_SELECT, P_ROC_REG_CHIP_ID_ADDR, 4, readdata);
     board_id = readdata[0];
-    board_rev = readdata[3];
-    board_rev = (board_rev & 0x80) >> 7 |
-                (board_rev & 0x40) >> 5 |
-                (board_rev & 0x20) >> 3 |
-                (board_rev & 0x10) >> 1;
+    int board_rev = 0;
+    if (board_id == P3_ROC_CHIP_ID) {
+        board_rev = (readdata[3] & 0x800) >> 11 |
+                    (readdata[3] & 0x400) >> 10 |
+                    (readdata[3] & 0x200) >> 9 |
+                    (readdata[3] & 0x100) >> 8;
+        fprintf(stderr, "Connected to P3-ROC (board rev %d).\n", board_rev);
+    }
+    else if (board_id == P_ROC_CHIP_ID) {
+        board_rev = (readdata[3] & 0x80) >> 7 |
+                    (readdata[3] & 0x40) >> 6 |
+                    (readdata[3] & 0x20) >> 5 |
+                    (readdata[3] & 0x10) >> 4;
+        fprintf(stderr, "Connected to P-ROC (board rev %d).\n", board_rev);
+    }
+    else {
+        fprintf(stderr, "Connected to unrecognized hardware (0x%08X).\n",
+                board_id);
+        return 0;
+    }
+    fprintf(stderr, "Current FPGA version: %u.%u\n",
+        readdata[1] >> 16, readdata[1] & 0xffff);
 
     if (proc_file_version != 0) {
-        fprintf(stderr, "\nERROR: Unsupported .p-roc file version: %x.  Check for an updated version of this tool.\n\n", proc_file_version);
+        fprintf(stderr, "ERROR: Unsupported .p-roc file version: 0x%x.  Check for an updated version of this tool.\n\n",
+                proc_file_version);
         return 0;
     }
 
     // Check for valid board ID and rev
-    if (board_id != file_board_id) {
-        fprintf(stderr, "\nERROR: board type mismatch.");
-        if (board_id == P_ROC_CHIP_ID && file_board_id == P3_ROC_CHIP_ID)
-            fprintf(stderr, "\nCannot program a P3-ROC image onto a P-ROC\n\n");
-        else if (board_id == P3_ROC_CHIP_ID && file_board_id == P_ROC_CHIP_ID)
-            fprintf(stderr, "\nCannot program a P-ROC image onto a P3-ROC\n\n");
-        else fprintf(stderr, "\nImage (0x%08X) and board (0x%08X) are incompatible\n\n", file_board_id, board_id);
+    if (board_id == file_board_id) {
+        fprintf(stderr, "Board ID verified\n");
+    }
+    else {
+        if (board_id == P_ROC_CHIP_ID && file_board_id == P3_ROC_CHIP_ID) {
+            fprintf(stderr, "ERROR: Cannot program a P3-ROC image onto a P-ROC\n\n");
+        } 
+        else if (board_id == P3_ROC_CHIP_ID && file_board_id == P_ROC_CHIP_ID) {
+            fprintf(stderr, "ERROR: Cannot program a P-ROC image onto a P3-ROC\n\n");
+        }
+        else {
+            fprintf(stderr, "ERROR: Image (0x%08X) and board (0x%08X) are incompatible\n\n",
+                    file_board_id, board_id);
+        }
         return 0;
     }
-    else fprintf(stderr, "\nBoard ID verified");
+
     if (board_rev > max_board_rev || board_rev < min_board_rev) {
-        fprintf(stderr, "\nERROR: This image is not compatible with the P-ROC board (rev: %x)", board_id);
+        fprintf(stderr, "ERROR: Board rev %d not between %d and %d\n",
+                board_rev, min_board_rev, max_board_rev);
         return 0;
     }
-    else fprintf(stderr, "\nBoard rev verified");
 
     checksum = 0;
     i = 0;
-    while (!feof(in))
-    {
+    while (!feof(in)) {
         data   = (unsigned char)fgetc( in );
         checksum += data;
         i++;
@@ -2218,7 +2213,7 @@ int checkPROCFile() {
     if ((i != file_i) ||
         (checksum != file_checksum) ||
         (header_checksum != new_header_checksum)) {
-        fprintf(stderr, "\nFPGA data verification failure!\n\n"); 
+        fprintf(stderr, "FPGA data verification failure!\n\n"); 
         return 0;
     }
 
@@ -2247,11 +2242,11 @@ int main( int argc, char** argv )
     int     i;
     int     iErrorCode;
 
-    // Set a signal handler so that we can exit gracefully on Ctrl-C:
-    //signal(SIGINT, sigint);
+    // Set stdout unbuffered to eliminate need to fflush()
+    setbuf(stdout, NULL);
 
     iErrorCode          = XSVF_ERRORCODE( XSVF_ERROR_NONE );
-    pzXsvfFileName      = 0;
+    pzXsvfFileName      = NULL;
 
     //printf( "XSVF Player v%s, Xilinx, Inc.\n", XSVF_VERSION );
 
@@ -2279,56 +2274,59 @@ int main( int argc, char** argv )
         // Check for .p-roc file
         if (strstr(pzXsvfFileName, ".p-roc")) {
 
-            fprintf(stderr, "\nP-ROC file format detected\n.");
+            fprintf(stderr, "P-ROC file format detected.\n");
 
             in = fopen( pzXsvfFileName, "rb" );
             if ( !in ) {
-                fprintf(stderr, "ERROR:  Cannot open file %s\n.", pzXsvfFileName );
+                fprintf(stderr, "ERROR:  Cannot open file '%s'.\n", pzXsvfFileName );
                 iErrorCode  = XSVF_ERRORCODE( XSVF_ERROR_UNKNOWN );
             }
             else {
-
                 if (openPROC()) {
-                    fprintf(stderr, "\nVerifying file contents and board compatibility...");
-                    switch (checkPROCFile()) 
-                    {
-                      case P_ROC_CHIP_ID:
-			rewind(in);        
+                    fprintf(stderr, "Verifying file contents and board compatibility...\n");
+                    switch (checkPROCFile()) {
+                    case P_ROC_CHIP_ID:
                         preparePROCFile();
                         processFile();
                         break;
-                      case P3_ROC_CHIP_ID:
-			  rewind(in);        
-                          preparePROCFile();
-                          processP3ROCFile();
-                          break;
-                      default:
-                          break;
-                     }
+                    case P3_ROC_CHIP_ID:
+                        preparePROCFile();
+                        processP3ROCFile();
+                        break;
+                    default:
+                        fprintf(stderr, "Failed to parse file.\n");
+                        break;
+                    }
                 }
             }
         }
-        // Check for .p-roc file
+        // Check for .xsvf file
         else if (strstr(pzXsvfFileName, ".xsvf")) {
-            fprintf(stderr, "\nXSVF file format detected.\n");
+            fprintf(stderr, "XSVF file format detected.\n");
             in = fopen( pzXsvfFileName, "rb" );
             if ( !in ) {
-                fprintf(stderr, "ERROR:  Cannot open file %s\n.", pzXsvfFileName );
+                fprintf(stderr, "ERROR:  Cannot open file '%s'.\n", pzXsvfFileName );
                 iErrorCode  = XSVF_ERRORCODE( XSVF_ERROR_UNKNOWN );
             }
             else {
-                numBytesTotal = getNumFileBytes();
-		rewind(in);        
-
                 if (openPROC()) {
+                    fseek(in, 0, SEEK_END);
+                    numBytesTotal = ftell(in);
+                    rewind(in);
                     processFile();
                 }
             }
         }
         else {
-            fprintf(stderr, "\nERROR: Unsupported file format.\n");
+            fprintf(stderr, "ERROR: Unsupported file format.\n");
             printUsage(argv[0]);
         }
+    }
+
+    if (proc != kPRHandleInvalid) {
+        // Destroy the P-ROC device handle created by openPROC()
+        PRDelete(proc);
+        proc = kPRHandleInvalid;
     }
 
     return( iErrorCode );

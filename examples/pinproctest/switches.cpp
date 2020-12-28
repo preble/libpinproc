@@ -33,7 +33,7 @@ typedef struct SwitchStatus {
 
 static SwitchStatus switches[kPRSwitchPhysicalLast + 1];
 
-void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc)
+void ConfigureSwitches(PRHandle proc)
 {
     // Configure switch controller registers (if the defaults aren't acceptable)
     PRSwitchConfig switchConfig;
@@ -137,45 +137,6 @@ void ConfigureBumperRule (PRHandle proc, int swNum, int coilNum, int pulseTime)
     PRSwitchUpdateRule(proc, swNum, kPREventTypeSwitchClosedDebounced, &sw, NULL, 0, false);
 }
 
-void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc)
-{
-    // WPC  Flippers
-    std::string numStr;
-    const YAML::Node& flippers = yamlDoc[kFlippersSection];
-    for (YAML::Iterator flippersIt = flippers.begin(); flippersIt != flippers.end(); ++flippersIt)
-    {
-        int swNum, coilMain, coilHold;
-        std::string flipperName;
-        *flippersIt >> flipperName;
-        if (machineType == kPRMachineWPC)
-        {
-            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Hold"][kNumberField] >> numStr; coilHold = PRDecode(machineType, numStr.c_str());
-            ConfigureWPCFlipperSwitchRule (proc, swNum, coilMain, coilHold, kFlipperPulseTime);
-        }
-        else if (machineType == kPRMachineSternWhitestar || machineType == kPRMachineSternSAM)
-        {
-            printf("hi\n");
-            yamlDoc[kSwitchesSection][flipperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-            yamlDoc[kCoilsSection][flipperName + "Main"][kNumberField] >> numStr; coilMain = PRDecode(machineType, numStr.c_str());
-            ConfigureSternFlipperSwitchRule (proc, swNum, coilMain, kFlipperPulseTime, kFlipperPatterOnTime, kFlipperPatterOffTime);
-        }
-    }
-    
-    const YAML::Node& bumpers = yamlDoc[kBumpersSection];
-    for (YAML::Iterator bumpersIt = bumpers.begin(); bumpersIt != bumpers.end(); ++bumpersIt)
-    {
-        int swNum, coilNum;
-        // WPC  Slingshots
-        std::string bumperName;
-        *bumpersIt >> bumperName;
-        yamlDoc[kSwitchesSection][bumperName][kNumberField] >> numStr; swNum = PRDecode(machineType, numStr.c_str());
-        yamlDoc[kCoilsSection][bumperName][kNumberField] >> numStr; coilNum = PRDecode(machineType, numStr.c_str());
-        ConfigureBumperRule (proc, swNum, coilNum, kBumperPulseTime);
-    }
-}
-
 void UpdateSwitchState( PREvent * event )
 {
     switches[event->value].state = event->type;
@@ -190,7 +151,7 @@ void LoadSwitchStates( PRHandle proc )
     // Get all of the switch states from the P-ROC.
     if (PRSwitchGetStates( proc, procSwitchStates, kPRSwitchPhysicalLast + 1 ) == kPRFailure)
     {
-        fprintf(stderr, "Error: Unable to retrieve switch states\n");
+        printf("Error: Unable to retrieve switch states\n");
     }
     else
     {
@@ -201,17 +162,15 @@ void LoadSwitchStates( PRHandle proc )
         }
 
         int zero = 0;
-        fprintf(stderr, "\nCurrent Switch States: %3d : ", zero);
         for (i = 0; i < kPRSwitchPhysicalLast + 1; i++)
         {
-            fprintf(stderr, "%d ", switches[i].state);
-            if ((i + 1) % 32 == 0) 
-            {
+            if (i % 32 == 0) {
                 printf("\n");
                 if (i != kPRSwitchPhysicalLast) 
-                    fprintf(stderr, "Current Switch States: %3d : ", i+1);
+                    printf("Current Switch States: %3d: ", i);
             }
+            printf("%d", switches[i].state);
         }
-        fprintf(stderr, "\n");
+        printf("\n");
     }
 }

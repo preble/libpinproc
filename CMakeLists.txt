@@ -1,18 +1,14 @@
 ###
 ### CMake settings
 ###
-## Due to Mac OSX we need to keep compatibility with CMake 2.6
-# see http://www.cmake.org/Wiki/CMake_Policies
-cmake_minimum_required(VERSION 2.6)
-# see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0012
-if(POLICY CMP0012)
-	cmake_policy(SET CMP0012 OLD)
-endif()
-# see http://www.cmake.org/cmake/help/cmake-2-8-docs.html#policy:CMP0015
-if(POLICY CMP0015)
-	cmake_policy(SET CMP0015 OLD)
-endif()
+# Version 2.8.1 was released 2010-03-16 and is a reasonable minimum.
+cmake_minimum_required(VERSION 2.8.1)
 
+# allow relative paths in link_directories()
+# see https://cmake.org/cmake/help/v3.18/policy/CMP0081.html
+if(POLICY CMP0081)
+	cmake_policy(SET CMP0081 OLD)
+endif()
 
 ###
 ### Project settings
@@ -20,7 +16,7 @@ endif()
 project(PINPROC)
 
 set(PINPROC_VERSION_MAJOR "2")
-set(PINPROC_VERSION_MINOR "0")
+set(PINPROC_VERSION_MINOR "1")
 set(PINPROC_VERSION "${PINPROC_VERSION_MAJOR}.${PINPROC_VERSION_MINOR}")
 
 
@@ -45,6 +41,7 @@ option(APPLE_UNIVERSAL_BIN "Apple: Build universal binary" OFF)
 option(MSVC_SHARED_RT "MSVC: Build with shared runtime libs (/MD)" ON)
 option(MSVC_STHREADED_RT "MSVC: Build with single-threaded static runtime libs (/ML until VS .NET 2003)" OFF)
 
+option(CROSS_ROOT "Cross-compilation root path" OFF)
 
 ###
 ### Sources, headers, directories and libs
@@ -69,11 +66,15 @@ if(VERBOSE)
 endif()
 
 # use -DEXTRA_INC="<path>;<path>" and -DEXTRA_LINK="<path>;<path>"
+set(EXTRA_INC "" CACHE STRING "Extra include directories separated by ;")
+set(EXTRA_LINK "" CACHE STRING "Extra link directories separated by ;")
+if(CROSS_ROOT)
+include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} ${CROSS_ROOT}/usr/local/include)
+link_directories(${EXTRA_LINK} ${CROSS_ROOT}/usr/local/lib)
+else()
 include_directories(${PINPROC_SOURCE_DIR}/include ${EXTRA_INC} /usr/local/include)
 link_directories(${EXTRA_LINK} /usr/local/lib)
-
-set(YAML_CPP_LIB "yaml-cpp")
-set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}")
+endif()
 
 
 ###
@@ -100,7 +101,7 @@ if(WIN32)
 		set(CMAKE_INSTALL_PREFIX "C:/")
 	endif()
 else()
-	set(lib_ftdi_usb usb ftdi1)
+	set(lib_ftdi_usb usb-1.0 ftdi1)
 endif()
 
 # GCC specialities
@@ -153,13 +154,7 @@ if(MSVC)
 
 	# c) Correct suffixes for static libraries
 	if(NOT BUILD_SHARED_LIBS)
-		### General stuff
 		set(LIB_TARGET_SUFFIX "${LIB_SUFFIX}${LIB_RT_SUFFIX}")
-
-		### Project stuff
-		# correct external library names
-		set(YAML_CPP_LIB "${CMAKE_STATIC_LIBRARY_PREFIX}${YAML_CPP_LIB}${LIB_RT_SUFFIX}")
-		set(YAML_CPP_LIB_DBG "${YAML_CPP_LIB}d")
 	endif()
 endif()
 
@@ -244,8 +239,6 @@ add_executable(pinproctest
 )
 target_link_libraries(pinproctest
 	pinproc
-	optimized ${YAML_CPP_LIB}
-	debug ${YAML_CPP_LIB_DBG}
 )
 
 # Create a target for the firmware tool

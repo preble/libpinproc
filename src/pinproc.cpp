@@ -51,7 +51,7 @@ void PRLog(PRLogLevel level, const char *format, ...)
 {
     if (level < logLevel)
         return;
-    
+
     char line[MAX_TEXT];
     va_list ap;
     va_start(ap, format);
@@ -82,7 +82,7 @@ void PRSetLastErrorText(const char *format, ...)
     PRLog(kPRLogError, "%s\n", lastErrorText);
 }
 
-const char *PRGetLastErrorText()
+const char *PRGetLastErrorText(void)
 {
     return lastErrorText;
 }
@@ -119,10 +119,16 @@ PRResult PRFlushWriteData(PRHandle handle)
     return handleAsDevice->FlushWriteData();
 }
 
-/** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData */
+/** Write data out to the P-ROC immediately (does not require a call to PRFlushWriteData). */
 PRResult PRWriteData(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
 {
     return handleAsDevice->WriteDataRaw(moduleSelect, startingAddr, numWriteWords, writeBuffer);
+}
+
+/** Write data buffered to P-ROC (does require a call to PRFlushWriteData). */
+PRResult PRWriteDataUnbuffered(PRHandle handle, uint32_t moduleSelect, uint32_t startingAddr, int32_t numWriteWords, uint32_t * writeBuffer)
+{
+    return handleAsDevice->WriteDataRawUnbuffered(moduleSelect, startingAddr, numWriteWords, writeBuffer);
 }
 
 /** Read data from the P-ROC. */
@@ -358,8 +364,8 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
     else if ( strlen(str) == 4)
         x = (str[2]-'0') * 10 + (str[3]-'0');
     else return atoi(str);
-    
-    if ((machineType == kPRMachineWPC) || 
+
+    if ((machineType == kPRMachineWPC) ||
         (machineType == kPRMachineWPC95) ||
         (machineType == kPRMachineWPCAlphanumeric))
     {
@@ -381,7 +387,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                                     case 'm':
                                         return 32;
                                     default:
-                                        return 33; 
+                                        return 33;
                                 }
                             default:
                                 switch (str[3])
@@ -390,7 +396,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                                     case 'm':
                                         return 34;
                                     default:
-                                        return 35; 
+                                        return 35;
                                 }
                         }
                     default:
@@ -404,7 +410,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                                     case 'm':
                                         return 36;
                                     default:
-                                        return 37; 
+                                        return 37;
                                 }
                             default:
                                 switch (str[3])
@@ -413,7 +419,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                                     case 'm':
                                         return 38;
                                     default:
-                                        return 39; 
+                                        return 39;
                                 }
                         }
                 }
@@ -432,7 +438,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                     if (machineType == kPRMachineWPC95)
                         //return x + 7;
                         return x + 31;
-                    else 
+                    else
                         return x + 107; // WPC 37-44 use 8-driver board (mapped to drivers 144-151)
                 }
                 else return x + 108;
@@ -473,7 +479,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                 {
                     case 'D':
                     case 'd':
-                        if (strlen(str) == 3) 
+                        if (strlen(str) == 3)
                             return (str[2]-'0') + 7;
                         else return x + 7;
                     default:
@@ -502,7 +508,7 @@ uint16_t PRDecode(PRMachineType machineType, const char *str)
                 {
                     case 'D':
                     case 'd':
-                        if (strlen(str) == 3) 
+                        if (strlen(str) == 3)
                             return (str[2]-'0') + 7;
                         else return x + 7;
                     default:

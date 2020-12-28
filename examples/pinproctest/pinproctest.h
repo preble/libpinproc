@@ -44,7 +44,6 @@
 #include <cmath>
 #include "pinproc.h" // Include libpinproc's header.
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 
 #ifdef _MSC_VER
   #include <time.h>
@@ -72,8 +71,7 @@
 
 void ConfigureDrivers(PRHandle proc);
 
-void ConfigureSwitches(PRHandle proc, YAML::Node& yamlDoc);
-void ConfigureSwitchRules(PRHandle proc, YAML::Node& yamlDoc);
+void ConfigureSwitches(PRHandle proc);
 void UpdateSwitchState (PREvent * event);
 void LoadSwitchStates (PRHandle proc);
 
